@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>Álbum Mundial 2026</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+</head>
+<body>
+<canvas id="confetti-canvas"></canvas>
+
+<div id="app">
+  <main class="main-content">
+    <section id="tab-home" class="tab-content">
+      <header class="app-header">
+        <div class="header-main">
+          <div class="brand-block">
+            <div class="album-title" id="profile-name-display">Mi Álbum</div>
+            <div class="album-subtitle">Mundial 2026 · 48 selecciones · 993 fichas</div>
+          </div>
+          <div class="header-actions">
+            <button class="icon-btn" id="theme-btn" title="Cambiar tema">☾</button>
+            <button class="icon-btn" id="settings-btn" title="Configuración">⚙</button>
+          </div>
+        </div>
+
+        <div class="search-panel">
+          <label class="collection-search-wrap" for="collection-search">
+            <span class="collection-search-icon">⌕</span>
+            <input id="collection-search" class="collection-search" type="search"
+              placeholder="Buscar país, código o grupo..." autocomplete="off" />
+          </label>
+          <div class="filter-controls">
+            <label class="filter-control">
+              <span>Equipo</span>
+              <select id="filter-team">
+                <option value="">Todos los equipos</option>
+              </select>
+            </label>
+            <label class="filter-control">
+              <span>Posición</span>
+              <select id="filter-position">
+                <option value="">Todas las posiciones</option>
+                <option value="Portero">Portero</option>
+                <option value="Defensa">Defensa</option>
+                <option value="Mediocampista">Mediocampista</option>
+                <option value="Delantero">Delantero</option>
+              </select>
+            </label>
+            <button class="clear-filters-btn" id="clear-filters" type="button">Borrar filtros</button>
+          </div>
+          <div class="results-count" id="results-count">50 secciones</div>
+        </div>
+
+        <div class="sort-bar" id="sort-bar">
+          <span class="sort-indicator" id="sort-indicator"></span>
+          <button class="sort-btn active" data-sort="progress-desc">Más completos</button>
+          <button class="sort-btn" data-sort="progress-asc">Menos completos</button>
+          <button class="sort-btn" data-sort="all">Todos</button>
+        </div>
+      </header>
+
+      <section class="dashboard-overview">
+        <article class="dashboard-hero-card">
+          <div class="dashboard-ring" id="dashboard-ring">
+            <svg class="dashboard-progress-svg" viewBox="0 0 180 180" aria-hidden="true">
+              <circle class="dashboard-progress-track" cx="90" cy="90" r="74"></circle>
+              <circle class="dashboard-progress-fill" id="dashboard-circle-fill" cx="90" cy="90" r="74"></circle>
+            </svg>
+            <div class="dashboard-ring-inner">
+              <strong id="dashboard-percent">0%</strong>
+              <span>Completado</span>
+            </div>
+          </div>
+          <div class="dashboard-copy">
+            <span class="dashboard-kicker">Tu colección</span>
+            <h2>Progreso del álbum</h2>
+            <p id="dashboard-summary">Tienes 0 de 993 fichas únicas.</p>
+            <div class="dashboard-linear">
+              <div class="dashboard-linear-fill" id="dashboard-linear-fill"></div>
+            </div>
+          </div>
+        </article>
+
+        <div class="dashboard-metric-card">
+          <span>Avance</span>
+          <strong id="dashboard-progress-card">0%</strong>
+          <small>Total completado</small>
+        </div>
+        <div class="dashboard-metric-card">
+          <span>Únicas</span>
+          <strong id="dashboard-owned">0</strong>
+          <small>Ya marcadas</small>
+        </div>
+        <div class="dashboard-metric-card">
+          <span>Cambio</span>
+          <strong id="dashboard-duplicates">0</strong>
+          <small>Repetidas</small>
+        </div>
+      </section>
+
+      <div class="teams-grid" id="teams-grid"></div>
+    </section>
+
+    <section id="tab-trades" class="tab-content">
+      <header class="section-header">
+        <div>
+          <div class="section-kicker">Cambios</div>
+          <h1 class="section-heading">Fichas Para Cambio</h1>
+        </div>
+        <div class="trades-count-badge" id="trades-repeated-count">0</div>
+      </header>
+
+      <div class="section-title">Mis repetidas</div>
+      <div id="trades-repeated-list" class="trades-list"></div>
+      <button class="share-fab" id="share-fab">Compartir lista</button>
+    </section>
+  </main>
+
+  <nav class="bottom-nav">
+    <button class="nav-btn" data-tab="home">
+      <span class="nav-icon">◆</span>
+      <span class="nav-label">Álbum</span>
+    </button>
+    <button class="nav-btn" data-tab="trades">
+      <span class="nav-icon">↔</span>
+      <span class="nav-label">Cambios</span>
+    </button>
+  </nav>
+</div>
+
+<div class="modal-overlay" id="team-detail-modal">
+  <div class="modal team-modal">
+    <button class="modal-close" type="button" onclick="closeModal('team-detail-modal')" aria-label="Cerrar">×</button>
+    <div class="team-detail-header">
+      <img class="team-detail-flag-img" id="team-detail-flag" src="" alt="" width="56" height="40" />
+      <div>
+        <div class="team-detail-name" id="team-detail-name">Equipo</div>
+        <div class="team-detail-group" id="team-detail-group"></div>
+      </div>
+    </div>
+    <div class="stickers-grid" id="team-detail-grid"></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="settings-modal">
+  <div class="modal">
+    <button class="modal-close" type="button" onclick="closeModal('settings-modal')" aria-label="Cerrar">×</button>
+    <div class="modal-title">Configuración</div>
+    <button class="modal-btn primary" id="export-btn">Exportar datos JSON</button>
+    <button class="modal-btn secondary" id="import-btn">Importar datos JSON</button>
+    <input type="file" id="import-file" accept=".json" style="display:none" />
+    <button class="modal-btn danger" id="reset-btn">Reiniciar álbum</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="reset-modal">
+  <div class="modal">
+    <button class="modal-close" type="button" onclick="closeModal('reset-modal')" aria-label="Cerrar">×</button>
+    <div class="modal-title">Reiniciar Álbum</div>
+    <p class="modal-copy">Esta acción borrará todo tu progreso. ¿Estás seguro?</p>
+    <button class="modal-btn danger" id="confirm-reset">Sí, reiniciar todo</button>
+    <button class="modal-btn secondary" id="cancel-reset">Cancelar</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="share-modal">
+  <div class="modal">
+    <button class="modal-close" type="button" onclick="closeModal('share-modal')" aria-label="Cerrar">×</button>
+    <div class="modal-title">Compartir mi lista</div>
+    <textarea class="share-textarea" id="share-text" readonly></textarea>
+    <button class="modal-btn primary" id="copy-share">Copiar</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="celebration-modal">
+  <div class="modal">
+    <button class="modal-close" type="button" onclick="closeModal('celebration-modal')" aria-label="Cerrar">×</button>
+    <div class="celebration-modal">
+      <div class="celebration-trophy">🏆</div>
+      <div class="celebration-title" id="celebration-text">¡FELICITACIONES!</div>
+      <div class="celebration-sub" id="celebration-sub"></div>
+      <button class="modal-btn primary" id="close-celebration">Seguir coleccionando</button>
+    </div>
+  </div>
+</div>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
