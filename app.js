@@ -178,7 +178,7 @@ function checkMilestones() {
     }
   });
 
-  // Team complete check
+  // Section complete check
   getAlbumSections().forEach(team => {
     const p = getTeamProgress(team.code);
     const key = `team_${team.code}`;
@@ -224,6 +224,7 @@ function switchTab(tab) {
 function renderTab(tab) {
   if (tab === 'home') renderHome();
   if (tab === 'trades') renderTrades();
+  if (tab === 'stats') renderStats();
 }
 
 // ── TAB 1: HOME ───────────────────────────────────────────
@@ -648,7 +649,7 @@ function renderStats() {
 
 function renderConfedStats() {
   const confeds = {};
-  getAlbumSections().forEach(team => {
+  TEAMS_DATA.forEach(team => {
     const c = TEAM_CONFED[team.code] || 'Otro';
     if (!confeds[c]) confeds[c] = { have: 0, total: 0 };
     const p = getTeamProgress(team.code);
@@ -714,15 +715,18 @@ function renderEstimate() {
 function renderCompletedTeams() {
   const container = document.getElementById('completed-teams');
   container.innerHTML = '';
-  const completed = TEAMS_DATA.filter(t => getTeamProgress(t.code).have === 20);
+  const completed = getAlbumSections().filter(t => {
+    const p = getTeamProgress(t.code);
+    return p.total > 0 && p.have === p.total;
+  });
   if (completed.length === 0) {
-    container.innerHTML = '<span style="font-size:13px;color:var(--text2)">Aún no hay equipos completos</span>';
+    container.innerHTML = '<span style="font-size:13px;color:var(--text-secondary)">Aún no hay secciones completas</span>';
     return;
   }
   completed.forEach(t => {
     const chip = document.createElement('div');
     chip.className = 'completed-team-chip';
-    chip.innerHTML = `${t.flag} ${t.name} ✅`;
+    chip.textContent = `${t.flag || t.icon || ''} ${t.name} OK`;
     container.appendChild(chip);
   });
 }

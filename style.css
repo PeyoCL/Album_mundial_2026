@@ -729,6 +729,157 @@ button { cursor: pointer; }
 }
 .empty-icon { font-size: 36px; margin-bottom: 10px; }
 
+.stats-header {
+  max-width: 1180px;
+}
+.stats-grid {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 12px 24px 120px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+.stats-card {
+  min-height: 160px;
+  padding: 18px;
+  border-radius: var(--radius-card);
+  border: 1px solid var(--border-subtle);
+  background:
+    linear-gradient(145deg, rgba(30,42,64,0.90), rgba(17,24,39,0.96)),
+    radial-gradient(circle at 20% 0%, rgba(59,130,246,0.14), transparent 45%);
+  box-shadow: var(--shadow-card);
+}
+[data-theme="light"] .stats-card {
+  background: linear-gradient(145deg, rgba(255,255,255,0.97), rgba(248,250,252,0.98));
+}
+.stats-wide {
+  grid-column: 1 / -1;
+}
+.stats-label {
+  display: block;
+  margin-bottom: 14px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+}
+.estimate-card strong {
+  display: block;
+  color: var(--gold);
+  font-size: 48px;
+  line-height: 1;
+  font-weight: 900;
+}
+.estimate-card small {
+  display: block;
+  margin-top: 10px;
+  color: var(--text-secondary);
+  font-weight: 700;
+}
+.milestone-track {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+.milestone-dot {
+  min-height: 58px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  background: rgba(148,163,184,0.08);
+  font-weight: 900;
+}
+.milestone-dot.reached {
+  color: #000;
+  background: var(--gold);
+  border-color: var(--gold);
+  box-shadow: 0 0 20px rgba(246,201,14,0.24);
+}
+.confed-bars {
+  display: grid;
+  gap: 12px;
+}
+.confed-bar-row {
+  display: grid;
+  grid-template-columns: 96px 1fr 48px;
+  align-items: center;
+  gap: 12px;
+}
+.confed-name,
+.confed-pct {
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 900;
+}
+.confed-pct {
+  text-align: right;
+}
+.confed-track {
+  height: 10px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(148,163,184,0.14);
+}
+.confed-fill {
+  height: 100%;
+  border-radius: inherit;
+}
+.top-teams-list {
+  display: grid;
+  gap: 8px;
+}
+.top-team-row {
+  min-height: 38px;
+  display: grid;
+  grid-template-columns: 28px 32px 1fr auto;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+  border-top: 1px solid var(--border-subtle);
+}
+.top-rank {
+  color: var(--gold);
+  font-weight: 900;
+}
+.top-flag {
+  font-size: 18px;
+}
+.top-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 800;
+}
+.top-val {
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 900;
+}
+.completed-teams {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.completed-team-chip {
+  min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 10px;
+  border-radius: 999px;
+  background: var(--gold-soft);
+  color: var(--gold);
+  border: 1px solid rgba(246,201,14,0.28);
+  font-size: 12px;
+  font-weight: 900;
+}
+
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -996,6 +1147,9 @@ button { cursor: pointer; }
   .filter-controls { grid-template-columns: 1fr; }
   .clear-filters-btn { width: 100%; }
   .dashboard-overview { grid-template-columns: 1fr; padding: 16px 16px 0; }
+  .stats-grid { grid-template-columns: 1fr; padding: 12px 16px 120px; }
+  .milestone-track { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .confed-bar-row { grid-template-columns: 80px 1fr 42px; }
   .dashboard-hero-card { flex-direction: column; align-items: center; text-align: center; }
   .dashboard-ring { width: 154px; height: 154px; flex-basis: 154px; }
   .dashboard-ring::before { width: 130px; height: 130px; }
@@ -1018,6 +1172,7 @@ button { cursor: pointer; }
   .teams-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .dashboard-overview { grid-template-columns: repeat(3, 1fr); }
   .dashboard-hero-card { grid-column: 1 / -1; }
+  .stats-grid { grid-template-columns: 1fr; }
 }
 
 @media (min-width: 1024px) {
@@ -1026,7 +1181,7 @@ button { cursor: pointer; }
     left: 50%;
     right: auto;
     bottom: 18px;
-    width: 340px;
+    width: 420px;
     transform: translateX(-50%);
     border: 1px solid var(--border-subtle);
     border-radius: 999px;
