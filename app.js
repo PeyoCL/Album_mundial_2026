@@ -963,7 +963,26 @@ function setThemeButtonIcon() {
 function updateHeaderOffset() {
   const header = document.querySelector('.app-header');
   if (!header) return;
-  document.documentElement.style.setProperty('--header-offset', `${header.offsetHeight}px`);
+  document.documentElement.style.setProperty('--header-offset', `${header.offsetHeight + 18}px`);
+}
+
+function observeHeaderOffset() {
+  const header = document.querySelector('.app-header');
+  if (!header) return;
+  updateHeaderOffset();
+  if ('ResizeObserver' in window) {
+    const observer = new ResizeObserver(() => {
+      updateHeaderOffset();
+      updateSortIndicator();
+    });
+    observer.observe(header);
+  }
+  if (document.fonts?.ready) {
+    document.fonts.ready.then(() => {
+      updateHeaderOffset();
+      updateSortIndicator();
+    });
+  }
 }
 
 function toggleTheme() {
@@ -989,7 +1008,7 @@ function loadTheme() {
 function init() {
   loadTheme();
   populateTeamFilter();
-  updateHeaderOffset();
+  observeHeaderOffset();
 
   // Nav buttons
   document.querySelectorAll('.nav-btn').forEach(btn => {

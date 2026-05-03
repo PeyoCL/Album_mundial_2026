@@ -67,7 +67,7 @@ button { cursor: pointer; }
 .main-content { min-height: 100vh; }
 .tab-content { display: none; min-height: 100vh; padding-bottom: calc(var(--nav-h) + 24px); }
 .tab-content.active { display: block; }
-#tab-home { padding-top: calc(var(--header-offset) + clamp(14px, 2vw, 24px)); }
+#tab-home { padding-top: var(--header-offset); }
 
 .app-header {
   position: fixed;
@@ -261,7 +261,7 @@ button { cursor: pointer; }
 .dashboard-overview {
   max-width: 1230px;
   margin: 0 auto;
-  padding: 30px 24px 0;
+  padding: 18px 24px 0;
   display: grid;
   grid-template-columns: minmax(400px, 1.7fr) repeat(3, minmax(210px, 1fr));
   gap: 16px;
