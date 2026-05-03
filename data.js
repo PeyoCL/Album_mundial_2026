@@ -68,7 +68,7 @@ const ADDITIONAL_SECTIONS = [
       { code: '00', name: 'Lamina 00', type: 'album-special' },
       ...[
         'FWC1', 'FWC2', 'FWC3', 'FWC4', 'FWC5', 'FWC6', 'FWC7', 'FWC8', 'FWC9',
-        'FWC10', 'FWC11', 'FWC12', 'FWC13', 'FWC14', 'FWC15', 'FWC17', 'FWC18', 'FWC19'
+        'FWC10', 'FWC11', 'FWC12', 'FWC13', 'FWC14', 'FWC15', 'FWC16', 'FWC17', 'FWC18', 'FWC19'
       ].map(code => ({ code, name: code, type: 'album-special' }))
     ]
   },
@@ -1108,7 +1108,7 @@ const GROUPS = {
   L: ['ENG', 'DEN', 'URU', 'IRQ'],
 };
 
-const TOTAL_BASE = 993;
+const TOTAL_BASE = 994;
 const TOTAL_TEAMS_STICKERS = 960; // 48 × 20
 const TOTAL_ADDITIONAL_STICKERS = ADDITIONAL_SECTIONS.reduce((sum, section) => sum + section.stickers.length, 0);
 const TOTAL_ALBUM_STICKERS = TOTAL_TEAMS_STICKERS + TOTAL_ADDITIONAL_STICKERS;
