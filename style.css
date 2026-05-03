@@ -1194,7 +1194,7 @@ button { cursor: pointer; }
     left: 50%;
     right: auto;
     bottom: 18px;
-    width: 420px;
+    width: 340px;
     transform: translateX(-50%);
     border: 1px solid var(--border-subtle);
     border-radius: 999px;

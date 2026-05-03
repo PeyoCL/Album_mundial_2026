@@ -224,7 +224,6 @@ function switchTab(tab) {
 function renderTab(tab) {
   if (tab === 'home') renderHome();
   if (tab === 'trades') renderTrades();
-  if (tab === 'stats') renderStats();
 }
 
 // ── TAB 1: HOME ───────────────────────────────────────────
