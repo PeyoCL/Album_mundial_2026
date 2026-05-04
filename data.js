@@ -88,16 +88,13 @@ const ADDITIONAL_SECTIONS = [
 function makeTeam(code, name, flag, group, debutant, players) {
   return {
     code, name, flag, group, debutant,
-    stickers: [
-      { code: `${code}-01`, name: 'Escudo oficial', type: 'shield' },
-      { code: `${code}-02`, name: 'Foto grupal', type: 'group' },
-      ...players.map((p, i) => ({
-        code: `${code}-${String(i + 3).padStart(2, '0')}`,
-        name: p[0],
-        position: p[1],
-        type: 'player'
-      }))
-    ]
+    stickers: Array.from({ length: 20 }, (_, i) => {
+      const number = i + 1;
+      const stickerCode = `${code}${number}`;
+      if (number === 1) return { code: stickerCode, name: stickerCode, type: 'shield' };
+      if (number === 13) return { code: stickerCode, name: stickerCode, type: 'group' };
+      return { code: stickerCode, name: stickerCode, type: 'sticker' };
+    })
   };
 }
 

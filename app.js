@@ -61,9 +61,26 @@ function getSectionGroupLabel(section) {
 function loadState() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return JSON.parse(raw);
+    if (raw) return migrateStickerCodes(JSON.parse(raw));
   } catch (e) {}
   return { profile: { name: 'Mi Álbum', photo: null }, stickers: {}, lastUpdated: Date.now() };
+}
+
+function migrateStickerCodes(data) {
+  if (!data?.stickers) return data;
+  const migrated = {};
+  Object.entries(data.stickers).forEach(([code, value]) => {
+    const match = code.match(/^([A-Z]{3})-(\d{2})$/);
+    const nextCode = match ? `${match[1]}${Number(match[2])}` : code;
+    if (migrated[nextCode]) {
+      migrated[nextCode].count += value.count || 0;
+      migrated[nextCode].have = migrated[nextCode].have || value.have;
+    } else {
+      migrated[nextCode] = { ...value };
+    }
+  });
+  data.stickers = migrated;
+  return data;
 }
 
 function saveState() {
@@ -344,18 +361,16 @@ function applyCollectionSearch() {
   cards.forEach(card => {
     const textMatch = !searchQuery || card.dataset.search.includes(searchQuery);
     const teamMatch = !activeTeamFilter || card.dataset.team === activeTeamFilter;
-    const positionMatch = !activePositionFilter || card.dataset.positions.split('|').includes(activePositionFilter);
-    const isMatch = textMatch && teamMatch && positionMatch;
+    const isMatch = textMatch && teamMatch;
     card.hidden = !isMatch;
     card.classList.toggle('dimmed', false);
     if (isMatch) matches++;
   });
   const clearBtn = document.getElementById('clear-filters');
-  if (clearBtn) clearBtn.disabled = !searchQuery && !activeTeamFilter && !activePositionFilter;
+  if (clearBtn) clearBtn.disabled = !searchQuery && !activeTeamFilter;
   const counter = document.getElementById('results-count');
   if (counter) {
-    const pos = activePositionFilter ? ` · ${activePositionFilter}` : '';
-    counter.textContent = `${matches} de ${cards.length} secciones${pos}`;
+    counter.textContent = `${matches} de ${cards.length} secciones`;
   }
 }
 
@@ -366,10 +381,8 @@ function clearFilters() {
 
   const searchInput = document.getElementById('collection-search');
   const teamSelect = document.getElementById('filter-team');
-  const positionSelect = document.getElementById('filter-position');
   if (searchInput) searchInput.value = '';
   if (teamSelect) teamSelect.value = '';
-  if (positionSelect) positionSelect.value = '';
 
   applyCollectionSearch();
 }
@@ -1026,10 +1039,6 @@ function init() {
   });
   document.getElementById('filter-team').addEventListener('change', e => {
     activeTeamFilter = e.target.value;
-    applyCollectionSearch();
-  });
-  document.getElementById('filter-position').addEventListener('change', e => {
-    activePositionFilter = e.target.value;
     applyCollectionSearch();
   });
   document.getElementById('clear-filters').addEventListener('click', clearFilters);

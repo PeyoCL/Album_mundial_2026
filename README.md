@@ -10,11 +10,19 @@ Aplicacion web estatica para llevar el control de un album del Mundial 2026. Per
 - 14 laminas de la seccion Coca-Cola: `CC1` a `CC14`.
 - Total: 994 fichas.
 
+Las laminas de cada seleccion usan solo nomenclatura por codigo para evitar errores con nombres de jugadores. Ejemplo: Mexico usa `MEX1` a `MEX20`.
+
+En todas las selecciones:
+
+- La ficha `1` es el escudo.
+- La ficha `13` es la foto del equipo.
+- El resto de fichas se identifican solo por codigo.
+
 ## Funciones
 
 - Dashboard de progreso dentro de la seccion Album.
-- Busqueda por pais, seccion, grupo, codigo de lamina, nombre y posicion.
-- Filtros por equipo/seccion y posicion.
+- Busqueda por pais, seccion, grupo y codigo de lamina.
+- Filtro por equipo/seccion.
 - Boton para borrar filtros.
 - Registro de laminas obtenidas y repetidas.
 - Lista de cambios agrupada por equipo o seccion.
