@@ -521,8 +521,10 @@ function updateHomeProgress() {
 
 function renderTrades() {
   const repeated = getRepeatedList();
+  const missing = getMissingList();
   document.getElementById('trades-repeated-count').textContent = getRepeatedTotal();
   updateTradeExportButtons(repeated.length > 0);
+  updateMissingExportButton(missing.length > 0);
   renderRepeated(repeated);
 }
 
@@ -531,6 +533,11 @@ function updateTradeExportButtons(hasRepeated) {
     const btn = document.getElementById(id);
     if (btn) btn.disabled = !hasRepeated;
   });
+}
+
+function updateMissingExportButton(hasMissing) {
+  const btn = document.getElementById('export-missing-excel');
+  if (btn) btn.disabled = !hasMissing;
 }
 
 function renderRepeated(list) {
@@ -648,6 +655,14 @@ function getTradeExportRows() {
   }));
 }
 
+function getMissingExportRows() {
+  return getMissingList().map(s => ({
+    section: s.teamName,
+    code: s.code,
+    name: s.name
+  }));
+}
+
 function escapeHtml(value) {
   return String(value)
     .replace(/&/g, '&amp;')
@@ -694,6 +709,35 @@ function exportTradesExcel() {
   `;
   const blob = new Blob([html], { type: 'application/vnd.ms-excel;charset=utf-8' });
   downloadBlob(blob, 'cambios_album_mundial_2026.xls');
+}
+
+function exportMissingExcel() {
+  const rows = getMissingExportRows();
+  if (rows.length === 0) return;
+  const tableRows = rows.map(row => `
+    <tr>
+      <td>${escapeHtml(row.section)}</td>
+      <td>${escapeHtml(row.code)}</td>
+      <td>${escapeHtml(row.name)}</td>
+    </tr>
+  `).join('');
+  const html = `
+    <html>
+      <head><meta charset="UTF-8"></head>
+      <body>
+        <table border="1">
+          <tr>
+            <th>Seccion</th>
+            <th>Codigo</th>
+            <th>Lamina</th>
+          </tr>
+          ${tableRows}
+        </table>
+      </body>
+    </html>
+  `;
+  const blob = new Blob([html], { type: 'application/vnd.ms-excel;charset=utf-8' });
+  downloadBlob(blob, 'faltantes_album_mundial_2026.xls');
 }
 
 function escapePdfText(value) {
@@ -1211,6 +1255,7 @@ function init() {
   });
   document.getElementById('export-trades-pdf').addEventListener('click', exportTradesPdf);
   document.getElementById('export-trades-excel').addEventListener('click', exportTradesExcel);
+  document.getElementById('export-missing-excel').addEventListener('click', exportMissingExcel);
   document.getElementById('copy-share').addEventListener('click', () => {
     navigator.clipboard.writeText(document.getElementById('share-text').value)
       .then(() => { document.getElementById('copy-share').textContent = '✅ Copiado'; setTimeout(() => { document.getElementById('copy-share').textContent = '📋 Copiar'; }, 2000); });

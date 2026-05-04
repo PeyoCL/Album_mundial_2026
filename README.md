@@ -29,6 +29,7 @@ En todas las selecciones:
 - Texto para compartir repetidas.
 - Exportacion de la lista de cambios en PDF.
 - Exportacion de la lista de cambios en Excel (`.xls`).
+- Descarga de la lista de fichas faltantes en Excel (`.xls`).
 - Exportacion e importacion de progreso en JSON.
 - Reinicio del album con confirmacion.
 - Tema claro y oscuro.
