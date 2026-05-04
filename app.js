@@ -522,7 +522,15 @@ function updateHomeProgress() {
 function renderTrades() {
   const repeated = getRepeatedList();
   document.getElementById('trades-repeated-count').textContent = getRepeatedTotal();
+  updateTradeExportButtons(repeated.length > 0);
   renderRepeated(repeated);
+}
+
+function updateTradeExportButtons(hasRepeated) {
+  ['export-trades-pdf', 'export-trades-excel', 'share-fab'].forEach(id => {
+    const btn = document.getElementById(id);
+    if (btn) btn.disabled = !hasRepeated;
+  });
 }
 
 function renderRepeated(list) {
@@ -630,6 +638,131 @@ function generateShareText() {
 }
 
 // ── TAB 4: STATS ──────────────────────────────────────────
+
+function getTradeExportRows() {
+  return getRepeatedList().map(s => ({
+    section: s.teamName,
+    code: s.code,
+    name: s.name,
+    repeated: s.extra
+  }));
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function exportTradesExcel() {
+  const rows = getTradeExportRows();
+  if (rows.length === 0) return;
+  const tableRows = rows.map(row => `
+    <tr>
+      <td>${escapeHtml(row.section)}</td>
+      <td>${escapeHtml(row.code)}</td>
+      <td>${escapeHtml(row.name)}</td>
+      <td>${row.repeated}</td>
+    </tr>
+  `).join('');
+  const html = `
+    <html>
+      <head><meta charset="UTF-8"></head>
+      <body>
+        <table border="1">
+          <tr>
+            <th>Seccion</th>
+            <th>Codigo</th>
+            <th>Lamina</th>
+            <th>Repetidas</th>
+          </tr>
+          ${tableRows}
+        </table>
+      </body>
+    </html>
+  `;
+  const blob = new Blob([html], { type: 'application/vnd.ms-excel;charset=utf-8' });
+  downloadBlob(blob, 'cambios_album_mundial_2026.xls');
+}
+
+function escapePdfText(value) {
+  return String(value)
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^\x20-\x7E]/g, '')
+    .replace(/\\/g, '\\\\')
+    .replace(/\(/g, '\\(')
+    .replace(/\)/g, '\\)');
+}
+
+function buildPdfPage(lines) {
+  const commands = ['BT', '/F1 11 Tf', '50 780 Td'];
+  lines.forEach((line, index) => {
+    if (index > 0) commands.push('0 -16 Td');
+    commands.push(`(${escapePdfText(line)}) Tj`);
+  });
+  commands.push('ET');
+  return commands.join('\n');
+}
+
+function createSimplePdf(lines) {
+  const pages = [];
+  for (let i = 0; i < lines.length; i += 42) pages.push(lines.slice(i, i + 42));
+  const objects = [
+    '1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj',
+    `2 0 obj\n<< /Type /Pages /Kids [${pages.map((_, i) => `${(i * 2) + 3} 0 R`).join(' ')}] /Count ${pages.length} >>\nendobj`
+  ];
+  const fontObj = pages.length * 2 + 3;
+  pages.forEach((pageLines, i) => {
+    const pageObj = (i * 2) + 3;
+    const contentObj = pageObj + 1;
+    const stream = buildPdfPage(pageLines);
+    objects.push(`${pageObj} 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 ${fontObj} 0 R >> >> /Contents ${contentObj} 0 R >>\nendobj`);
+    objects.push(`${contentObj} 0 obj\n<< /Length ${stream.length} >>\nstream\n${stream}\nendstream\nendobj`);
+  });
+  objects.push(`${fontObj} 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>\nendobj`);
+
+  let pdf = '%PDF-1.4\n';
+  const offsets = [0];
+  objects.forEach(obj => {
+    offsets.push(pdf.length);
+    pdf += obj + '\n';
+  });
+  const xrefOffset = pdf.length;
+  pdf += `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`;
+  offsets.slice(1).forEach(offset => {
+    pdf += `${String(offset).padStart(10, '0')} 00000 n \n`;
+  });
+  pdf += `trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF`;
+  return pdf;
+}
+
+function exportTradesPdf() {
+  const rows = getTradeExportRows();
+  if (rows.length === 0) return;
+  const lines = [
+    'Album Mundial 2026 - Lista de cambios',
+    `Coleccionista: ${state.profile.name}`,
+    `Progreso: ${getTotalProgress()}/${TOTAL_ALBUM_STICKERS}`,
+    `Total repetidas: ${getRepeatedTotal()}`,
+    '',
+    'Seccion | Codigo | Lamina | Repetidas',
+    '--------------------------------------',
+    ...rows.map(row => `${row.section} | ${row.code} | ${row.name} | +${row.repeated}`)
+  ];
+  const blob = new Blob([createSimplePdf(lines)], { type: 'application/pdf' });
+  downloadBlob(blob, 'cambios_album_mundial_2026.pdf');
+}
 
 const CONFED_COLORS = {
   'CONCACAF': '#E53935', 'CONMEBOL': '#43A047', 'UEFA': '#1E88E5',
@@ -1076,6 +1209,8 @@ function init() {
     document.getElementById('share-text').value = text;
     showModal('share-modal');
   });
+  document.getElementById('export-trades-pdf').addEventListener('click', exportTradesPdf);
+  document.getElementById('export-trades-excel').addEventListener('click', exportTradesExcel);
   document.getElementById('copy-share').addEventListener('click', () => {
     navigator.clipboard.writeText(document.getElementById('share-text').value)
       .then(() => { document.getElementById('copy-share').textContent = '✅ Copiado'; setTimeout(() => { document.getElementById('copy-share').textContent = '📋 Copiar'; }, 2000); });

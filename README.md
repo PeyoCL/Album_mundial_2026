@@ -27,6 +27,8 @@ En todas las selecciones:
 - Registro de laminas obtenidas y repetidas.
 - Lista de cambios agrupada por equipo o seccion.
 - Texto para compartir repetidas.
+- Exportacion de la lista de cambios en PDF.
+- Exportacion de la lista de cambios en Excel (`.xls`).
 - Exportacion e importacion de progreso en JSON.
 - Reinicio del album con confirmacion.
 - Tema claro y oscuro.
