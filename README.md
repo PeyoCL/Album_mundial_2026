@@ -11,6 +11,7 @@ Aplicacion web estatica para llevar el control de un album del Mundial 2026. Per
 - Total: 994 fichas.
 
 Las laminas de cada seleccion usan solo nomenclatura por codigo para evitar errores con nombres de jugadores. Ejemplo: Mexico usa `MEX1` a `MEX20`.
+Como la nomenclatura de codigo y lamina es la misma, la interfaz y las exportaciones muestran solo el campo Lamina.
 
 En todas las selecciones:
 

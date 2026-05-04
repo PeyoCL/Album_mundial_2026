@@ -40,6 +40,12 @@
                 <option value="">Todos los equipos</option>
               </select>
             </label>
+            <label class="filter-control">
+              <span>Grupo</span>
+              <select id="filter-group">
+                <option value="">Todos los grupos</option>
+              </select>
+            </label>
             <button class="clear-filters-btn" id="clear-filters" type="button">Borrar filtros</button>
           </div>
           <div class="results-count" id="results-count">50 secciones</div>
@@ -49,6 +55,7 @@
           <span class="sort-indicator" id="sort-indicator"></span>
           <button class="sort-btn active" data-sort="progress-desc">Más completos</button>
           <button class="sort-btn" data-sort="progress-asc">Menos completos</button>
+          <button class="sort-btn" data-sort="team-az">Equipos A-Z</button>
           <button class="sort-btn" data-sort="all">Todos</button>
         </div>
       </header>

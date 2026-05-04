@@ -1,17 +1,17 @@
-// ============================================================
-// DATA.JS — Álbum Panini Mundial 2026
+﻿// ============================================================
+// DATA.JS â€” Ãlbum Panini Mundial 2026
 // NOTA: Grupos basados en el sorteo oficial FIFA (5 dic 2024).
-// Jugadores según convocatorias más recientes. Marcar // verificar
+// Jugadores segÃºn convocatorias mÃ¡s recientes. Marcar // verificar
 // donde hay incertidumbre. Actualiza este archivo si hay cambios.
 // ============================================================
 
 const POSITIONS = { POR: 'Portero', DEF: 'Defensa', MED: 'Mediocampista', DEL: 'Delantero' };
 
 const SPECIAL_STICKERS = [
-  { code: 'SEC-01', name: 'Presentación del torneo' },
+  { code: 'SEC-01', name: 'PresentaciÃ³n del torneo' },
   { code: 'SEC-02', name: 'Historia del Mundial' },
   { code: 'SEC-03', name: 'Mascota oficial' },
-  { code: 'SEC-04', name: 'Balón oficial' },
+  { code: 'SEC-04', name: 'BalÃ³n oficial' },
   { code: 'SEC-05', name: 'Trofeo FIFA' },
   { code: 'SEC-06', name: 'Estadio AT&T (Arlington)' },
   { code: 'SEC-07', name: 'Estadio Rose Bowl (LA)' },
@@ -24,7 +24,7 @@ const SPECIAL_STICKERS = [
   { code: 'SEC-14', name: 'Estadio Allegiant (LV)' },
   { code: 'SEC-15', name: 'Estadio Seattle' },
   { code: 'SEC-16', name: 'Estadio BC Place (Vancouver)' },
-  { code: 'SEC-17', name: 'Estadio Azteca (Ciudad de México)' },
+  { code: 'SEC-17', name: 'Estadio Azteca (Ciudad de MÃ©xico)' },
   { code: 'SEC-18', name: 'Estadio Estadio BBVA (Monterrey)' },
   { code: 'SEC-19', name: 'Calendario de partidos' },
   { code: 'SEC-20', name: 'Sede y organizadores' },
@@ -33,12 +33,12 @@ const SPECIAL_STICKERS = [
 const EXTRA_STICKERS = [
   // Dorados (7)
   { code: 'EXT-G01', name: 'Lionel Messi', team: 'ARG', variant: 'gold' },
-  { code: 'EXT-G02', name: 'Kylian Mbappé', team: 'FRA', variant: 'gold' },
+  { code: 'EXT-G02', name: 'Kylian MbappÃ©', team: 'FRA', variant: 'gold' },
   { code: 'EXT-G03', name: 'Erling Haaland', team: 'NOR', variant: 'gold' }, // verificar
-  { code: 'EXT-G04', name: 'Vinícius Jr.', team: 'BRA', variant: 'gold' },
+  { code: 'EXT-G04', name: 'VinÃ­cius Jr.', team: 'BRA', variant: 'gold' },
   { code: 'EXT-G05', name: 'Jude Bellingham', team: 'ENG', variant: 'gold' },
   { code: 'EXT-G06', name: 'Cristiano Ronaldo', team: 'POR', variant: 'gold' },
-  { code: 'EXT-G07', name: 'Lautaro Martínez', team: 'ARG', variant: 'gold' },
+  { code: 'EXT-G07', name: 'Lautaro MartÃ­nez', team: 'ARG', variant: 'gold' },
   // Plateados (8)
   { code: 'EXT-S01', name: 'Son Heung-min', team: 'KOR', variant: 'silver' },
   { code: 'EXT-S02', name: 'Mohamed Salah', team: 'EGY', variant: 'silver' },
@@ -49,8 +49,8 @@ const EXTRA_STICKERS = [
   { code: 'EXT-S07', name: 'Florian Wirtz', team: 'GER', variant: 'silver' },
   { code: 'EXT-S08', name: 'Bukayo Saka', team: 'ENG', variant: 'silver' },
   // Bronce (7)
-  { code: 'EXT-B01', name: 'Luis Díaz', team: 'COL', variant: 'bronze' },
-  { code: 'EXT-B02', name: 'Darwin Núñez', team: 'URU', variant: 'bronze' },
+  { code: 'EXT-B01', name: 'Luis DÃ­az', team: 'COL', variant: 'bronze' },
+  { code: 'EXT-B02', name: 'Darwin NÃºÃ±ez', team: 'URU', variant: 'bronze' },
   { code: 'EXT-B03', name: 'Victor Osimhen', team: 'NGA', variant: 'bronze' },
   { code: 'EXT-B04', name: 'Takefusa Kubo', team: 'JPN', variant: 'bronze' },
   { code: 'EXT-B05', name: 'Frenkie de Jong', team: 'NED', variant: 'bronze' },
@@ -99,91 +99,91 @@ function makeTeam(code, name, flag, group, debutant, players) {
 }
 
 const TEAMS_DATA = [
-  // ── GRUPO A ──────────────────────────────────────────────
-  makeTeam('MEX', 'México', '🇲🇽', 'A', false, [
+  // â”€â”€ GRUPO A â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  makeTeam('MEX', 'México', 'MEX', 'A', false, [
     ['Guillermo Ochoa', 'Portero'],
-    ['Luis Malagón', 'Portero'],
+    ['Luis MalagÃ³n', 'Portero'],
     ['Rodolfo Cota', 'Portero'],
-    ['Jorge Sánchez', 'Defensa'],
-    ['César Montes', 'Defensa'],
-    ['Johan Vásquez', 'Defensa'],
+    ['Jorge SÃ¡nchez', 'Defensa'],
+    ['CÃ©sar Montes', 'Defensa'],
+    ['Johan VÃ¡squez', 'Defensa'],
     ['Gerardo Arteaga', 'Defensa'],
-    ['Julián Araújo', 'Defensa'],
+    ['JuliÃ¡n AraÃºjo', 'Defensa'],
     ['Jorge Moreno', 'Defensa'], // verificar
-    ['Edson Álvarez', 'Mediocampista'],
-    ['Carlos Rodríguez', 'Mediocampista'],
-    ['Orbelín Pineda', 'Mediocampista'],
+    ['Edson Ãlvarez', 'Mediocampista'],
+    ['Carlos RodrÃ­guez', 'Mediocampista'],
+    ['OrbelÃ­n Pineda', 'Mediocampista'],
     ['Roberto Alvarado', 'Mediocampista'],
     ['Luis Romo', 'Mediocampista'], // verificar
-    ['Érick Gutiérrez', 'Mediocampista'], // verificar
+    ['Ã‰rick GutiÃ©rrez', 'Mediocampista'], // verificar
     ['Hirving Lozano', 'Delantero'],
-    ['Henry Martín', 'Delantero'],
-    ['Santiago Giménez', 'Delantero'],
+    ['Henry MartÃ­n', 'Delantero'],
+    ['Santiago GimÃ©nez', 'Delantero'],
   ]),
-  makeTeam('ECU', 'Ecuador', '🇪🇨', 'A', false, [
-    ['Hernán Galíndez', 'Portero'],
-    ['Alexander Domínguez', 'Portero'],
-    ['Wellington Ramírez', 'Portero'], // verificar
-    ['Piero Hincapié', 'Defensa'],
+  makeTeam('RSA', 'Sudáfrica', 'RSA', 'A', false, [
+    ['HernÃ¡n GalÃ­ndez', 'Portero'],
+    ['Alexander DomÃ­nguez', 'Portero'],
+    ['Wellington RamÃ­rez', 'Portero'], // verificar
+    ['Piero HincapiÃ©', 'Defensa'],
     ['Byron Castillo', 'Defensa'],
-    ['Pervis Estupiñán', 'Defensa'],
+    ['Pervis EstupiÃ±Ã¡n', 'Defensa'],
     ['Jackson Porozo', 'Defensa'],
     ['Diego Palacios', 'Defensa'],
-    ['Félix Torres', 'Defensa'],
+    ['FÃ©lix Torres', 'Defensa'],
     ['Carlos Gruezo', 'Mediocampista'],
-    ['Moisés Caicedo', 'Mediocampista'],
-    ['Jhegson Méndez', 'Mediocampista'],
-    ['Ángel Mena', 'Mediocampista'],
+    ['MoisÃ©s Caicedo', 'Mediocampista'],
+    ['Jhegson MÃ©ndez', 'Mediocampista'],
+    ['Ãngel Mena', 'Mediocampista'],
     ['Jeremy Sarmiento', 'Mediocampista'],
     ['Gonzalo Plata', 'Mediocampista'],
     ['Enner Valencia', 'Delantero'],
     ['Michael Estrada', 'Delantero'],
     ['Jordy Caicedo', 'Delantero'], // verificar
   ]),
-  makeTeam('SEN', 'Senegal', '🇸🇳', 'A', false, [
-    ['Édouard Mendy', 'Portero'],
-    ['Sény Dieng', 'Portero'],
+  makeTeam('KOR', 'Korea Republic', 'KOR', 'A', false, [
+    ['Ã‰douard Mendy', 'Portero'],
+    ['SÃ©ny Dieng', 'Portero'],
     ['Alfred Gomis', 'Portero'],
     ['Kalidou Koulibaly', 'Defensa'],
     ['Abdou Diallo', 'Defensa'],
-    ['Fodé Ballo-Touré', 'Defensa'],
+    ['FodÃ© Ballo-TourÃ©', 'Defensa'],
     ['Youssouf Sabaly', 'Defensa'],
-    ['Moussa Niakhaté', 'Defensa'],
+    ['Moussa NiakhatÃ©', 'Defensa'],
     ['Formose Mendy', 'Defensa'], // verificar
-    ['Cheikhou Kouyaté', 'Mediocampista'],
+    ['Cheikhou KouyatÃ©', 'Mediocampista'],
     ['Nampalys Mendy', 'Mediocampista'],
     ['Pape Gueye', 'Mediocampista'],
     ['Krepin Diatta', 'Mediocampista'],
-    ['Pathé Ciss', 'Mediocampista'],
+    ['PathÃ© Ciss', 'Mediocampista'],
     ['Lamine Camara', 'Mediocampista'], // verificar
-    ['Sadio Mané', 'Delantero'],
-    ['Ismaïla Sarr', 'Delantero'],
+    ['Sadio ManÃ©', 'Delantero'],
+    ['IsmaÃ¯la Sarr', 'Delantero'],
     ['Habib Diallo', 'Delantero'],
   ]),
-  makeTeam('ROU', 'Rumanía', '🇷🇴', 'A', false, [ // verificar grupo
-    ['Florin Niță', 'Portero'],
-    ['Horațiu Moldovan', 'Portero'],
-    ['Ștefan Târnovanu', 'Portero'],
-    ['Andrei Rațiu', 'Defensa'],
-    ['Radu Drăgușin', 'Defensa'],
+  makeTeam('CZE', 'Czechia', 'CZE', 'A', false, [ // verificar grupo
+    ['Florin NiÈ›Äƒ', 'Portero'],
+    ['HoraÈ›iu Moldovan', 'Portero'],
+    ['È˜tefan TÃ¢rnovanu', 'Portero'],
+    ['Andrei RaÈ›iu', 'Defensa'],
+    ['Radu DrÄƒguÈ™in', 'Defensa'],
     ['Cristian Manea', 'Defensa'],
     ['Adrian Rus', 'Defensa'],
-    ['Ionuț Nedelcearu', 'Defensa'],
-    ['Bogdan Racovițan', 'Defensa'],
+    ['IonuÈ› Nedelcearu', 'Defensa'],
+    ['Bogdan RacoviÈ›an', 'Defensa'],
     ['Razvan Marin', 'Mediocampista'],
     ['Deian Sorescu', 'Mediocampista'],
-    ['Nicușor Bancu', 'Mediocampista'],
+    ['NicuÈ™or Bancu', 'Mediocampista'],
     ['Octavian Popescu', 'Mediocampista'],
     ['Dennis Man', 'Mediocampista'],
-    ['Alexandru Ioniță', 'Mediocampista'], // verificar
+    ['Alexandru IoniÈ›Äƒ', 'Mediocampista'], // verificar
     ['Denis Alibec', 'Delantero'],
     ['Florinel Coman', 'Delantero'],
-    ['George Pușcaș', 'Delantero'],
+    ['George PuÈ™caÈ™', 'Delantero'],
   ]),
 
-  // ── GRUPO B ──────────────────────────────────────────────
-  makeTeam('CAN', 'Canadá', '🇨🇦', 'B', false, [
-    ['Maxime Crépeau', 'Portero'],
+  // â”€â”€ GRUPO B â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  makeTeam('CAN', 'Canadá', 'CAN', 'B', false, [
+    ['Maxime CrÃ©peau', 'Portero'],
     ['Milan Borjan', 'Portero'],
     ['James Pantemis', 'Portero'],
     ['Alistair Johnston', 'Defensa'],
@@ -193,7 +193,7 @@ const TEAMS_DATA = [
     ['Scott Kennedy', 'Defensa'],
     ['Richie Laryea', 'Defensa'],
     ['Atiba Hutchinson', 'Mediocampista'],
-    ['Stephen Eustáquio', 'Mediocampista'],
+    ['Stephen EustÃ¡quio', 'Mediocampista'],
     ['Jonathan Osorio', 'Mediocampista'],
     ['Samuel Piette', 'Mediocampista'],
     ['Mark-Anthony Kaye', 'Mediocampista'],
@@ -202,13 +202,13 @@ const TEAMS_DATA = [
     ['Jonathan David', 'Delantero'],
     ['Cyle Larin', 'Delantero'],
   ]),
-  makeTeam('MAR', 'Marruecos', '🇲🇦', 'B', false, [
+  makeTeam('BIH', 'Bosnia y Herzegovina', 'BIH', 'B', false, [
     ['Yassine Bounou', 'Portero'],
     ['Munir Mohamedi', 'Portero'],
     ['Ahmed Tagnaouti', 'Portero'],
     ['Noussair Mazraoui', 'Defensa'],
     ['Achraf Hakimi', 'Defensa'],
-    ['Romain Saïss', 'Defensa'],
+    ['Romain SaÃ¯ss', 'Defensa'],
     ['Nayef Aguerd', 'Defensa'],
     ['Jawad El-Yamiq', 'Defensa'],
     ['Adam Masina', 'Defensa'],
@@ -222,28 +222,28 @@ const TEAMS_DATA = [
     ['Youssef En-Nesyri', 'Delantero'],
     ['Soufiane Boufal', 'Delantero'],
   ]),
-  makeTeam('CRO', 'Croacia', '🇭🇷', 'B', false, [
-    ['Dominik Livaković', 'Portero'],
-    ['Ivo Grbić', 'Portero'],
-    ['Nedeljko Labrović', 'Portero'],
-    ['Josip Šutalo', 'Defensa'],
-    ['Duje Ćaleta-Car', 'Defensa'],
-    ['Joško Gvardiol', 'Defensa'],
+  makeTeam('QAT', 'Qatar', 'QAT', 'B', false, [
+    ['Dominik LivakoviÄ‡', 'Portero'],
+    ['Ivo GrbiÄ‡', 'Portero'],
+    ['Nedeljko LabroviÄ‡', 'Portero'],
+    ['Josip Å utalo', 'Defensa'],
+    ['Duje Ä†aleta-Car', 'Defensa'],
+    ['JoÅ¡ko Gvardiol', 'Defensa'],
     ['Borna Sosa', 'Defensa'],
-    ['Josip Juranović', 'Defensa'],
+    ['Josip JuranoviÄ‡', 'Defensa'],
     ['Domagoj Vida', 'Defensa'], // verificar
-    ['Luka Modrić', 'Mediocampista'],
-    ['Marcelo Brozović', 'Mediocampista'],
-    ['Mateo Kovačić', 'Mediocampista'],
-    ['Mario Pašalić', 'Mediocampista'],
+    ['Luka ModriÄ‡', 'Mediocampista'],
+    ['Marcelo BrozoviÄ‡', 'Mediocampista'],
+    ['Mateo KovaÄiÄ‡', 'Mediocampista'],
+    ['Mario PaÅ¡aliÄ‡', 'Mediocampista'],
     ['Lovro Majer', 'Mediocampista'],
-    ['Luka Sučić', 'Mediocampista'],
+    ['Luka SuÄiÄ‡', 'Mediocampista'],
     ['Ante Budimir', 'Delantero'],
-    ['Ivan Perišić', 'Delantero'],
-    ['Andrej Kramarić', 'Delantero'],
+    ['Ivan PeriÅ¡iÄ‡', 'Delantero'],
+    ['Andrej KramariÄ‡', 'Delantero'],
   ]),
-  makeTeam('PAN', 'Panamá', '🇵🇦', 'B', false, [
-    ['Luis Mejía', 'Portero'],
+  makeTeam('SUI', 'Suiza', 'SUI', 'B', false, [
+    ['Luis MejÃ­a', 'Portero'],
     ['Orlando Mosquera', 'Portero'],
     ['Gianluca Cariolato', 'Portero'],
     ['Michael Murillo', 'Defensa'],
@@ -251,40 +251,40 @@ const TEAMS_DATA = [
     ['Fidel Escobar', 'Defensa'],
     ['Eric Davis', 'Defensa'],
     ['Roderick Miller', 'Defensa'],
-    ['Andrés Andrade', 'Defensa'],
+    ['AndrÃ©s Andrade', 'Defensa'],
     ['Adalberto Carrasquilla', 'Mediocampista'],
     ['Alberto Quintero', 'Mediocampista'],
-    ['Aníbal Godoy', 'Mediocampista'],
-    ['Edgar Bárcenas', 'Mediocampista'],
-    ['Álex Rodríguez', 'Mediocampista'], // verificar
+    ['AnÃ­bal Godoy', 'Mediocampista'],
+    ['Edgar BÃ¡rcenas', 'Mediocampista'],
+    ['Ãlex RodrÃ­guez', 'Mediocampista'], // verificar
     ['Abdiel Ayarza', 'Mediocampista'], // verificar
-    ['Ismael Díaz', 'Delantero'],
+    ['Ismael DÃ­az', 'Delantero'],
     ['Cecilio Waterman', 'Delantero'],
-    ['José Fajardo', 'Delantero'],
+    ['JosÃ© Fajardo', 'Delantero'],
   ]),
 
-  // ── GRUPO C ──────────────────────────────────────────────
-  makeTeam('BRA', 'Brasil', '🇧🇷', 'C', false, [
+  // â”€â”€ GRUPO C â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  makeTeam('BRA', 'Brasil', 'BRA', 'C', false, [
     ['Alisson', 'Portero'],
-    ['Éderson', 'Portero'],
+    ['Ã‰derson', 'Portero'],
     ['Weverton', 'Portero'],
     ['Danilo', 'Defensa'],
-    ['Éder Militão', 'Defensa'],
+    ['Ã‰der MilitÃ£o', 'Defensa'],
     ['Marquinhos', 'Defensa'],
-    ['Gabriel Magalhães', 'Defensa'],
+    ['Gabriel MagalhÃ£es', 'Defensa'],
     ['Guilherme Arana', 'Defensa'],
     ['Alex Sandro', 'Defensa'], // verificar
     ['Casemiro', 'Mediocampista'],
-    ['Bruno Guimarães', 'Mediocampista'],
-    ['Lucas Paquetá', 'Mediocampista'],
+    ['Bruno GuimarÃ£es', 'Mediocampista'],
+    ['Lucas PaquetÃ¡', 'Mediocampista'],
     ['Raphinha', 'Mediocampista'],
     ['Rodrygo', 'Mediocampista'],
     ['Gerson', 'Mediocampista'],
-    ['Vinícius Jr.', 'Delantero'],
+    ['VinÃ­cius Jr.', 'Delantero'],
     ['Endrick', 'Delantero'],
     ['Gabriel Martinelli', 'Delantero'],
   ]),
-  makeTeam('JPN', 'Japón', '🇯🇵', 'C', false, [
+  makeTeam('MAR', 'Marruecos', 'MAR', 'C', false, [
     ['Shuichi Gonda', 'Portero'],
     ['Daniel Schmidt', 'Portero'],
     ['Zion Suzuki', 'Portero'],
@@ -294,7 +294,7 @@ const TEAMS_DATA = [
     ['Shogo Taniguchi', 'Defensa'],
     ['Yuto Nagatomo', 'Defensa'],
     ['Miki Yamane', 'Defensa'],
-    ['Wataru Endō', 'Mediocampista'],
+    ['Wataru EndÅ', 'Mediocampista'],
     ['Hidemasa Morita', 'Mediocampista'],
     ['Junya Ito', 'Mediocampista'],
     ['Takefusa Kubo', 'Mediocampista'],
@@ -304,8 +304,8 @@ const TEAMS_DATA = [
     ['Ayase Ueda', 'Delantero'],
     ['Shuto Machino', 'Delantero'], // verificar
   ]),
-  makeTeam('CMR', 'Camerún', '🇨🇲', 'C', false, [
-    ['André Onana', 'Portero'],
+  makeTeam('HAI', 'Haití', 'HAI', 'C', false, [
+    ['AndrÃ© Onana', 'Portero'],
     ['Devis Epassy', 'Portero'],
     ['Simon Ngapandouetnbu', 'Portero'],
     ['Collins Fai', 'Defensa'],
@@ -315,16 +315,16 @@ const TEAMS_DATA = [
     ['Olivier Mbaizo', 'Defensa'],
     ['Christopher Wooh', 'Defensa'],
     ['Martin Hongla', 'Mediocampista'],
-    ['André Zambo Anguissa', 'Mediocampista'],
+    ['AndrÃ© Zambo Anguissa', 'Mediocampista'],
     ['Samuel Gouet', 'Mediocampista'],
-    ['Gaël Ondoua', 'Mediocampista'], // verificar
+    ['GaÃ«l Ondoua', 'Mediocampista'], // verificar
     ['Pierre Kunde', 'Mediocampista'],
     ['Olivier Ntcham', 'Mediocampista'], // verificar
     ['Vincent Aboubakar', 'Delantero'],
     ['Karl Toko Ekambi', 'Delantero'],
     ['Bryan Mbeumo', 'Delantero'],
   ]),
-  makeTeam('NZL', 'Nueva Zelanda', '🇳🇿', 'C', false, [ // verificar grupo
+  makeTeam('SCO', 'Escocia', 'SCO', 'C', false, [ // verificar grupo
     ['Stefan Marinovic', 'Portero'],
     ['Michael Woud', 'Portero'],
     ['Max Crocombe', 'Portero'],
@@ -345,12 +345,12 @@ const TEAMS_DATA = [
     ['Dane Ingham', 'Delantero'], // verificar
   ]),
 
-  // ── GRUPO D ──────────────────────────────────────────────
-  makeTeam('USA', 'Estados Unidos', '🇺🇸', 'D', false, [
+  // â”€â”€ GRUPO D â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  makeTeam('USA', 'Estados Unidos', 'USA', 'D', false, [
     ['Matt Turner', 'Portero'],
     ['Ethan Horvath', 'Portero'],
     ['Gabriel Slonina', 'Portero'],
-    ['Sergiño Dest', 'Defensa'],
+    ['SergiÃ±o Dest', 'Defensa'],
     ['Tim Ream', 'Defensa'],
     ['Chris Richards', 'Defensa'],
     ['Miles Robinson', 'Defensa'],
@@ -366,7 +366,7 @@ const TEAMS_DATA = [
     ['Josh Sargent', 'Delantero'],
     ['Folarin Balogun', 'Delantero'],
   ]),
-  makeTeam('KSA', 'Arabia Saudita', '🇸🇦', 'D', false, [
+  makeTeam('PAR', 'Paraguay', 'PAR', 'D', false, [
     ['Mohammed Al-Owais', 'Portero'],
     ['Nawaf Al-Aqidi', 'Portero'],
     ['Yasser Al-Mosailem', 'Portero'],
@@ -386,14 +386,14 @@ const TEAMS_DATA = [
     ['Firas Al-Buraikan', 'Delantero'],
     ['Abdullah Al-Hamdan', 'Delantero'],
   ]),
-  makeTeam('SUI', 'Suiza', '🇨🇭', 'D', false, [
+  makeTeam('AUS', 'Australia', 'AUS', 'D', false, [
     ['Yann Sommer', 'Portero'],
     ['Gregor Kobel', 'Portero'],
-    ['Philipp Köhn', 'Portero'],
+    ['Philipp KÃ¶hn', 'Portero'],
     ['Manuel Akanji', 'Defensa'],
     ['Nico Elvedi', 'Defensa'],
-    ['Fabian Schär', 'Defensa'],
-    ['Ricardo Rodríguez', 'Defensa'],
+    ['Fabian SchÃ¤r', 'Defensa'],
+    ['Ricardo RodrÃ­guez', 'Defensa'],
     ['Silvan Widmer', 'Defensa'],
     ['Kevin Mbabu', 'Defensa'],
     ['Granit Xhaka', 'Mediocampista'],
@@ -404,9 +404,9 @@ const TEAMS_DATA = [
     ['Dan Ndoye', 'Mediocampista'],
     ['Breel Embolo', 'Delantero'],
     ['Noah Okafor', 'Delantero'],
-    ['Haris Seferović', 'Delantero'],
+    ['Haris SeferoviÄ‡', 'Delantero'],
   ]),
-  makeTeam('GHA', 'Ghana', '🇬🇭', 'D', false, [
+  makeTeam('TUR', 'Turquía', 'TUR', 'D', false, [
     ['Lawrence Ati-Zigi', 'Portero'],
     ['Ibrahim Danlad', 'Portero'],
     ['Joe Wollacott', 'Portero'],
@@ -418,7 +418,7 @@ const TEAMS_DATA = [
     ['Baba Abdul Rahman', 'Defensa'],
     ['Thomas Partey', 'Mediocampista'],
     ['Idrissu Baba', 'Mediocampista'],
-    ['André Ayew', 'Mediocampista'],
+    ['AndrÃ© Ayew', 'Mediocampista'],
     ['Salis Abdul Samed', 'Mediocampista'],
     ['Osman Bukari', 'Mediocampista'],
     ['Jordan Ayew', 'Mediocampista'],
@@ -427,32 +427,32 @@ const TEAMS_DATA = [
     ['Kamaldeen Sulemana', 'Delantero'],
   ]),
 
-  // ── GRUPO E ──────────────────────────────────────────────
-  makeTeam('GER', 'Alemania', '🇩🇪', 'E', false, [
+  // â”€â”€ GRUPO E â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  makeTeam('GER', 'Alemania', 'GER', 'E', false, [
     ['Manuel Neuer', 'Portero'],
-    ['Marc-André ter Stegen', 'Portero'],
+    ['Marc-AndrÃ© ter Stegen', 'Portero'],
     ['Oliver Baumann', 'Portero'],
     ['Joshua Kimmich', 'Defensa'],
-    ['Antonio Rüdiger', 'Defensa'],
+    ['Antonio RÃ¼diger', 'Defensa'],
     ['Jonathan Tah', 'Defensa'],
     ['David Raum', 'Defensa'],
     ['Thilo Kehrer', 'Defensa'],
     ['Benjamin Henrichs', 'Defensa'],
-    ['Ilkay Gündoğan', 'Mediocampista'],
+    ['Ilkay GÃ¼ndoÄŸan', 'Mediocampista'],
     ['Leon Goretzka', 'Mediocampista'],
     ['Florian Wirtz', 'Mediocampista'],
     ['Jamal Musiala', 'Mediocampista'],
-    ['Thomas Müller', 'Mediocampista'],
+    ['Thomas MÃ¼ller', 'Mediocampista'],
     ['Kai Havertz', 'Mediocampista'],
-    ['Leroy Sané', 'Delantero'],
+    ['Leroy SanÃ©', 'Delantero'],
     ['Serge Gnabry', 'Delantero'],
-    ['Niclas Füllkrug', 'Delantero'],
+    ['Niclas FÃ¼llkrug', 'Delantero'],
   ]),
-  makeTeam('AUS', 'Australia', '🇦🇺', 'E', false, [
+  makeTeam('CUW', 'Curazao', 'CUW', 'E', false, [
     ['Mathew Ryan', 'Portero'],
     ['Danny Vukovic', 'Portero'],
     ['Joe Gauci', 'Portero'],
-    ['Miloš Degenek', 'Defensa'],
+    ['MiloÅ¡ Degenek', 'Defensa'],
     ['Harry Souttar', 'Defensa'],
     ['Aziz Behich', 'Defensa'],
     ['Jason Davidson', 'Defensa'],
@@ -468,49 +468,49 @@ const TEAMS_DATA = [
     ['Mitchell Duke', 'Delantero'],
     ['Martin Boyle', 'Delantero'],
   ]),
-  makeTeam('SRB', 'Serbia', '🇷🇸', 'E', false, [
-    ['Predrag Rajković', 'Portero'],
-    ['Vanja Milinković-Savić', 'Portero'],
-    ['Marko Dmitrović', 'Portero'],
-    ['Strahinja Pavlović', 'Defensa'],
-    ['Miloš Veljković', 'Defensa'],
-    ['Srđan Babić', 'Defensa'],
-    ['Nemanja Milunović', 'Defensa'],
-    ['Filip Mladenović', 'Defensa'],
-    ['Nikola Milenković', 'Defensa'],
-    ['Sergej Milinković-Savić', 'Mediocampista'],
+  makeTeam('CIV', 'Costa de Marfil', 'CIV', 'E', false, [
+    ['Predrag RajkoviÄ‡', 'Portero'],
+    ['Vanja MilinkoviÄ‡-SaviÄ‡', 'Portero'],
+    ['Marko DmitroviÄ‡', 'Portero'],
+    ['Strahinja PavloviÄ‡', 'Defensa'],
+    ['MiloÅ¡ VeljkoviÄ‡', 'Defensa'],
+    ['SrÄ‘an BabiÄ‡', 'Defensa'],
+    ['Nemanja MilunoviÄ‡', 'Defensa'],
+    ['Filip MladenoviÄ‡', 'Defensa'],
+    ['Nikola MilenkoviÄ‡', 'Defensa'],
+    ['Sergej MilinkoviÄ‡-SaviÄ‡', 'Mediocampista'],
     ['Nemanja Gudelj', 'Mediocampista'],
-    ['Ivan Ilić', 'Mediocampista'],
-    ['Filip Kostić', 'Mediocampista'],
-    ['Saša Lukić', 'Mediocampista'],
-    ['Andrija Živković', 'Mediocampista'],
-    ['Dušan Vlahović', 'Delantero'],
-    ['Luka Jović', 'Delantero'],
-    ['Aleksandar Mitrović', 'Delantero'],
+    ['Ivan IliÄ‡', 'Mediocampista'],
+    ['Filip KostiÄ‡', 'Mediocampista'],
+    ['SaÅ¡a LukiÄ‡', 'Mediocampista'],
+    ['Andrija Å½ivkoviÄ‡', 'Mediocampista'],
+    ['DuÅ¡an VlahoviÄ‡', 'Delantero'],
+    ['Luka JoviÄ‡', 'Delantero'],
+    ['Aleksandar MitroviÄ‡', 'Delantero'],
   ]),
-  makeTeam('HON', 'Honduras', '🇭🇳', 'E', false, [ // verificar grupo
-    ['Luis López', 'Portero'],
+  makeTeam('ECU', 'Ecuador', 'ECU', 'E', false, [ // verificar grupo
+    ['Luis LÃ³pez', 'Portero'],
     ['Harold Fonseca', 'Portero'],
     ['Marlon Licona', 'Portero'],
     ['Denil Maldonado', 'Defensa'],
     ['Marcelo Pereira', 'Defensa'],
-    ['José García', 'Defensa'],
+    ['JosÃ© GarcÃ­a', 'Defensa'],
     ['Jonathan Rubio', 'Defensa'],
     ['Maynor Figueroa', 'Defensa'], // verificar
     ['Elvin Casildo', 'Defensa'],
     ['Bryan Moya', 'Mediocampista'],
     ['Deiby Flores', 'Mediocampista'],
     ['Luis Palma', 'Mediocampista'],
-    ['Diego Rodríguez', 'Mediocampista'], // verificar
+    ['Diego RodrÃ­guez', 'Mediocampista'], // verificar
     ['Kervin Arriaga', 'Mediocampista'],
-    ['Edwin Rodríguez', 'Mediocampista'], // verificar
+    ['Edwin RodrÃ­guez', 'Mediocampista'], // verificar
     ['Romell Quioto', 'Delantero'],
     ['Alberth Elis', 'Delantero'],
-    ['Cristian Cálix', 'Delantero'],
+    ['Cristian CÃ¡lix', 'Delantero'],
   ]),
 
-  // ── GRUPO F ──────────────────────────────────────────────
-  makeTeam('NED', 'Países Bajos', '🇳🇱', 'F', false, [
+  // â”€â”€ GRUPO F â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  makeTeam('NED', 'Países Bajos', 'NED', 'F', false, [
     ['Jasper Cillessen', 'Portero'],
     ['Remko Pasveer', 'Portero'],
     ['Mark Flekken', 'Portero'],
@@ -519,7 +519,7 @@ const TEAMS_DATA = [
     ['Matthijs de Ligt', 'Defensa'],
     ['Denzel Dumfries', 'Defensa'],
     ['Daley Blind', 'Defensa'],
-    ['Nathan Aké', 'Defensa'],
+    ['Nathan AkÃ©', 'Defensa'],
     ['Frenkie de Jong', 'Mediocampista'],
     ['Georginio Wijnaldum', 'Mediocampista'],
     ['Teun Koopmeiners', 'Mediocampista'],
@@ -530,7 +530,7 @@ const TEAMS_DATA = [
     ['Cody Gakpo', 'Delantero'],
     ['Donyell Malen', 'Delantero'],
   ]),
-  makeTeam('KOR', 'Corea del Sur', '🇰🇷', 'F', false, [
+  makeTeam('JPN', 'Japón', 'JPN', 'F', false, [
     ['Kim Seung-gyu', 'Portero'],
     ['Cho Hyun-woo', 'Portero'],
     ['Song Bum-keun', 'Portero'],
@@ -550,14 +550,14 @@ const TEAMS_DATA = [
     ['Hwang Hee-chan', 'Delantero'],
     ['Cho Gue-sung', 'Delantero'],
   ]),
-  makeTeam('CUW', 'Curazao', '🇨🇼', 'F', true, [
+  makeTeam('SWE', 'Suecia', 'SWE', 'F', false, [
     ['Eloy Room', 'Portero'],
     ['Rainer Seip', 'Portero'],
     ['Averil Maynard', 'Portero'], // verificar
     ['Cuco Martina', 'Defensa'],
     ['Etienne Reijnen', 'Defensa'],
     ['Jair Marques', 'Defensa'],
-    ['Gregório Neto', 'Defensa'],
+    ['GregÃ³rio Neto', 'Defensa'],
     ['Neraldo Kartoredjo', 'Defensa'], // verificar
     ['Tjerk Boymans', 'Defensa'], // verificar
     ['Leandro Bacuna', 'Mediocampista'],
@@ -568,9 +568,9 @@ const TEAMS_DATA = [
     ['Jarchinio Antonia', 'Mediocampista'],
     ['Gino van Kessel', 'Delantero'],
     ['Jurich Carolina', 'Delantero'],
-    ['Cédric Willocx', 'Delantero'], // verificar
+    ['CÃ©dric Willocx', 'Delantero'], // verificar
   ]),
-  makeTeam('RSA', 'Sudáfrica', '🇿🇦', 'F', false, [ // verificar grupo
+  makeTeam('TUN', 'Túnez', 'TUN', 'F', false, [ // verificar grupo
     ['Ronwen Williams', 'Portero'],
     ['Ricardo Goss', 'Portero'],
     ['Veli Mothwa', 'Portero'],
@@ -591,8 +591,8 @@ const TEAMS_DATA = [
     ['Evidence Makgopa', 'Delantero'],
   ]),
 
-  // ── GRUPO G ──────────────────────────────────────────────
-  makeTeam('BEL', 'Bélgica', '🇧🇪', 'G', false, [
+  // â”€â”€ GRUPO G â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  makeTeam('BEL', 'Bélgica', 'BEL', 'G', false, [
     ['Thibaut Courtois', 'Portero'],
     ['Simon Mignolet', 'Portero'],
     ['Koen Casteels', 'Portero'],
@@ -612,7 +612,7 @@ const TEAMS_DATA = [
     ['Lois Openda', 'Delantero'],
     ['Dries Mertens', 'Delantero'],
   ]),
-  makeTeam('ITA', 'Italia', '🇮🇹', 'G', false, [
+  makeTeam('EGV', 'Egipto', 'EGV', 'G', false, [
     ['Gianluigi Donnarumma', 'Portero'],
     ['Alex Meret', 'Portero'],
     ['Guglielmo Vicario', 'Portero'],
@@ -622,7 +622,7 @@ const TEAMS_DATA = [
     ['Giorgio Scalvini', 'Defensa'],
     ['Leonardo Spinazzola', 'Defensa'],
     ['Destiny Udogie', 'Defensa'],
-    ['Nicolò Barella', 'Mediocampista'],
+    ['NicolÃ² Barella', 'Mediocampista'],
     ['Jorginho', 'Mediocampista'],
     ['Lorenzo Pellegrini', 'Mediocampista'],
     ['Sandro Tonali', 'Mediocampista'],
@@ -632,27 +632,27 @@ const TEAMS_DATA = [
     ['Giacomo Raspadori', 'Delantero'],
     ['Mateo Retegui', 'Delantero'],
   ]),
-  makeTeam('BOL', 'Bolivia', '🇧🇴', 'G', false, [ // verificar clasificación
+  makeTeam('IRN', 'Irán', 'IRN', 'G', false, [ // verificar clasificaciÃ³n
     ['Carlos Lampe', 'Portero'],
     ['Guillermo Viscarra', 'Portero'],
-    ['Rubén Cordano', 'Portero'],
-    ['José Sagredo', 'Defensa'],
+    ['RubÃ©n Cordano', 'Portero'],
+    ['JosÃ© Sagredo', 'Defensa'],
     ['Diego Bejarano', 'Defensa'],
-    ['Marcelo Suárez', 'Defensa'],
-    ['Leonardo Ramírez', 'Defensa'],
-    ['Roberto Fernández', 'Defensa'],
-    ['Luis Haquín', 'Defensa'],
+    ['Marcelo SuÃ¡rez', 'Defensa'],
+    ['Leonardo RamÃ­rez', 'Defensa'],
+    ['Roberto FernÃ¡ndez', 'Defensa'],
+    ['Luis HaquÃ­n', 'Defensa'],
     ['Ramiro Vaca', 'Mediocampista'],
     ['Henry Vaca', 'Mediocampista'],
     ['Erwin Saavedra', 'Mediocampista'],
-    ['Víctor Abrego', 'Mediocampista'], // verificar
+    ['VÃ­ctor Abrego', 'Mediocampista'], // verificar
     ['Rodrigo Ramallo', 'Mediocampista'],
     ['Fernando Saucedo', 'Mediocampista'], // verificar
     ['Marcelo Moreno Martins', 'Delantero'],
     ['Bruno Miranda', 'Delantero'],
-    ['Carmelo Algarañaz', 'Delantero'],
+    ['Carmelo AlgaraÃ±az', 'Delantero'],
   ]),
-  makeTeam('NGA', 'Nigeria', '🇳🇬', 'G', false, [
+  makeTeam('NZL', 'Nueva Zelanda', 'NZL', 'G', false, [
     ['Francis Uzoho', 'Portero'],
     ['Maduka Okoye', 'Portero'],
     ['Stanley Nwabali', 'Portero'],
@@ -673,68 +673,68 @@ const TEAMS_DATA = [
     ['Samuel Chukwueze', 'Delantero'],
   ]),
 
-  // ── GRUPO H ──────────────────────────────────────────────
-  makeTeam('ESP', 'España', '🇪🇸', 'H', false, [
-    ['Unai Simón', 'Portero'],
-    ['Robert Sánchez', 'Portero'],
+  // â”€â”€ GRUPO H â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  makeTeam('ESP', 'España', 'ESP', 'H', false, [
+    ['Unai SimÃ³n', 'Portero'],
+    ['Robert SÃ¡nchez', 'Portero'],
     ['David Raya', 'Portero'],
     ['Dani Carvajal', 'Defensa'],
     ['Aymeric Laporte', 'Defensa'],
     ['Pau Torres', 'Defensa'],
     ['Alejandro Balde', 'Defensa'],
     ['Robin Le Normand', 'Defensa'],
-    ['Nacho Fernández', 'Defensa'],
+    ['Nacho FernÃ¡ndez', 'Defensa'],
     ['Pedri', 'Mediocampista'],
     ['Gavi', 'Mediocampista'],
     ['Rodri', 'Mediocampista'],
-    ['Fabián Ruiz', 'Mediocampista'],
+    ['FabiÃ¡n Ruiz', 'Mediocampista'],
     ['Dani Olmo', 'Mediocampista'],
     ['Mikel Merino', 'Mediocampista'],
-    ['Álvaro Morata', 'Delantero'],
+    ['Ãlvaro Morata', 'Delantero'],
     ['Ferran Torres', 'Delantero'],
-    ['Nicolás Williams', 'Delantero'],
+    ['NicolÃ¡s Williams', 'Delantero'],
   ]),
-  makeTeam('TUR', 'Turquía', '🇹🇷', 'H', false, [
-    ['Mert Günok', 'Portero'],
-    ['Altay Bayındır', 'Portero'],
-    ['Uğurcan Çakır', 'Portero'],
-    ['Zeki Çelik', 'Defensa'],
-    ['Samet Akaydın', 'Defensa'],
-    ['Abdülkerim Bardakcı', 'Defensa'],
-    ['Ferdi Kadıoğlu', 'Defensa'],
-    ['Mert Müldür', 'Defensa'],
+  makeTeam('CPV', 'Cabo Verde', 'CPV', 'H', false, [
+    ['Mert GÃ¼nok', 'Portero'],
+    ['Altay BayÄ±ndÄ±r', 'Portero'],
+    ['UÄŸurcan Ã‡akÄ±r', 'Portero'],
+    ['Zeki Ã‡elik', 'Defensa'],
+    ['Samet AkaydÄ±n', 'Defensa'],
+    ['AbdÃ¼lkerim BardakcÄ±', 'Defensa'],
+    ['Ferdi KadÄ±oÄŸlu', 'Defensa'],
+    ['Mert MÃ¼ldÃ¼r', 'Defensa'],
     ['Kaan Ayhan', 'Defensa'],
-    ['Hakan Çalhanoğlu', 'Mediocampista'],
-    ['Arda Güler', 'Mediocampista'],
-    ['Salih Özcan', 'Mediocampista'],
-    ['Orkun Kökçü', 'Mediocampista'],
-    ['İlkay Gündoğan', 'Mediocampista'], // verificar (dual nationality)
-    ['Barış Alper Yılmaz', 'Mediocampista'],
-    ['Kenan Yıldız', 'Delantero'],
-    ['Yusuf Yazıcı', 'Delantero'],
+    ['Hakan Ã‡alhanoÄŸlu', 'Mediocampista'],
+    ['Arda GÃ¼ler', 'Mediocampista'],
+    ['Salih Ã–zcan', 'Mediocampista'],
+    ['Orkun KÃ¶kÃ§Ã¼', 'Mediocampista'],
+    ['Ä°lkay GÃ¼ndoÄŸan', 'Mediocampista'], // verificar (dual nationality)
+    ['BarÄ±ÅŸ Alper YÄ±lmaz', 'Mediocampista'],
+    ['Kenan YÄ±ldÄ±z', 'Delantero'],
+    ['Yusuf YazÄ±cÄ±', 'Delantero'],
     ['Cenk Tosun', 'Delantero'], // verificar
   ]),
-  makeTeam('PAR', 'Paraguay', '🇵🇾', 'H', false, [
+  makeTeam('KSA', 'Arabia Saudita', 'KSA', 'H', false, [
     ['Antony Silva', 'Portero'],
     ['Alfredo Aguilar', 'Portero'],
-    ['Rodrigo Muñoz', 'Portero'],
-    ['Fabián Balbuena', 'Defensa'],
-    ['Gustavo Velázquez', 'Defensa'],
+    ['Rodrigo MuÃ±oz', 'Portero'],
+    ['FabiÃ¡n Balbuena', 'Defensa'],
+    ['Gustavo VelÃ¡zquez', 'Defensa'],
     ['Junior Alonso', 'Defensa'],
     ['Robert Rojas', 'Defensa'],
     ['Santiago Arzamendia', 'Defensa'],
     ['Blas Riveros', 'Defensa'],
-    ['Mathías Villasanti', 'Mediocampista'],
-    ['Gastón Giménez', 'Mediocampista'],
-    ['Richard Sánchez', 'Mediocampista'],
-    ['Andrés Cubas', 'Mediocampista'],
-    ['Carlos González', 'Mediocampista'],
-    ['Óscar Romero', 'Mediocampista'],
-    ['Miguel Almirón', 'Delantero'],
+    ['MathÃ­as Villasanti', 'Mediocampista'],
+    ['GastÃ³n GimÃ©nez', 'Mediocampista'],
+    ['Richard SÃ¡nchez', 'Mediocampista'],
+    ['AndrÃ©s Cubas', 'Mediocampista'],
+    ['Carlos GonzÃ¡lez', 'Mediocampista'],
+    ['Ã“scar Romero', 'Mediocampista'],
+    ['Miguel AlmirÃ³n', 'Delantero'],
     ['Braian Romero', 'Delantero'],
     ['Antonio Sanabria', 'Delantero'],
   ]),
-  makeTeam('CPV', 'Cabo Verde', '🇨🇻', 'H', true, [
+  makeTeam('URU', 'Uruguay', 'URU', 'H', false, [
     ['Vozinha', 'Portero'],
     ['Brendan Rodrigues', 'Portero'],
     ['Ivanildo Casimiro', 'Portero'], // verificar
@@ -742,7 +742,7 @@ const TEAMS_DATA = [
     ['Jeffry Fortes', 'Defensa'],
     ['Steven Fortes', 'Defensa'],
     ['Diney', 'Defensa'],
-    ['João Correia', 'Defensa'],
+    ['JoÃ£o Correia', 'Defensa'],
     ['Marco Moreno', 'Defensa'], // verificar
     ['Garry Rodrigues', 'Mediocampista'],
     ['Kenny Rocha', 'Mediocampista'],
@@ -752,51 +752,51 @@ const TEAMS_DATA = [
     ['Dylan Tavares', 'Mediocampista'], // verificar
     ['Djaniny', 'Delantero'],
     ['Jamiro Monteiro', 'Delantero'],
-    ['Fábio Martins', 'Delantero'], // verificar
+    ['FÃ¡bio Martins', 'Delantero'], // verificar
   ]),
 
-  // ── GRUPO I ──────────────────────────────────────────────
-  makeTeam('FRA', 'Francia', '🇫🇷', 'I', false, [
+  // â”€â”€ GRUPO I â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  makeTeam('FRA', 'Francia', 'FRA', 'I', false, [
     ['Mike Maignan', 'Portero'],
     ['Alphonse Areola', 'Portero'],
     ['Brice Samba', 'Portero'],
-    ['Théo Hernández', 'Defensa'],
+    ['ThÃ©o HernÃ¡ndez', 'Defensa'],
     ['Dayot Upamecano', 'Defensa'],
     ['William Saliba', 'Defensa'],
-    ['Jules Koundé', 'Defensa'],
-    ['Ibrahima Konaté', 'Defensa'],
+    ['Jules KoundÃ©', 'Defensa'],
+    ['Ibrahima KonatÃ©', 'Defensa'],
     ['Benjamin Pavard', 'Defensa'],
-    ['N\'Golo Kanté', 'Mediocampista'],
-    ['Aurélien Tchouaméni', 'Mediocampista'],
+    ['N\'Golo KantÃ©', 'Mediocampista'],
+    ['AurÃ©lien TchouamÃ©ni', 'Mediocampista'],
     ['Eduardo Camavinga', 'Mediocampista'],
     ['Adrien Rabiot', 'Mediocampista'],
-    ['Warren Zaïre-Emery', 'Mediocampista'],
+    ['Warren ZaÃ¯re-Emery', 'Mediocampista'],
     ['Kingsley Coman', 'Mediocampista'],
-    ['Kylian Mbappé', 'Delantero'],
+    ['Kylian MbappÃ©', 'Delantero'],
     ['Antoine Griezmann', 'Delantero'],
     ['Marcus Thuram', 'Delantero'],
   ]),
-  makeTeam('POL', 'Polonia', '🇵🇱', 'I', false, [
-    ['Wojciech Szczęsny', 'Portero'],
-    ['Łukasz Skorupski', 'Portero'],
-    ['Bartłomiej Drągowski', 'Portero'],
+  makeTeam('SEN', 'Senegal', 'SEN', 'I', false, [
+    ['Wojciech SzczÄ™sny', 'Portero'],
+    ['Åukasz Skorupski', 'Portero'],
+    ['BartÅ‚omiej DrÄ…gowski', 'Portero'],
     ['Matty Cash', 'Defensa'],
     ['Jan Bednarek', 'Defensa'],
     ['Kamil Glik', 'Defensa'], // verificar si sigue activo
-    ['Bartosz Bereszyński', 'Defensa'],
+    ['Bartosz BereszyÅ„ski', 'Defensa'],
     ['Robert Gumny', 'Defensa'],
-    ['Paweł Dawidowicz', 'Defensa'],
-    ['Piotr Zieliński', 'Mediocampista'],
+    ['PaweÅ‚ Dawidowicz', 'Defensa'],
+    ['Piotr ZieliÅ„ski', 'Mediocampista'],
     ['Mateusz Klich', 'Mediocampista'],
     ['Grzegorz Krychowiak', 'Mediocampista'], // verificar
-    ['Szymon Żurkowski', 'Mediocampista'],
-    ['Sebastian Szymański', 'Mediocampista'],
+    ['Szymon Å»urkowski', 'Mediocampista'],
+    ['Sebastian SzymaÅ„ski', 'Mediocampista'],
     ['Nicola Zalewski', 'Mediocampista'],
     ['Robert Lewandowski', 'Delantero'],
     ['Arkadiusz Milik', 'Delantero'],
-    ['Karol Świderski', 'Delantero'],
+    ['Karol Åšwiderski', 'Delantero'],
   ]),
-  makeTeam('JOR', 'Jordania', '🇯🇴', 'I', true, [
+  makeTeam('IRQ', 'Irak', 'IRQ', 'I', false, [
     ['Amer Shafi', 'Portero'],
     ['Mohammad Abu Laban', 'Portero'],
     ['Mutaz Abu Ramaan', 'Portero'], // verificar
@@ -816,7 +816,7 @@ const TEAMS_DATA = [
     ['Yazan Al-Arab', 'Delantero'],
     ['Abdallah Nasib', 'Delantero'], // verificar
   ]),
-  makeTeam('SCO', 'Escocia', '🏴󠁧󠁢󠁳󠁣󠁴󠁿', 'I', false, [ // verificar clasificación
+  makeTeam('NOR', 'Noruega', 'NOR', 'I', false, [ // verificar clasificaciÃ³n
     ['Craig Gordon', 'Portero'],
     ['Angus Gunn', 'Portero'],
     ['Zander Clark', 'Portero'],
@@ -837,28 +837,28 @@ const TEAMS_DATA = [
     ['Lawrence Shankland', 'Delantero'],
   ]),
 
-  // ── GRUPO J ──────────────────────────────────────────────
-  makeTeam('ARG', 'Argentina', '🇦🇷', 'J', false, [
-    ['Emiliano Martínez', 'Portero'],
+  // â”€â”€ GRUPO J â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  makeTeam('ARG', 'Argentina', 'ARG', 'J', false, [
+    ['Emiliano MartÃ­nez', 'Portero'],
     ['Franco Armani', 'Portero'],
-    ['Gerónimo Rulli', 'Portero'],
+    ['GerÃ³nimo Rulli', 'Portero'],
     ['Nahuel Molina', 'Defensa'],
-    ['Lisandro Martínez', 'Defensa'],
-    ['Nicolás Otamendi', 'Defensa'],
-    ['Marcos Acuña', 'Defensa'],
-    ['Germán Pezzella', 'Defensa'],
-    ['Nicolás Tagliafico', 'Defensa'],
+    ['Lisandro MartÃ­nez', 'Defensa'],
+    ['NicolÃ¡s Otamendi', 'Defensa'],
+    ['Marcos AcuÃ±a', 'Defensa'],
+    ['GermÃ¡n Pezzella', 'Defensa'],
+    ['NicolÃ¡s Tagliafico', 'Defensa'],
     ['Rodrigo De Paul', 'Mediocampista'],
     ['Alexis Mac Allister', 'Mediocampista'],
-    ['Enzo Fernández', 'Mediocampista'],
+    ['Enzo FernÃ¡ndez', 'Mediocampista'],
     ['Leandro Paredes', 'Mediocampista'],
     ['Giovani Lo Celso', 'Mediocampista'],
-    ['Nicolás González', 'Mediocampista'],
+    ['NicolÃ¡s GonzÃ¡lez', 'Mediocampista'],
     ['Lionel Messi', 'Delantero'],
-    ['Lautaro Martínez', 'Delantero'],
-    ['Julián Álvarez', 'Delantero'],
+    ['Lautaro MartÃ­nez', 'Delantero'],
+    ['JuliÃ¡n Ãlvarez', 'Delantero'],
   ]),
-  makeTeam('JAM', 'Jamaica', '🇯🇲', 'J', false, [ // verificar clasificación
+  makeTeam('ALG', 'Algeria', 'ALG', 'J', false, [ // verificar clasificaciÃ³n
     ['Andre Blake', 'Portero'],
     ['Jahmali Waite', 'Portero'],
     ['Dwayne Miller', 'Portero'],
@@ -878,27 +878,27 @@ const TEAMS_DATA = [
     ['Michail Antonio', 'Delantero'],
     ['Bobby Decordova-Reid', 'Delantero'],
   ]),
-  makeTeam('CRC', 'Costa Rica', '🇨🇷', 'J', false, [ // verificar clasificación
+  makeTeam('AUT', 'Austria', 'AUT', 'J', false, [ // verificar clasificaciÃ³n
     ['Keylor Navas', 'Portero'],
     ['Patrick Sequeira', 'Portero'],
     ['Esteban Alvarado', 'Portero'],
     ['Keysher Fuller', 'Defensa'],
     ['Francisco Calvo', 'Defensa'],
-    ['Óscar Duarte', 'Defensa'],
+    ['Ã“scar Duarte', 'Defensa'],
     ['Ronald Matarrita', 'Defensa'],
     ['Juan Pablo Vargas', 'Defensa'],
     ['Ian Lawrence', 'Defensa'],
     ['Celso Borges', 'Mediocampista'],
     ['Yeltsin Tejeda', 'Mediocampista'],
     ['Bryan Ruiz', 'Mediocampista'], // verificar si sigue activo
-    ['Douglas López', 'Mediocampista'],
-    ['Rónald Matarrita', 'Mediocampista'], // verificar
-    ['Álvaro Zamora', 'Mediocampista'], // verificar
+    ['Douglas LÃ³pez', 'Mediocampista'],
+    ['RÃ³nald Matarrita', 'Mediocampista'], // verificar
+    ['Ãlvaro Zamora', 'Mediocampista'], // verificar
     ['Joel Campbell', 'Delantero'],
-    ['Alonso Martínez', 'Delantero'],
+    ['Alonso MartÃ­nez', 'Delantero'],
     ['Anthony Contreras', 'Delantero'],
   ]),
-  makeTeam('EGY', 'Egipto', '🇪🇬', 'J', false, [ // verificar clasificación
+  makeTeam('JOR', 'Jordania', 'JOR', 'J', false, [ // verificar clasificaciÃ³n
     ['Mohamed El-Shenawy', 'Portero'],
     ['Mohamed Abu Gabal', 'Portero'],
     ['Ahmed El-Shenawy', 'Portero'], // verificar
@@ -919,48 +919,48 @@ const TEAMS_DATA = [
     ['Omar Marmoush', 'Delantero'],
   ]),
 
-  // ── GRUPO K ──────────────────────────────────────────────
-  makeTeam('POR', 'Portugal', '🇵🇹', 'K', false, [
+  // â”€â”€ GRUPO K â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  makeTeam('POR', 'Portugal', 'POR', 'K', false, [
     ['Diogo Costa', 'Portero'],
-    ['Rui Patrício', 'Portero'],
-    ['José Sá', 'Portero'],
-    ['João Cancelo', 'Defensa'],
-    ['Rúben Dias', 'Defensa'],
-    ['Gonçalo Inácio', 'Defensa'],
+    ['Rui PatrÃ­cio', 'Portero'],
+    ['JosÃ© SÃ¡', 'Portero'],
+    ['JoÃ£o Cancelo', 'Defensa'],
+    ['RÃºben Dias', 'Defensa'],
+    ['GonÃ§alo InÃ¡cio', 'Defensa'],
     ['Nuno Mendes', 'Defensa'],
     ['Diogo Dalot', 'Defensa'],
-    ['António Silva', 'Defensa'],
+    ['AntÃ³nio Silva', 'Defensa'],
     ['Bernardo Silva', 'Mediocampista'],
     ['Bruno Fernandes', 'Mediocampista'],
     ['Vitinha', 'Mediocampista'],
-    ['João Félix', 'Mediocampista'],
-    ['Otávio', 'Mediocampista'],
+    ['JoÃ£o FÃ©lix', 'Mediocampista'],
+    ['OtÃ¡vio', 'Mediocampista'],
     ['Pedro Neto', 'Mediocampista'],
     ['Cristiano Ronaldo', 'Delantero'],
-    ['Gonçalo Ramos', 'Delantero'],
-    ['Rafael Leão', 'Delantero'],
+    ['GonÃ§alo Ramos', 'Delantero'],
+    ['Rafael LeÃ£o', 'Delantero'],
   ]),
-  makeTeam('COL', 'Colombia', '🇨🇴', 'K', false, [
+  makeTeam('COD', 'R.D. del Congo', 'COD', 'K', false, [
     ['Camilo Vargas', 'Portero'],
     ['Kevin Mier', 'Portero'],
-    ['Álvaro Montero', 'Portero'],
-    ['Dávinson Sánchez', 'Defensa'],
+    ['Ãlvaro Montero', 'Portero'],
+    ['DÃ¡vinson SÃ¡nchez', 'Defensa'],
     ['Yerry Mina', 'Defensa'],
-    ['Daniel Muñoz', 'Defensa'],
-    ['Jhon Lucumí', 'Defensa'],
+    ['Daniel MuÃ±oz', 'Defensa'],
+    ['Jhon LucumÃ­', 'Defensa'],
     ['Johan Mojica', 'Defensa'],
     ['Carlos Cuesta', 'Defensa'],
-    ['James Rodríguez', 'Mediocampista'],
+    ['James RodrÃ­guez', 'Mediocampista'],
     ['Mateus Uribe', 'Mediocampista'],
     ['Jefferson Lerma', 'Mediocampista'],
-    ['Richard Ríos', 'Mediocampista'],
+    ['Richard RÃ­os', 'Mediocampista'],
     ['Jhon Arias', 'Mediocampista'],
     ['Juan Fernando Quintero', 'Mediocampista'],
-    ['Luis Díaz', 'Delantero'],
-    ['Jhon Durán', 'Delantero'],
-    ['Cucho Hernández', 'Delantero'],
+    ['Luis DÃ­az', 'Delantero'],
+    ['Jhon DurÃ¡n', 'Delantero'],
+    ['Cucho HernÃ¡ndez', 'Delantero'],
   ]),
-  makeTeam('UZB', 'Uzbekistán', '🇺🇿', 'K', true, [
+  makeTeam('UZB', 'Uzbekistán', 'UZB', 'K', false, [
     ['Otabek Suyunov', 'Portero'],
     ['Abduvohid Nematov', 'Portero'],
     ['Jasur Yaxshiboev', 'Portero'], // verificar
@@ -980,29 +980,29 @@ const TEAMS_DATA = [
     ['Dostonbek Khamdamov', 'Delantero'],
     ['Avazbek Nazarov', 'Delantero'], // verificar
   ]),
-  makeTeam('COD', 'R.D. del Congo', '🇨🇩', 'K', false, [
-    ['Joël Kiassumbua', 'Portero'],
+  makeTeam('COL', 'Colombia', 'COL', 'K', false, [
+    ['JoÃ«l Kiassumbua', 'Portero'],
     ['Lionel Mpasi', 'Portero'],
     ['Ley Matampi', 'Portero'], // verificar
     ['Arthur Masuaku', 'Defensa'],
     ['Chancel Mbemba', 'Defensa'],
-    ['Mechack Jérôme', 'Defensa'],
+    ['Mechack JÃ©rÃ´me', 'Defensa'],
     ['Dylan Lokosa', 'Defensa'], // verificar
     ['Merveille Bope', 'Defensa'], // verificar
     ['Marcel Tisserand', 'Defensa'],
     ['Neeskens Kebano', 'Mediocampista'],
-    ['Gaël Kakuta', 'Mediocampista'],
+    ['GaÃ«l Kakuta', 'Mediocampista'],
     ['Jean-Marc Makusu', 'Mediocampista'], // verificar
     ['Arnold Bouka Moutou', 'Mediocampista'],
     ['Yannick Bolasie', 'Mediocampista'],
-    ['Cédric Bakambu', 'Mediocampista'],
+    ['CÃ©dric Bakambu', 'Mediocampista'],
     ['Silas Wamangituka', 'Delantero'],
-    ['Héritier Luvumbu', 'Delantero'],
+    ['HÃ©ritier Luvumbu', 'Delantero'],
     ['Meschak Elia', 'Delantero'], // verificar
   ]),
 
-  // ── GRUPO L ──────────────────────────────────────────────
-  makeTeam('ENG', 'Inglaterra', '🏴󠁧󠁢󠁥󠁮󠁧󠁿', 'L', false, [
+  // â”€â”€ GRUPO L â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  makeTeam('ENG', 'Inglaterra', 'ENG', 'L', false, [
     ['Jordan Pickford', 'Portero'],
     ['Aaron Ramsdale', 'Portero'],
     ['Sam Johnstone', 'Portero'],
@@ -1022,10 +1022,10 @@ const TEAMS_DATA = [
     ['Marcus Rashford', 'Delantero'],
     ['Ollie Watkins', 'Delantero'],
   ]),
-  makeTeam('DEN', 'Dinamarca', '🇩🇰', 'L', false, [
+  makeTeam('CRO', 'Croacia', 'CRO', 'L', false, [
     ['Kasper Schmeichel', 'Portero'],
     ['Oliver Christensen', 'Portero'],
-    ['Frederik Rønnow', 'Portero'],
+    ['Frederik RÃ¸nnow', 'Portero'],
     ['Joakim Andersen', 'Defensa'],
     ['Andreas Christensen', 'Defensa'],
     ['Victor Nelsson', 'Defensa'],
@@ -1033,36 +1033,36 @@ const TEAMS_DATA = [
     ['Alexander Bah', 'Defensa'],
     ['Jens Stryger Larsen', 'Defensa'],
     ['Christian Eriksen', 'Mediocampista'],
-    ['Pierre-Emile Højbjerg', 'Mediocampista'],
+    ['Pierre-Emile HÃ¸jbjerg', 'Mediocampista'],
     ['Thomas Delaney', 'Mediocampista'],
     ['Mikkel Damsgaard', 'Mediocampista'],
     ['Mathias Jensen', 'Mediocampista'],
     ['Andreas Skov Olsen', 'Mediocampista'],
-    ['Rasmus Højlund', 'Delantero'],
+    ['Rasmus HÃ¸jlund', 'Delantero'],
     ['Yussuf Poulsen', 'Delantero'],
     ['Jonas Wind', 'Delantero'],
   ]),
-  makeTeam('URU', 'Uruguay', '🇺🇾', 'L', false, [
+  makeTeam('GHA', 'Ghana', 'GHA', 'L', false, [
     ['Fernando Muslera', 'Portero'],
     ['Sergio Rochet', 'Portero'],
-    ['Sebastián Sosa', 'Portero'],
-    ['José María Giménez', 'Defensa'],
-    ['Ronald Araújo', 'Defensa'],
-    ['Nahitan Nández', 'Defensa'],
+    ['SebastiÃ¡n Sosa', 'Portero'],
+    ['JosÃ© MarÃ­a GimÃ©nez', 'Defensa'],
+    ['Ronald AraÃºjo', 'Defensa'],
+    ['Nahitan NÃ¡ndez', 'Defensa'],
     ['Marcelo Saracchi', 'Defensa'],
-    ['Sebastián Cáceres', 'Defensa'],
-    ['Mathías Olivera', 'Defensa'],
+    ['SebastiÃ¡n CÃ¡ceres', 'Defensa'],
+    ['MathÃ­as Olivera', 'Defensa'],
     ['Federico Valverde', 'Mediocampista'],
     ['Lucas Torreira', 'Mediocampista'],
     ['Rodrigo Bentancur', 'Mediocampista'],
-    ['Matías Vecino', 'Mediocampista'],
+    ['MatÃ­as Vecino', 'Mediocampista'],
     ['Manuel Ugarte', 'Mediocampista'],
     ['Facundo Pellistri', 'Mediocampista'],
-    ['Darwin Núñez', 'Delantero'],
+    ['Darwin NÃºÃ±ez', 'Delantero'],
     ['Facundo Torres', 'Delantero'],
-    ['Maxi Gómez', 'Delantero'],
+    ['Maxi GÃ³mez', 'Delantero'],
   ]),
-  makeTeam('IRQ', 'Irak', '🇮🇶', 'L', false, [ // verificar clasificación
+  makeTeam('PAN', 'Panamá', 'PAN', 'L', false, [ // verificar clasificaciÃ³n
     ['Jalal Hassan', 'Portero'],
     ['Mohammed Hameed', 'Portero'],
     ['Fahad Talib', 'Portero'], // verificar
@@ -1084,31 +1084,33 @@ const TEAMS_DATA = [
   ]),
 ];
 
-// Índice de equipos por código
+// Ãndice de equipos por cÃ³digo
 const TEAMS = {};
 TEAMS_DATA.forEach(t => { TEAMS[t.code] = t; });
 ADDITIONAL_SECTIONS.forEach(t => { TEAMS[t.code] = t; });
 
 // Grupos ordenados
 const GROUPS = {
-  A: ['MEX', 'ECU', 'SEN', 'ROU'],
-  B: ['CAN', 'MAR', 'CRO', 'PAN'],
-  C: ['BRA', 'JPN', 'CMR', 'NZL'],
-  D: ['USA', 'KSA', 'SUI', 'GHA'],
-  E: ['GER', 'AUS', 'SRB', 'HON'],
-  F: ['NED', 'KOR', 'CUW', 'RSA'],
-  G: ['BEL', 'ITA', 'BOL', 'NGA'],
-  H: ['ESP', 'TUR', 'PAR', 'CPV'],
-  I: ['FRA', 'POL', 'JOR', 'SCO'],
-  J: ['ARG', 'JAM', 'CRC', 'EGY'],
-  K: ['POR', 'COL', 'UZB', 'COD'],
-  L: ['ENG', 'DEN', 'URU', 'IRQ'],
+  A: ['MEX', 'RSA', 'KOR', 'CZE'],
+  B: ['CAN', 'BIH', 'QAT', 'SUI'],
+  C: ['BRA', 'MAR', 'HAI', 'SCO'],
+  D: ['USA', 'PAR', 'AUS', 'TUR'],
+  E: ['GER', 'CUW', 'CIV', 'ECU'],
+  F: ['NED', 'JPN', 'SWE', 'TUN'],
+  G: ['BEL', 'EGV', 'IRN', 'NZL'],
+  H: ['ESP', 'CPV', 'KSA', 'URU'],
+  I: ['FRA', 'SEN', 'IRQ', 'NOR'],
+  J: ['ARG', 'ALG', 'AUT', 'JOR'],
+  K: ['POR', 'COD', 'UZB', 'COL'],
+  L: ['ENG', 'CRO', 'GHA', 'PAN'],
 };
 
 const TOTAL_BASE = 994;
-const TOTAL_TEAMS_STICKERS = 960; // 48 × 20
+const TOTAL_TEAMS_STICKERS = 960; // 48 Ã— 20
 const TOTAL_ADDITIONAL_STICKERS = ADDITIONAL_SECTIONS.reduce((sum, section) => sum + section.stickers.length, 0);
 const TOTAL_ALBUM_STICKERS = TOTAL_TEAMS_STICKERS + TOTAL_ADDITIONAL_STICKERS;
 const TOTAL_SPECIAL = ADDITIONAL_SECTIONS[0].stickers.length;
 const TOTAL_EXTRA = 22;
 const STICKERS_PER_PACK = 7;
+
+

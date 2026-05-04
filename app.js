@@ -9,24 +9,25 @@ let currentTeamCode = null;
 let sortMode = 'progress-desc';
 let searchQuery = '';
 let activeTeamFilter = '';
+let activeGroupFilter = '';
 let activePositionFilter = '';
 let wantList = loadWantList();
 let milestonesSeen = loadMilestones();
 let progressObserver = null;
 
 const TEAM_FLAG_CODES = {
-  MEX: 'mx', ECU: 'ec', SEN: 'sn', ROU: 'ro',
-  CAN: 'ca', MAR: 'ma', CRO: 'hr', PAN: 'pa',
-  BRA: 'br', JPN: 'jp', CMR: 'cm', NZL: 'nz',
-  USA: 'us', KSA: 'sa', SUI: 'ch', GHA: 'gh',
-  GER: 'de', AUS: 'au', SRB: 'rs', HON: 'hn',
-  NED: 'nl', KOR: 'kr', CUW: 'cw', RSA: 'za',
-  BEL: 'be', ITA: 'it', BOL: 'bo', NGA: 'ng',
-  ESP: 'es', TUR: 'tr', PAR: 'py', CPV: 'cv',
-  FRA: 'fr', POL: 'pl', JOR: 'jo', SCO: 'gb-sct',
-  ARG: 'ar', JAM: 'jm', CRC: 'cr', EGY: 'eg',
-  POR: 'pt', COL: 'co', UZB: 'uz', COD: 'cd',
-  ENG: 'gb-eng', DEN: 'dk', URU: 'uy', IRQ: 'iq'
+  MEX: 'mx', RSA: 'za', KOR: 'kr', CZE: 'cz',
+  CAN: 'ca', BIH: 'ba', QAT: 'qa', SUI: 'ch',
+  BRA: 'br', MAR: 'ma', HAI: 'ht', SCO: 'gb-sct',
+  USA: 'us', PAR: 'py', AUS: 'au', TUR: 'tr',
+  GER: 'de', CUW: 'cw', CIV: 'ci', ECU: 'ec',
+  NED: 'nl', JPN: 'jp', SWE: 'se', TUN: 'tn',
+  BEL: 'be', EGV: 'eg', IRN: 'ir', NZL: 'nz',
+  ESP: 'es', CPV: 'cv', KSA: 'sa', URU: 'uy',
+  FRA: 'fr', SEN: 'sn', IRQ: 'iq', NOR: 'no',
+  ARG: 'ar', ALG: 'dz', AUT: 'at', JOR: 'jo',
+  POR: 'pt', COD: 'cd', UZB: 'uz', COL: 'co',
+  ENG: 'gb-eng', CRO: 'hr', GHA: 'gh', PAN: 'pa'
 };
 
 function getAlbumSections() {
@@ -54,6 +55,11 @@ function getSectionVisual(section) {
 
 function getSectionGroupLabel(section) {
   return /^[A-L]$/.test(section.group) ? `Grupo ${section.group}` : section.group;
+}
+
+function getGroupSortValue(section) {
+  if (/^[A-L]$/.test(section.group)) return section.group;
+  return `0-${section.group}`;
 }
 
 // ── STATE MANAGEMENT ──────────────────────────────────────
@@ -294,6 +300,9 @@ function renderTeamsGrid() {
   } else if (sortMode === 'progress-desc') {
     // progress-desc: más completos primero (default)
     teamsList.sort((a, b) => getTeamProgress(b.code).have - getTeamProgress(a.code).have);
+  } else if (sortMode === 'team-az') {
+    additionalSections.sort((a, b) => a.name.localeCompare(b.name));
+    teamsList.sort((a, b) => a.name.localeCompare(b.name));
   }
 
   additionalSections.forEach(t => container.appendChild(makeTeamCard(t)));
@@ -326,6 +335,7 @@ function makeTeamCard(team) {
   card.className = 'country-card';
   card.dataset.search = searchable;
   card.dataset.team = team.code;
+  card.dataset.group = team.group;
   card.dataset.positions = positions.join('|');
   card.innerHTML = `
     <div class="country-card-header">
@@ -361,13 +371,14 @@ function applyCollectionSearch() {
   cards.forEach(card => {
     const textMatch = !searchQuery || card.dataset.search.includes(searchQuery);
     const teamMatch = !activeTeamFilter || card.dataset.team === activeTeamFilter;
-    const isMatch = textMatch && teamMatch;
+    const groupMatch = !activeGroupFilter || card.dataset.group === activeGroupFilter;
+    const isMatch = textMatch && teamMatch && groupMatch;
     card.hidden = !isMatch;
     card.classList.toggle('dimmed', false);
     if (isMatch) matches++;
   });
   const clearBtn = document.getElementById('clear-filters');
-  if (clearBtn) clearBtn.disabled = !searchQuery && !activeTeamFilter;
+  if (clearBtn) clearBtn.disabled = !searchQuery && !activeTeamFilter && !activeGroupFilter;
   const counter = document.getElementById('results-count');
   if (counter) {
     counter.textContent = `${matches} de ${cards.length} secciones`;
@@ -377,12 +388,15 @@ function applyCollectionSearch() {
 function clearFilters() {
   searchQuery = '';
   activeTeamFilter = '';
+  activeGroupFilter = '';
   activePositionFilter = '';
 
   const searchInput = document.getElementById('collection-search');
   const teamSelect = document.getElementById('filter-team');
+  const groupSelect = document.getElementById('filter-group');
   if (searchInput) searchInput.value = '';
   if (teamSelect) teamSelect.value = '';
+  if (groupSelect) groupSelect.value = '';
 
   applyCollectionSearch();
 }
@@ -423,6 +437,19 @@ function populateTeamFilter() {
   });
 }
 
+function populateGroupFilter() {
+  const select = document.getElementById('filter-group');
+  if (!select || select.options.length > 1) return;
+  const groups = [...new Set(getAlbumSections().map(section => section.group))]
+    .sort((a, b) => getGroupSortValue({ group: a }).localeCompare(getGroupSortValue({ group: b })));
+  groups.forEach(group => {
+    const option = document.createElement('option');
+    option.value = group;
+    option.textContent = getSectionGroupLabel({ group });
+    select.appendChild(option);
+  });
+}
+
 function makeStickerCard(sticker, st, onAfterToggle) {
   const repeated = st.have && st.count > 1;
   const card = document.createElement('div');
@@ -449,7 +476,6 @@ function makeStickerCard(sticker, st, onAfterToggle) {
   if (sticker.type === 'sponsor') typeLabel = 'Coca-Cola';
 
   card.innerHTML = `
-    <span class="sticker-code">${sticker.code}</span>
     ${typeLabel ? `<span class="sticker-type-badge">${typeLabel}</span>` : ''}
     <span class="sticker-name">${sticker.name}</span>
     ${posLabel ? `<span class="sticker-pos ${posClass}">${posLabel}</span>` : ''}
@@ -564,7 +590,6 @@ function renderRepeated(list) {
       const row = document.createElement('div');
       row.className = 'repeated-sticker-row';
       row.innerHTML = `
-        <span class="repeated-sticker-code">${s.code}</span>
         <span class="repeated-sticker-name">${s.name}</span>
         <span class="repeated-qty">+${s.extra}</span>
         <button class="repeated-minus" data-code="${s.code}">−</button>
@@ -605,7 +630,6 @@ function renderWantList(missing) {
       row.className = 'want-sticker-row' + (isWanted ? ' marked' : '');
       row.innerHTML = `
         <div class="want-check">${isWanted ? '✓' : ''}</div>
-        <span class="repeated-sticker-code">${s.code}</span>
         <span class="repeated-sticker-name">${s.name}</span>
       `;
       row.addEventListener('click', () => {
@@ -635,7 +659,7 @@ function generateShareText() {
 
   if (repeated.length > 0) {
     text += `🔄 TENGO PARA CAMBIO:\n`;
-    repeated.forEach(s => { text += `  ${s.code} ${s.name} (+${s.extra})\n`; });
+    repeated.forEach(s => { text += `  ${s.name} (+${s.extra})\n`; });
   } else {
     text += `No tengo láminas repetidas por ahora.\n`;
   }
@@ -649,7 +673,6 @@ function generateShareText() {
 function getTradeExportRows() {
   return getRepeatedList().map(s => ({
     section: s.teamName,
-    code: s.code,
     name: s.name,
     repeated: s.extra
   }));
@@ -658,7 +681,6 @@ function getTradeExportRows() {
 function getMissingExportRows() {
   return getMissingList().map(s => ({
     section: s.teamName,
-    code: s.code,
     name: s.name
   }));
 }
@@ -686,7 +708,6 @@ function exportTradesExcel() {
   const tableRows = rows.map(row => `
     <tr>
       <td>${escapeHtml(row.section)}</td>
-      <td>${escapeHtml(row.code)}</td>
       <td>${escapeHtml(row.name)}</td>
       <td>${row.repeated}</td>
     </tr>
@@ -698,7 +719,6 @@ function exportTradesExcel() {
         <table border="1">
           <tr>
             <th>Seccion</th>
-            <th>Codigo</th>
             <th>Lamina</th>
             <th>Repetidas</th>
           </tr>
@@ -717,7 +737,6 @@ function exportMissingExcel() {
   const tableRows = rows.map(row => `
     <tr>
       <td>${escapeHtml(row.section)}</td>
-      <td>${escapeHtml(row.code)}</td>
       <td>${escapeHtml(row.name)}</td>
     </tr>
   `).join('');
@@ -728,7 +747,6 @@ function exportMissingExcel() {
         <table border="1">
           <tr>
             <th>Seccion</th>
-            <th>Codigo</th>
             <th>Lamina</th>
           </tr>
           ${tableRows}
@@ -800,9 +818,9 @@ function exportTradesPdf() {
     `Progreso: ${getTotalProgress()}/${TOTAL_ALBUM_STICKERS}`,
     `Total repetidas: ${getRepeatedTotal()}`,
     '',
-    'Seccion | Codigo | Lamina | Repetidas',
-    '--------------------------------------',
-    ...rows.map(row => `${row.section} | ${row.code} | ${row.name} | +${row.repeated}`)
+    'Seccion | Lamina | Repetidas',
+    '-----------------------------',
+    ...rows.map(row => `${row.section} | ${row.name} | +${row.repeated}`)
   ];
   const blob = new Blob([createSimplePdf(lines)], { type: 'application/pdf' });
   downloadBlob(blob, 'cambios_album_mundial_2026.pdf');
@@ -814,18 +832,18 @@ const CONFED_COLORS = {
 };
 
 const TEAM_CONFED = {
-  MEX:'CONCACAF',ECU:'CONMEBOL',SEN:'CAF',ROU:'UEFA',
-  CAN:'CONCACAF',MAR:'CAF',CRO:'UEFA',PAN:'CONCACAF',
-  BRA:'CONMEBOL',JPN:'AFC',CMR:'CAF',NZL:'OFC',
-  USA:'CONCACAF',KSA:'AFC',SUI:'UEFA',GHA:'CAF',
-  GER:'UEFA',AUS:'AFC',SRB:'UEFA',HON:'CONCACAF',
-  NED:'UEFA',KOR:'AFC',CUW:'CONCACAF',RSA:'CAF',
-  BEL:'UEFA',ITA:'UEFA',BOL:'CONMEBOL',NGA:'CAF',
-  ESP:'UEFA',TUR:'UEFA',PAR:'CONMEBOL',CPV:'CAF',
-  FRA:'UEFA',POL:'UEFA',JOR:'AFC',SCO:'UEFA',
-  ARG:'CONMEBOL',JAM:'CONCACAF',CRC:'CONCACAF',EGY:'CAF',
-  POR:'UEFA',COL:'CONMEBOL',UZB:'AFC',COD:'CAF',
-  ENG:'UEFA',DEN:'UEFA',URU:'CONMEBOL',IRQ:'AFC'
+  MEX:'CONCACAF',RSA:'CAF',KOR:'AFC',CZE:'UEFA',
+  CAN:'CONCACAF',BIH:'UEFA',QAT:'AFC',SUI:'UEFA',
+  BRA:'CONMEBOL',MAR:'CAF',HAI:'CONCACAF',SCO:'UEFA',
+  USA:'CONCACAF',PAR:'CONMEBOL',AUS:'AFC',TUR:'UEFA',
+  GER:'UEFA',CUW:'CONCACAF',CIV:'CAF',ECU:'CONMEBOL',
+  NED:'UEFA',JPN:'AFC',SWE:'UEFA',TUN:'CAF',
+  BEL:'UEFA',EGV:'CAF',IRN:'AFC',NZL:'OFC',
+  ESP:'UEFA',CPV:'CAF',KSA:'AFC',URU:'CONMEBOL',
+  FRA:'UEFA',SEN:'CAF',IRQ:'AFC',NOR:'UEFA',
+  ARG:'CONMEBOL',ALG:'CAF',AUT:'UEFA',JOR:'AFC',
+  POR:'UEFA',COD:'CAF',UZB:'AFC',COL:'CONMEBOL',
+  ENG:'UEFA',CRO:'UEFA',GHA:'CAF',PAN:'CONCACAF'
 };
 
 function renderStats() {
@@ -1197,6 +1215,7 @@ function loadTheme() {
 function init() {
   loadTheme();
   populateTeamFilter();
+  populateGroupFilter();
   observeHeaderOffset();
 
   // Nav buttons
@@ -1216,6 +1235,10 @@ function init() {
   });
   document.getElementById('filter-team').addEventListener('change', e => {
     activeTeamFilter = e.target.value;
+    applyCollectionSearch();
+  });
+  document.getElementById('filter-group').addEventListener('change', e => {
+    activeGroupFilter = e.target.value;
     applyCollectionSearch();
   });
   document.getElementById('clear-filters').addEventListener('click', clearFilters);
