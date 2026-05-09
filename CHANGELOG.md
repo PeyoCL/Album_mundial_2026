@@ -2,8 +2,12 @@
 
 Todas las actualizaciones y cambios notables de la aplicación "Álbum Mundial 2026" se documentarán en este archivo.
 
-### v10 (Actual) - Corrección Estructural
-- **Reestructuración limpia:** Se corrigieron etiquetas HTML mal cerradas y estilos corruptos que causaban que la interfaz "se quebrara" o se mostrara en blanco al actualizar. 
+### v11 (Actual) - Estabilidad y Rompe-caché
+- **Cache Busting:** Se añadieron parámetros `?v=11` en los enlaces de `style.css` y `app.js` en el HTML principal para forzar a los navegadores móviles a descargar siempre la última versión, ignorando cachés atascados.
+- **Protección Anti-Crash:** Se reescribió la función de inicio (`init()`) con programación defensiva (`try/catch`) para garantizar que la interfaz y los menús de navegación sigan funcionando incluso si los datos guardados (`localStorage`) en el dispositivo se corrompen.
+
+### v10 - Corrección Estructural
+- **Reestructuración limpia:** Se corrigieron etiquetas HTML mal cerradas y estilos corruptos que causaban que la interfaz "se quebrara" o se perdiera la responsividad de las pestañas inferiores. 
 - **Consolidación de código:** Se entregó una base de código fuente revisada e íntegra para asegurar que la PWA se renderice perfectamente tanto en móvil como en escritorio.
 
 ### v9 - Corrección de Codificación en Exportaciones CSV
@@ -20,23 +24,4 @@ Todas las actualizaciones y cambios notables de la aplicación "Álbum Mundial 2
 - **Recordatorio inteligente:** La app ahora alerta si intentas copiar tus datos para hacer Match usando el nombre por defecto ("Mi Álbum"), pidiendo tu nombre real para que la otra persona te identifique fácilmente.
 
 ### v6 - Sistema de Match y Exportación Optimizada
-- **Validar Intercambio (Match):** Nueva pestaña principal dedicada a cruzar tu código JSON con el de un contacto. Calcula automáticamente dos listas: "Láminas que le puedo dar" y "Láminas que me puede dar".
-- **Integración WhatsApp:** Botón para enviar el resumen del Match directamente al chat de la otra persona.
-- **Exportación en línea única:** Las listas PDF, CSV y de texto ahora agrupan las repetidas/faltantes en una sola línea por país (ej. `México: 1(x2), 4, 15`), reduciendo drásticamente el tamaño del documento.
-
-### v5 - Indicador de Versión
-- **Versionado visible:** Se añadió un indicador sutil (`v5`, `v6`, etc.) en la cabecera junto al contador de láminas para ayudar a los usuarios a confirmar que su PWA se actualizó correctamente en segundo plano.
-
-### v4 - Soporte Landscape
-- **Giro de pantalla destrabado:** Eliminación de la restricción `portrait` en el `manifest.json`.
-- **Media Queries dinámicos:** El menú de navegación inferior ahora se adapta a modo barra en pantallas horizontales (Landscape) para no obstruir el contenido visual.
-- **Recálculo de offsets:** Implementación de un evento `orientationchange` para que el espaciado de la cabecera se reajuste al instante al girar el celular.
-
-### v3 - Correcciones Visuales y Nativas
-- **Fix Multilínea:** Se ajustó el CSS para que los nombres largos de los países (Ej. "Bosnia y Herzegovina") hagan salto de línea sin romper la tarjeta del equipo.
-- **Íconos SVG:** Se cambió el emoji del vaso de refresco por un ícono vectorial de botella dorada para la sección Coca-Cola.
-- **Fix Exportación Excel:** Se cambió la generación de `.xls` puro a formato universal CSV delimitado por comas, solucionando advertencias de archivo corrupto en Excel.
-- **Fix Exportación PDF:** Migración del generador PDF. Ahora usa un iframe invisible en lugar de `window.open`, evitando que los bloqueadores de ventanas emergentes de iOS y Android impidieran la descarga.
-
-### v2 - PWA y Nomenclatura
-- **Progressive Web App:** Creación de
+- **Valid
