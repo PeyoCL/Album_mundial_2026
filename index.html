@@ -23,8 +23,8 @@
         <header class="app-header">
             <div class="header-top">
                 <div class="header-titles">
-                    <h1 id="album-title" contenteditable="true" spellcheck="false">Mi Álbum</h1>
-                    <span class="subtitle">Mundial 2026 · 48 selecciones · 994 láminas <span class="app-version">v6</span></span>
+                    <h1 id="album-title" contenteditable="true" spellcheck="false" title="Toca para editar tu nombre">Mi Álbum</h1>
+                    <span class="subtitle">Mundial 2026 · 48 selecciones · 994 láminas <span class="app-version">v7</span></span>
                 </div>
                 <div class="header-actions">
                     <button id="btn-theme" title="Cambiar Tema">🌙</button>
@@ -112,7 +112,7 @@
                 </div>
             </section>
 
-            <!-- Nueva Pestaña Match -->
+            <!-- Pestaña Match -->
             <section id="tab-match" class="tab-pane">
                 <div class="trades-header">
                     <h2>Validar Intercambio</h2>
@@ -120,7 +120,7 @@
                 </div>
                 
                 <div class="match-setup">
-                    <button onclick="copyMyJsonForTrade()" class="btn-block" style="background: var(--bg-card); color: var(--gold); border: 1px solid var(--gold);">1. Copiar mis datos para enviar</button>
+                    <button id="btn-copy-match" onclick="copyMyJsonForTrade()" class="btn-block" style="background: var(--bg-card); color: var(--gold); border: 1px solid var(--gold);">1. Copiar mis datos</button>
                     <p style="text-align: center; margin: 1rem 0; font-size: 0.85rem; color: var(--text-muted);">o</p>
                     <textarea id="match-input" rows="4" placeholder="2. Pega aquí los datos (JSON) que te envió tu amigo..."></textarea>
                     <button onclick="compareTrades()" class="btn-block">3. Comparar álbumes</button>
@@ -166,6 +166,12 @@
                     <button class="close-modal" onclick="closeModal('modal-settings')">✕</button>
                 </div>
                 <div class="modal-body">
+                    <!-- Nuevo campo para el nombre -->
+                    <div style="margin-bottom: 1.5rem;">
+                        <label style="display:block; margin-bottom: 0.5rem; font-size:0.9rem; color: var(--text-secondary);">Tu Nombre o Alias (Para intercambios):</label>
+                        <input type="text" id="input-profile-name" placeholder="Ej. Juan Pérez" style="width: 100%;">
+                    </div>
+                    
                     <button onclick="exportData()" class="btn-block">Exportar datos JSON (Backup)</button>
                     <button onclick="document.getElementById('import-file').click()" class="btn-block">Importar datos JSON (Restaurar)</button>
                     <input type="file" id="import-file" style="display:none" accept=".json" onchange="importData(event)">
