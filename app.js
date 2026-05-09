@@ -3,6 +3,12 @@ let state = { profile: { name: 'Mi Álbum', photo: null }, stickers: {}, lastUpd
 let activeSearch = { text: '', team: 'all', group: 'all', sort: 'all' };
 let currentOpenTeam = null;
 
+// FORMATEADOR GLOBAL (Ej: "MEX1" -> "MEX 1")
+function formatCode(name) {
+    if(name === '00') return '00';
+    return name.replace(/^([A-Z]+)(\d+)$/, '$1 $2');
+}
+
 function init() {
     try {
         loadTheme();
@@ -116,7 +122,6 @@ function decrementSticker(code, ev) {
         updateHomeProgress();
     }
 }
-
 function getHaveCount() { return Object.values(state.stickers || {}).filter(s => s.have).length; }
 
 function getTeamProgress(teamCode) {
@@ -146,6 +151,7 @@ function checkMilestones() {
         }
     }
 }
+
 function getRepeatedList() {
     let repeated = [];
     if (!window.DATA || !window.DATA.TEAMS) return repeated;
@@ -233,7 +239,6 @@ function makeStickerCard(sticker) {
     const st = getStickerState(sticker.code);
     const div = document.createElement('div');
     
-    // CORRECCIÓN V16: Todas estas son especiales (1, 13, CC, FWC)
     const isSpecial = sticker.type === 'special' || sticker.type === 'shield' || sticker.type === 'group';
     
     div.className = `sticker ${st.have ? 'have animate-pop' : ''} ${isSpecial ? 'special' : ''}`;
@@ -241,12 +246,11 @@ function makeStickerCard(sticker) {
     let badge = st.count > 1 ? `<span class="sticker-badge">+${st.count - 1}</span>` : '';
     
     div.innerHTML = `
-        <span class="sticker-name" style="${isSpecial ? 'color: var(--gold)' : ''}">Lám. ${sticker.name.replace(/[A-Z]+/, '') || sticker.name}</span>
+        <span class="sticker-name" style="${isSpecial ? 'color: var(--gold)' : ''}">${formatCode(sticker.name)}</span>
         ${badge}<button class="btn-minus" onclick="decrementSticker('${sticker.code}', event)">-</button>
     `;
     return div;
 }
-
 function openTeamDetail(team) {
     currentOpenTeam = team;
     document.getElementById('modal-team-name').innerText = team.name;
@@ -285,7 +289,6 @@ function updateTeamCount(teamCode) {
         } else { card.classList.remove('completed'); }
     }
 }
-function updateHomeProgress() { renderDashboardCards(); }
 
 function applyCollectionSearch() {
     if (!window.DATA || !window.DATA.TEAMS) return;
@@ -349,7 +352,7 @@ function renderTrades() {
     else {
         reps.forEach(group => {
             const grpDiv = document.createElement('div'); grpDiv.className = 'trade-group';
-            let itemsHtml = group.items.map(i => `<span class="trade-item">Lám. ${i.name.replace(/[A-Z]+/, '') || i.name} (x${i.count})</span>`).join('');
+            let itemsHtml = group.items.map(i => `<span class="trade-item">${formatCode(i.name)} (x${i.count})</span>`).join('');
             grpDiv.innerHTML = `<h3>${group.team}</h3><div class="trade-items">${itemsHtml}</div>`;
             list.appendChild(grpDiv);
         });
@@ -378,7 +381,7 @@ function getTradeExportRows() {
     let rows = [];
     getRepeatedList().forEach(g => {
         let itemsStr = g.items.map(i => {
-            let num = i.name.replace(/[A-Z]+/, '') || i.name;
+            let num = formatCode(i.name);
             return i.count > 1 ? `${num}(x${i.count})` : num;
         }).join(', ');
         rows.push({ section: g.team, text: itemsStr });
@@ -391,12 +394,11 @@ function getMissingExportRows() {
     let map = {};
     getMissingList().forEach(m => {
         if(!map[m.team]) map[m.team] = [];
-        map[m.team].push(m.name.replace(/[A-Z]+/, '') || m.name);
+        map[m.team].push(formatCode(m.name));
     });
     for(let team in map){ rows.push({ section: team, text: map[team].join(', ') }); }
     return rows;
 }
-
 function generateShareText() {
     const p = getTotalProgress();
     let txt = `*${state.profile.name}*\nProgreso: ${p.have}/${p.total} (${p.percentage}%)\nRepetidas: ${getRepeatedTotal()}\n\n`;
@@ -421,6 +423,7 @@ function exportMissingExcel() {
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     downloadBlob(blob, 'faltantes_album_mundial_2026.csv');
 }
+
 function exportTradesPdf() {
     const p = getTotalProgress();
     let html = `<!DOCTYPE html><html><head><title>Cambios Álbum 2026</title><style>body{font-family:sans-serif; padding: 20px;} table{width:100%;border-collapse:collapse; margin-top: 20px;} th,td{border:1px solid #ccc;padding:8px;text-align:left;}</style></head><body>`;
@@ -504,7 +507,7 @@ function compareTrades() {
                 const code = s.code;
                 const mySticker = getStickerState(code);
                 const friendSticker = friendState.stickers[code] || { have: false, count: 0 };
-                const myName = s.name.replace(/[A-Z]+/, '') || s.name;
+                const myName = formatCode(s.name);
 
                 if (!mySticker.have && friendSticker.have && friendSticker.count > 1) {
                     if(!iReceive[team.name]) iReceive[team.name] = [];
