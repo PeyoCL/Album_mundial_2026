@@ -8,15 +8,12 @@ function init() {
     loadState();
     migrateStickerCodes();
     
-    // Sincronizar el nombre inicial en todas partes
     updateProfileName(state.profile.name);
 
-    // Si edita dando clic al título principal en la cabecera
     const title = document.getElementById('album-title');
     title.addEventListener('blur', () => { updateProfileName(title.innerText); });
     title.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); title.blur(); } });
 
-    // Si edita desde el nuevo campo en Configuración
     document.getElementById('input-profile-name').addEventListener('input', (e) => {
         updateProfileName(e.target.value, false); 
     });
@@ -361,21 +358,27 @@ function exportTradesPdf() {
 // MATCH / Intercambios
 function copyMyJsonForTrade() {
     if (state.profile.name === 'Mi Álbum') {
-        const userName = prompt('Antes de compartir, ¿Cómo te llamas? (Para que tu amigo te identifique)');
+        const userName = prompt('Antes de compartir, ¿Cómo te llamas? (Para que la otra persona te identifique)');
         if (userName) updateProfileName(userName);
     }
 
     const json = JSON.stringify(state);
     navigator.clipboard.writeText(json).then(() => {
-        alert(`¡Los datos de ${state.profile.name} han sido copiados!\n\nEnvíalos a tu amigo para que los pegue en su aplicación.`);
+        alert(`¡Los datos de ${state.profile.name} han sido copiados!\n\nEnvíalos a tu amigo o amiga para que los pegue en su aplicación.`);
     });
 }
 
 let lastMatchResult = null;
 
+function clearMatchInput() {
+    document.getElementById('match-input').value = '';
+    document.getElementById('match-results-container').style.display = 'none';
+    lastMatchResult = null;
+}
+
 function compareTrades() {
     const input = document.getElementById('match-input').value.trim();
-    if (!input) { alert('Pega los datos de tu amigo en el recuadro primero.'); return; }
+    if (!input) { alert('Pega los datos recibidos en el recuadro primero.'); return; }
     try {
         const friendState = JSON.parse(input);
         if (!friendState.stickers) throw new Error();
@@ -402,7 +405,7 @@ function compareTrades() {
             });
         });
 
-        lastMatchResult = { iReceive, iGive, friendName: friendState.profile?.name || 'Tu amigo' };
+        lastMatchResult = { iReceive, iGive, friendName: friendState.profile?.name || 'Tu contacto' };
         renderMatchResults();
 
     } catch(e) { alert('Los datos pegados no son válidos. Asegúrate de copiar el texto completo.'); }
@@ -439,7 +442,7 @@ function renderMatchResults() {
 
 function shareMatchWhatsApp() {
     if(!lastMatchResult) return;
-    let text = `*¡Hola ${lastMatchResult.friendName}! He revisado el álbum para intercambiar contigo:*\n\n`;
+    let text = `*¡Hola ${lastMatchResult.friendName}! He revisado las láminas para intercambiar:*\n\n`;
     
     text += `*⬇️ Me puedes dar:*\n`;
     let recCount = 0;
