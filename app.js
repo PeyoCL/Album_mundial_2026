@@ -411,23 +411,25 @@ function getMissingExportRows() {
     return rows;
 }
 
+/* Corrección Excel: Genera CSV delimitado por comas */
 function exportTradesExcel() {
     const rows = getTradeExportRows();
-    let csv = '\uFEFFSección\tLámina\tRepetidas\n';
-    rows.forEach(r => { csv += `"${r.section}"\t"${r.lam}"\t"${r.qty}"\n`; });
-    downloadBlob(csv, 'cambios_album_mundial_2026.xls', 'application/vnd.ms-excel');
+    let csv = '\uFEFFSección,Lámina,Repetidas\n';
+    rows.forEach(r => { csv += `"${r.section}","${r.lam}","${r.qty}"\n`; });
+    downloadBlob(csv, 'cambios_album_mundial_2026.csv', 'text/csv;charset=utf-8;');
 }
 
 function exportMissingExcel() {
     const rows = getMissingExportRows();
-    let csv = '\uFEFFSección\tLámina\n';
-    rows.forEach(r => { csv += `"${r.section}"\t"${r.lam}"\n`; });
-    downloadBlob(csv, 'faltantes_album_mundial_2026.xls', 'application/vnd.ms-excel');
+    let csv = '\uFEFFSección,Lámina\n';
+    rows.forEach(r => { csv += `"${r.section}","${r.lam}"\n`; });
+    downloadBlob(csv, 'faltantes_album_mundial_2026.csv', 'text/csv;charset=utf-8;');
 }
 
+/* Corrección PDF: Usar iframe invisible en lugar de popup */
 function exportTradesPdf() {
     const p = getTotalProgress();
-    let html = `<html><head><title>Cambios Álbum 2026</title><style>body{font-family:sans-serif;} table{width:100%;border-collapse:collapse;} th,td{border:1px solid #ccc;padding:8px;text-align:left;}</style></head><body>`;
+    let html = `<!DOCTYPE html><html><head><title>Cambios Álbum 2026</title><style>body{font-family:sans-serif; padding: 20px;} table{width:100%;border-collapse:collapse; margin-top: 20px;} th,td{border:1px solid #ccc;padding:8px;text-align:left;}</style></head><body>`;
     html += `<h1>Cambios - ${state.profile.name}</h1>`;
     html += `<p>Progreso: ${p.have}/${p.total} (${p.percentage}%) | Total repetidas: ${getRepeatedTotal()}</p>`;
     html += `<table><tr><th>Sección</th><th>Lámina</th><th>Repetidas</th></tr>`;
@@ -438,11 +440,27 @@ function exportTradesPdf() {
     
     html += `</table></body></html>`;
     
-    let win = window.open('', '_blank');
-    win.document.write(html);
-    win.document.close();
-    win.focus();
-    setTimeout(() => { win.print(); win.close(); }, 250);
+    const iframe = document.createElement('iframe');
+    iframe.style.position = 'absolute';
+    iframe.style.width = '0px';
+    iframe.style.height = '0px';
+    iframe.style.border = 'none';
+    document.body.appendChild(iframe);
+    
+    const doc = iframe.contentWindow || iframe.contentDocument.document || iframe.contentDocument;
+    doc.document.open();
+    doc.document.write(html);
+    doc.document.close();
+    
+    iframe.contentWindow.focus();
+    setTimeout(() => {
+        try {
+            iframe.contentWindow.print();
+        } catch (err) {
+            alert('Tu dispositivo bloquea la impresión automática. Por favor usa la opción Exportar Excel (CSV) o Compartir Lista.');
+        }
+        setTimeout(() => document.body.removeChild(iframe), 1000);
+    }, 500);
 }
 
 function downloadBlob(content, filename, type) {
