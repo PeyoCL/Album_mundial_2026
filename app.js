@@ -201,6 +201,7 @@ function renderDashboardCards() {
     const repEl = document.getElementById('metric-repeated');
     if (repEl) repEl.innerText = `${rep} rep.`;
 }
+
 function renderTeamsGrid(teams) {
     const grid = document.getElementById('teams-grid'); 
     if(!grid) return;
@@ -212,7 +213,6 @@ function renderTeamsGrid(teams) {
     
     toRender.forEach(team => { grid.appendChild(makeTeamCard(team)); });
 }
-
 function makeTeamCard(team) {
     const prog = getTeamProgress(team.code);
     let pct = Math.round((prog.have / prog.total) * 100) || 0;
@@ -235,13 +235,10 @@ function makeTeamCard(team) {
 function makeStickerCard(sticker) {
     const st = getStickerState(sticker.code);
     const div = document.createElement('div');
-    
     const isSpecial = sticker.type === 'special' || sticker.type === 'shield' || sticker.type === 'group';
-    
     div.className = `sticker ${st.have ? 'have animate-pop' : ''} ${isSpecial ? 'special' : ''}`;
     div.onclick = (e) => toggleSticker(sticker.code, e);
     let badge = st.count > 1 ? `<span class="sticker-badge">+${st.count - 1}</span>` : '';
-    
     div.innerHTML = `
         <span class="sticker-name" style="${isSpecial ? 'color: var(--gold)' : ''}">${formatCode(sticker.name)}</span>
         ${badge}<button class="btn-minus" onclick="decrementSticker('${sticker.code}', event)">-</button>
@@ -267,7 +264,6 @@ function renderStickersGrid(team) {
 
 function updateTeamCount(teamCode) {
     const p = getTeamProgress(teamCode);
-    
     const countEl = document.getElementById('modal-team-count');
     if(countEl) countEl.innerText = `${p.have}/${p.total}`;
     
@@ -277,7 +273,6 @@ function updateTeamCount(teamCode) {
     if (cardCount) {
         let pct = Math.round((p.have / p.total) * 100) || 0;
         if (pct === 100 && p.have < p.total) pct = 99;
-        
         cardCount.innerText = `${p.have}/${p.total} (${pct}%)`;
         cardBar.style.width = `${pct}%`;
         if (p.have === p.total && p.total > 0) {
@@ -308,6 +303,7 @@ function applyCollectionSearch() {
 
     renderTeamsGrid(filtered);
 }
+
 function clearFilters() {
     const searchInput = document.getElementById('search-input');
     if(searchInput) searchInput.value = '';
@@ -318,7 +314,6 @@ function clearFilters() {
     activeSearch = { ...activeSearch, text: '', team: 'all', group: 'all' };
     applyCollectionSearch();
 }
-
 function populateTeamFilter() {
     const sel = document.getElementById('filter-team');
     if(!sel || !window.DATA || !window.DATA.TEAMS) return;
@@ -397,36 +392,29 @@ function generateShareText() {
     showModal('modal-share');
 }
 
-/* --- EXPORTACIONES EXCEL v20 (UTF-8 Bytes Puros para Google Sheets) --- */
+/* --- EXPORTACIONES EXCEL v21 (Solución Universal ASCII Puro) --- */
+function removeAccents(str) {
+    if (!str) return '';
+    return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
+
 function exportTradesExcel() {
-    let csv = 'Sección,Láminas Repetidas\n';
-    getTradeExportRows().forEach(r => { csv += `"${r.section}","${r.text}"\n`; });
-    const encoder = new TextEncoder();
-    const csvBytes = encoder.encode(csv);
-    const bom = new Uint8Array([0xEF, 0xBB, 0xBF]);
-    const finalBlobBytes = new Uint8Array(bom.byteLength + csvBytes.byteLength);
-    finalBlobBytes.set(bom, 0);
-    finalBlobBytes.set(csvBytes, bom.byteLength);
-    const blob = new Blob([finalBlobBytes], { type: 'text/csv;charset=utf-8' });
+    let csv = 'Seccion,Laminas Repetidas\n';
+    getTradeExportRows().forEach(r => { csv += `"${removeAccents(r.section)}","${r.text}"\n`; });
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
     downloadBlob(blob, 'cambios_album_mundial_2026.csv');
 }
 
 function exportMissingExcel() {
-    let csv = 'Sección,Láminas Faltantes\n';
-    getMissingExportRows().forEach(r => { csv += `"${r.section}","${r.text}"\n`; });
-    const encoder = new TextEncoder();
-    const csvBytes = encoder.encode(csv);
-    const bom = new Uint8Array([0xEF, 0xBB, 0xBF]);
-    const finalBlobBytes = new Uint8Array(bom.byteLength + csvBytes.byteLength);
-    finalBlobBytes.set(bom, 0);
-    finalBlobBytes.set(csvBytes, bom.byteLength);
-    const blob = new Blob([finalBlobBytes], { type: 'text/csv;charset=utf-8' });
+    let csv = 'Seccion,Laminas Faltantes\n';
+    getMissingExportRows().forEach(r => { csv += `"${removeAccents(r.section)}","${r.text}"\n`; });
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
     downloadBlob(blob, 'faltantes_album_mundial_2026.csv');
 }
 
 function exportTradesPdf() {
     const p = getTotalProgress();
-    let html = `<!DOCTYPE html><html><head><title>Cambios Álbum 2026</title><style>body{font-family:sans-serif; padding: 20px;} table{width:100%;border-collapse:collapse; margin-top: 20px;} th,td{border:1px solid #ccc;padding:8px;text-align:left;}</style></head><body>`;
+    let html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Cambios Álbum 2026</title><style>body{font-family:sans-serif; padding: 20px;} table{width:100%;border-collapse:collapse; margin-top: 20px;} th,td{border:1px solid #ccc;padding:8px;text-align:left;}</style></head><body>`;
     html += `<h1>Cambios - ${state.profile.name}</h1><p>Progreso: ${p.have}/${p.total} (${p.percentage}%) | Total repetidas: ${getRepeatedTotal()}</p>`;
     html += `<table><tr><th style="width:150px">Sección</th><th>Láminas Repetidas</th></tr>`;
     getTradeExportRows().forEach(r => { html += `<tr><td>${r.section}</td><td>${r.text}</td></tr>`; });
