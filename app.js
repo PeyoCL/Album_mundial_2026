@@ -127,10 +127,13 @@ function getTeamProgress(teamCode) {
     return { have, total: team.stickers.length };
 }
 
+/* --- CORRECCIÓN V15: Evitar 100% prematuro --- */
 function getTotalProgress() {
     let have = getHaveCount(); 
     let total = window.DATA ? window.DATA.TOTAL_STICKERS : 994;
-    return { have, total, percentage: Math.round((have / total) * 100) || 0 };
+    let percentage = Math.round((have / total) * 100) || 0;
+    if (percentage === 100 && have < total) percentage = 99;
+    return { have, total, percentage };
 }
 
 function checkMilestones() {
@@ -210,7 +213,10 @@ function renderTeamsGrid(teams) {
 
 function makeTeamCard(team) {
     const prog = getTeamProgress(team.code);
-    const pct = Math.round((prog.have / prog.total) * 100) || 0;
+    /* --- CORRECCIÓN V15: Evitar 100% prematuro --- */
+    let pct = Math.round((prog.have / prog.total) * 100) || 0;
+    if (pct === 100 && prog.have < prog.total) pct = 99;
+    
     const div = document.createElement('div');
     div.className = `team-card ${prog.have === prog.total ? 'completed' : ''}`;
     div.id = `team-card-${team.code}`;
@@ -265,7 +271,10 @@ function updateTeamCount(teamCode) {
     const cardBar = document.getElementById(`card-bar-${teamCode}`);
     const card = document.getElementById(`team-card-${teamCode}`);
     if (cardCount) {
-        const pct = Math.round((p.have / p.total) * 100) || 0;
+        /* --- CORRECCIÓN V15: Evitar 100% prematuro --- */
+        let pct = Math.round((p.have / p.total) * 100) || 0;
+        if (pct === 100 && p.have < p.total) pct = 99;
+        
         cardCount.innerText = `${p.have}/${p.total} (${pct}%)`;
         cardBar.style.width = `${pct}%`;
         if (p.have === p.total && p.total > 0) {
@@ -398,7 +407,6 @@ function generateShareText() {
     showModal('modal-share');
 }
 
-/* --- EXPORTACIONES EXCEL CORREGIDAS (Separador ';' y BOM estricto) --- */
 function exportTradesExcel() {
     let csv = '\uFEFFSección;Láminas Repetidas\n';
     getTradeExportRows().forEach(r => { csv += `"${r.section}";"${r.text}"\n`; });
@@ -412,7 +420,6 @@ function exportMissingExcel() {
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     downloadBlob(blob, 'faltantes_album_mundial_2026.csv');
 }
-/* ---------------------------------------------------------------------- */
 function exportTradesPdf() {
     const p = getTotalProgress();
     let html = `<!DOCTYPE html><html><head><title>Cambios Álbum 2026</title><style>body{font-family:sans-serif; padding: 20px;} table{width:100%;border-collapse:collapse; margin-top: 20px;} th,td{border:1px solid #ccc;padding:8px;text-align:left;}</style></head><body>`;
@@ -434,7 +441,6 @@ function exportTradesPdf() {
     }, 500);
 }
 
-// MATCH / Intercambios Modificado para compresión JSON v13
 function copyMyJsonForTrade() {
     if (state.profile.name === 'Mi Álbum') {
         const userName = prompt('Antes de compartir, ¿Cómo te llamas? (Para que la otra persona te identifique)');
