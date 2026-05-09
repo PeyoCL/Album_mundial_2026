@@ -411,7 +411,6 @@ function getMissingExportRows() {
     return rows;
 }
 
-/* Corrección Excel: Genera CSV delimitado por comas */
 function exportTradesExcel() {
     const rows = getTradeExportRows();
     let csv = '\uFEFFSección,Lámina,Repetidas\n';
@@ -426,7 +425,6 @@ function exportMissingExcel() {
     downloadBlob(csv, 'faltantes_album_mundial_2026.csv', 'text/csv;charset=utf-8;');
 }
 
-/* Corrección PDF: Usar iframe invisible en lugar de popup */
 function exportTradesPdf() {
     const p = getTotalProgress();
     let html = `<!DOCTYPE html><html><head><title>Cambios Álbum 2026</title><style>body{font-family:sans-serif; padding: 20px;} table{width:100%;border-collapse:collapse; margin-top: 20px;} th,td{border:1px solid #ccc;padding:8px;text-align:left;}</style></head><body>`;
@@ -547,6 +545,9 @@ function observeHeaderOffset() {
         new ResizeObserver(() => updateHeaderOffset()).observe(document.querySelector('.app-header'));
     }
     window.addEventListener('resize', updateHeaderOffset);
+    // Nuevo escuchador para que responda rápido a la rotación de pantalla
+    window.addEventListener('orientationchange', () => { setTimeout(updateHeaderOffset, 150); });
+    
     if(document.fonts) document.fonts.ready.then(updateHeaderOffset);
 }
 
