@@ -190,7 +190,6 @@ textarea { width: 100%; background: var(--bg-base); color: var(--text-primary); 
 .match-col strong { display: block; margin-top: 0.8rem; color: var(--blue-accent); }
 .match-col span { display: block; font-size: 0.9rem; margin-top: 0.2rem; color: var(--text-secondary); }
 
-/* Nav Inferior - Actualizado a 3 botones */
 .bottom-nav {
     position: fixed; bottom: 0; left: 0; width: 100%; background: var(--bg-card);
     display: flex; border-top: 1px solid var(--border-subtle); z-index: 100;
