@@ -2,6 +2,10 @@
 
 Todas las actualizaciones y cambios notables de la aplicación "Álbum Mundial 2026" se documentarán en este archivo.
 
+### v20 - Integración Fuerte UTF-8 y Botón de Limpieza
+- **Inyección de Bytes (TextEncoder):** Se abandonó la concatenación de strings para exportaciones CSV, migrando al uso de `TextEncoder` y `Uint8Array`. Al convertir el CSV a bytes y adjuntar el BOM `0xEF, 0xBB, 0xBF` directo a nivel de memoria, se fuerza a los navegadores móviles a guardar un archivo UTF-8 inmaculado, resolviendo 100% los caracteres extraños en Google Sheets.
+- **Herramienta "Anti-Caché":** Se añadió un botón de rescate llamado "Forzar Actualización (Limpiar Caché)" dentro de Configuración. Este botón borra a la fuerza el almacenamiento del Service Worker y recarga la PWA pasando parámetros aleatorios en la URL para evitar quedarse atrapado en versiones viejas.
+
 ### v19 - Corrección estricta de Codificación para Google Sheets
 - **TextEncoder (A prueba de balas):** Se eliminó la inyección de BOM mediante strings que los navegadores móviles a veces ignoran. Ahora el texto CSV se compila a un `Uint8Array` usando `TextEncoder` y el BOM se inyecta directamente a nivel de bytes en memoria antes de guardar el Blob.
 - **Formato universal:** Esto garantiza que el archivo generado sea detectado como un UTF-8 real por Google Sheets (separado por comas) y Excel, sin perder ni corromper jamás las tildes.
