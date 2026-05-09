@@ -2,6 +2,10 @@
 
 Todas las actualizaciones y cambios notables de la aplicación "Álbum Mundial 2026" se documentarán en este archivo.
 
+### v13 - Optimización JSON de Intercambio (Match)
+- **Minificación de Payload:** Se rediseñó la función de copia de datos al portapapeles. Ahora genera un formato ultra comprimido (`{"n": "Nombre", "s": {"MEX1": 2}}`), filtrando láminas faltantes, propiedades inútiles y el historial. Esto reduce el peso del texto de 45KB a ~10KB, evitando que teléfonos o la app de WhatsApp trunquen el mensaje por límite de caracteres.
+- **Retrocompatibilidad:** La lógica del sistema Match ahora puede interpretar tanto el nuevo formato minimizado (v13+) como el antiguo formato completo de la app (v12-).
+
 ### v12 - Solución de Espacio en Pantalla (Layout móvil)
 - **Filtros deslizables (Scroll Horizontal):** Se evitó que los campos de búsqueda, botones y filtros del encabezado salten a múltiples líneas. Ahora se mantienen en una sola línea deslizable (`overflow-x: auto`), reduciendo la altura de la cabecera en móviles a la mitad.
 - **Cabecera Flotante (Landscape):** Al girar el celular en formato horizontal (menor a 500px de alto), la cabecera deja de estar anclada (`position: absolute`) y se desliza hacia arriba de forma natural, otorgando el 100% de la pantalla a la navegación del álbum.
