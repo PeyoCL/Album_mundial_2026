@@ -2,10 +2,14 @@
 
 Todas las actualizaciones y cambios notables de la aplicación "Álbum Mundial 2026" se documentarán en este archivo.
 
+### v10 (Actual) - Corrección Estructural
+- **Reestructuración limpia:** Se corrigieron etiquetas HTML mal cerradas y estilos corruptos que causaban que la interfaz "se quebrara" o se mostrara en blanco al actualizar. 
+- **Consolidación de código:** Se entregó una base de código fuente revisada e íntegra para asegurar que la PWA se renderice perfectamente tanto en móvil como en escritorio.
+
 ### v9 - Corrección de Codificación en Exportaciones CSV
 - **UTF-8 estricto para Excel:** Inyección del *Byte Order Mark* (BOM `0xEF, 0xBB, 0xBF`) al generar los archivos CSV en Javascript para que Microsoft Excel (y Windows en general) reconozca de manera nativa y directa caracteres especiales como tildes (ej: "Haití", "Turquía") en las listas exportadas.
 
-### v8 (Actual) - Inclusividad y Mejoras UX
+### v8 - Inclusividad y Mejoras UX
 - **Refactorización de lenguaje:** Textos adaptados para usar lenguaje inclusivo y neutro en la sección Match ("tu contacto", "amigo o amiga").
 - **UX mejorado en Match:** Se agregó un botón "Limpiar texto" para resetear los resultados del intercambio rápidamente y poder pegar un nuevo código JSON de otra persona.
 - **Forzado de Caché:** Actualización del Service Worker para forzar a los dispositivos a tomar los últimos cambios de diseño.
@@ -35,11 +39,4 @@ Todas las actualizaciones y cambios notables de la aplicación "Álbum Mundial 2
 - **Fix Exportación PDF:** Migración del generador PDF. Ahora usa un iframe invisible en lugar de `window.open`, evitando que los bloqueadores de ventanas emergentes de iOS y Android impidieran la descarga.
 
 ### v2 - PWA y Nomenclatura
-- **Progressive Web App:** Creación de `manifest.json`, Service Worker (`sw.js`) con limpieza automática de caché antigua y reemplazo de iconos PNG por un `icon.svg` escalable de alto rendimiento.
-- **Corrección de contexto:** Cambio global de la palabra "Fichas" a "Láminas" en toda la interfaz de usuario y alertas.
-
-### v1 - Lanzamiento Inicial
-- Versión base de la aplicación.
-- Implementación de estado con `localStorage`.
-- Dashboard responsivo, listado de 48 selecciones y especiales (994 láminas).
-- Filtros por equipo/grupo/texto, ordenamientos dinámicos, gestión de repetidas y animaciones de `canvas` para celebraciones (Confetti).
+- **Progressive Web App:** Creación de
