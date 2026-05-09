@@ -2,6 +2,9 @@
 
 Todas las actualizaciones y cambios notables de la aplicación "Álbum Mundial 2026" se documentarán en este archivo.
 
+### v21 - Estandarización Universal de CSV (Anti-Encoding)
+- **Normalización de Tildes:** Al descargar archivos CSV de Faltantes o Repetidas, la app ahora remueve dinámicamente los acentos y tildes (`México` → `Mexico`) **solamente** en el archivo exportado (en la pantalla se siguen viendo perfectos). Esta es la única forma garantizada de que Google Sheets, Excel, Apple y Android abran el archivo sin romper la codificación de caracteres, independientemente de la configuración de región o idioma del celular.
+
 ### v20 - Integración Fuerte UTF-8 y Botón de Limpieza
 - **Inyección de Bytes (TextEncoder):** Se abandonó la concatenación de strings para exportaciones CSV, migrando al uso de `TextEncoder` y `Uint8Array`. Al convertir el CSV a bytes y adjuntar el BOM `0xEF, 0xBB, 0xBF` directo a nivel de memoria, se fuerza a los navegadores móviles a guardar un archivo UTF-8 inmaculado, resolviendo 100% los caracteres extraños en Google Sheets.
 - **Herramienta "Anti-Caché":** Se añadió un botón de rescate llamado "Forzar Actualización (Limpiar Caché)" dentro de Configuración. Este botón borra a la fuerza el almacenamiento del Service Worker y recarga la PWA pasando parámetros aleatorios en la URL para evitar quedarse atrapado en versiones viejas.
