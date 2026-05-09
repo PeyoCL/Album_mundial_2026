@@ -2,6 +2,9 @@
 
 Todas las actualizaciones y cambios notables de la aplicación "Álbum Mundial 2026" se documentarán en este archivo.
 
+### v15 - Precisión en Porcentajes (Bugfix)
+- **Corrección de Redondeo:** Se corrigió un error matemático donde la barra de progreso general y de equipo podía redondear a 100% prematuramente (ej. 991/994 láminas daba 99.7% = 100%). Ahora, el progreso de la colección está limitado de forma condicional: si no tienes exactamente todas las láminas, jamás mostrará el 100% ni lanzará las celebraciones antes de tiempo.
+
 ### v14 - Corrección Completa de Codificación en Exportaciones CSV
 - **Excel en Español:** Se cambió el delimitador de las columnas exportadas de coma (`,`) a punto y coma (`;`). Esto evita que Excel en sistemas configurados en español (que usan la coma para decimales) agrupe todas las columnas en una sola.
 - **BOM en UTF-8 nativo:** Se incluyó el marcador `\uFEFF` directamente en el string base del archivo JavaScript al exportar. Esto garantiza que todos los sistemas operativos (Windows/Mac) rendericen perfectamente los acentos y caracteres especiales.
