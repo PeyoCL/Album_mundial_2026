@@ -52,7 +52,6 @@
                 </div>
             </div>
         </header>
-
         <main id="main-content">
             <section id="tab-home" class="tab-pane active">
                 <div class="dashboard">
@@ -89,8 +88,7 @@
                     </div>
                 </div>
 
-                <div class="teams-grid" id="teams-grid">
-                    </div>
+                <div class="teams-grid" id="teams-grid"></div>
             </section>
 
             <section id="tab-trades" class="tab-pane">
@@ -104,8 +102,7 @@
                     <button id="btn-export-excel" disabled>Exportar Excel</button>
                     <button id="btn-download-missing" disabled>Descargar faltantes</button>
                 </div>
-                <div id="trades-list" class="trades-list">
-                    </div>
+                <div id="trades-list" class="trades-list"></div>
             </section>
 
             <section id="tab-match" class="tab-pane">
@@ -147,4 +144,58 @@
                     </div>
                     <div class="modal-team-stats">
                         <span id="modal-team-count">0/20</span>
-                        <button class="close-modal"
+                        <button class="close-modal" onclick="closeModal('modal-team')">✕</button>
+                    </div>
+                </div>
+                <div class="modal-body" id="modal-stickers-grid"></div>
+            </div>
+        </div>
+
+        <div id="modal-settings" class="modal">
+            <div class="modal-content settings-modal">
+                <div class="modal-header">
+                    <h2>Configuración</h2>
+                    <button class="close-modal" onclick="closeModal('modal-settings')">✕</button>
+                </div>
+                <div class="modal-body">
+                    <div style="margin-bottom: 1.5rem;">
+                        <label style="display:block; margin-bottom: 0.5rem; font-size:0.9rem; color: var(--text-secondary);">Tu Nombre o Alias (Para intercambios):</label>
+                        <input type="text" id="input-profile-name" placeholder="Ej. Juan Pérez" style="width: 100%;">
+                    </div>
+                    
+                    <button onclick="exportData()" class="btn-block">Exportar datos JSON (Backup)</button>
+                    <button onclick="document.getElementById('import-file').click()" class="btn-block">Importar datos JSON (Restaurar)</button>
+                    <input type="file" id="import-file" style="display:none" accept=".json" onchange="importData(event)">
+                    <button onclick="confirmReset()" class="btn-block btn-danger" style="margin-top: 1rem;">Reiniciar álbum</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="modal-share" class="modal">
+            <div class="modal-content share-modal">
+                <div class="modal-header">
+                    <h2>Compartir</h2>
+                    <button class="close-modal" onclick="closeModal('modal-share')">✕</button>
+                </div>
+                <div class="modal-body">
+                    <textarea id="share-textarea" readonly rows="10"></textarea>
+                    <button onclick="navigator.clipboard.writeText(document.getElementById('share-textarea').value); alert('¡Copiado!')" class="btn-block">Copiar al portapapeles</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="data.js?v=11"></script>
+    <script src="app.js?v=11"></script>
+    
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('./sw.js')
+            .then(reg => console.log('Service Worker registrado con éxito'))
+            .catch(err => console.warn('Error al registrar Service Worker', err));
+        });
+      }
+    </script>
+</body>
+</html>
