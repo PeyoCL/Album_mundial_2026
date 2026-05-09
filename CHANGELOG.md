@@ -23,7 +23,13 @@ Todas las actualizaciones y cambios notables de la aplicación "Álbum Mundial 2
 - **Consolidación de código:** Se entregó una base de código fuente revisada e íntegra para asegurar que la PWA se renderice perfectamente tanto en móvil como en escritorio.
 
 ### v9 - Corrección de Codificación en Exportaciones CSV
-- **UTF-8 estricto para Excel:** Inyección del *Byte Order Mark* (BOM `0xEF, 0xBB, 0xBF`) al generar los archivos CSV en Javascript para que Microsoft Excel (y Windows en general) reconozca de manera nativa y
+- **UTF-8 estricto para Excel:** Inyección del *Byte Order Mark* (BOM `0xEF, 0xBB, 0xBF`) al generar los archivos CSV en Javascript para que Microsoft Excel (y Windows en general) reconozca de manera nativa y directa caracteres especiales como tildes (ej: "Haití", "Turquía") en las listas exportadas.
+
+### v8 - Inclusividad y Mejoras UX
+- **Refactorización de lenguaje:** Textos adaptados para usar lenguaje inclusivo y neutro en la sección Match ("tu contacto", "amigo o amiga").
+- **UX mejorado en Match:** Se agregó un botón "Limpiar texto" para resetear los resultados del intercambio rápidamente y poder pegar un nuevo código JSON de otra persona.
+- **Forzado de Caché:** Actualización del Service Worker para forzar a los dispositivos a tomar los últimos cambios de diseño.
+
 ### v7 - Personalización e Identidad
 - **Alias de usuario:** Nuevo campo en "Configuración" para definir el Nombre o Alias del coleccionista.
 - **Sincronización:** El nombre se refleja dinámicamente en el título de la cabecera y en los reportes de intercambio.
