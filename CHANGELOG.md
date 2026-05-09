@@ -2,6 +2,10 @@
 
 Todas las actualizaciones y cambios notables de la aplicación "Álbum Mundial 2026" se documentarán en este archivo.
 
+### v14 - Corrección Completa de Codificación en Exportaciones CSV
+- **Excel en Español:** Se cambió el delimitador de las columnas exportadas de coma (`,`) a punto y coma (`;`). Esto evita que Excel en sistemas configurados en español (que usan la coma para decimales) agrupe todas las columnas en una sola.
+- **BOM en UTF-8 nativo:** Se incluyó el marcador `\uFEFF` directamente en el string base del archivo JavaScript al exportar. Esto garantiza que todos los sistemas operativos (Windows/Mac) rendericen perfectamente los acentos y caracteres especiales.
+
 ### v13 - Optimización JSON de Intercambio (Match)
 - **Minificación de Payload:** Se rediseñó la función de copia de datos al portapapeles. Ahora genera un formato ultra comprimido (`{"n": "Nombre", "s": {"MEX1": 2}}`), filtrando láminas faltantes, propiedades inútiles y el historial. Esto reduce el peso del texto de 45KB a ~10KB, evitando que teléfonos o la app de WhatsApp trunquen el mensaje por límite de caracteres.
 - **Retrocompatibilidad:** La lógica del sistema Match ahora puede interpretar tanto el nuevo formato minimizado (v13+) como el antiguo formato completo de la app (v12-).
