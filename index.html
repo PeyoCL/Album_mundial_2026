@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Álbum Mundial 2026</title>
     
-    <!-- Configuración PWA -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0a0e1a">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -25,7 +24,7 @@
             <div class="header-top">
                 <div class="header-titles">
                     <h1 id="album-title" contenteditable="true" spellcheck="false">Mi Álbum</h1>
-                    <span class="subtitle">Mundial 2026 · 48 selecciones · 994 láminas <span class="app-version">v5</span></span>
+                    <span class="subtitle">Mundial 2026 · 48 selecciones · 994 láminas <span class="app-version">v6</span></span>
                 </div>
                 <div class="header-actions">
                     <button id="btn-theme" title="Cambiar Tema">🌙</button>
@@ -112,11 +111,32 @@
                     <!-- Lista de repetidas vía JS -->
                 </div>
             </section>
+
+            <!-- Nueva Pestaña Match -->
+            <section id="tab-match" class="tab-pane">
+                <div class="trades-header">
+                    <h2>Validar Intercambio</h2>
+                    <p style="color: var(--text-secondary); margin-top: 0.5rem; font-size: 0.9rem;">Compara tu álbum con el de un amigo para saber exactamente qué láminas pueden intercambiar.</p>
+                </div>
+                
+                <div class="match-setup">
+                    <button onclick="copyMyJsonForTrade()" class="btn-block" style="background: var(--bg-card); color: var(--gold); border: 1px solid var(--gold);">1. Copiar mis datos para enviar</button>
+                    <p style="text-align: center; margin: 1rem 0; font-size: 0.85rem; color: var(--text-muted);">o</p>
+                    <textarea id="match-input" rows="4" placeholder="2. Pega aquí los datos (JSON) que te envió tu amigo..."></textarea>
+                    <button onclick="compareTrades()" class="btn-block">3. Comparar álbumes</button>
+                </div>
+
+                <div id="match-results-container" style="display: none; margin-top: 2rem;">
+                    <div id="match-results"></div>
+                    <button id="btn-share-match" onclick="shareMatchWhatsApp()" class="btn-block" style="margin-top: 1rem; background: #25D366; color: white;">Compartir resumen por WhatsApp</button>
+                </div>
+            </section>
         </main>
 
         <nav class="bottom-nav">
             <button class="nav-btn active" data-target="tab-home">Álbum</button>
             <button class="nav-btn" data-target="tab-trades">Cambios</button>
+            <button class="nav-btn" data-target="tab-match">Match</button>
         </nav>
 
         <!-- Modales -->
@@ -135,9 +155,7 @@
                         <button class="close-modal" onclick="closeModal('modal-team')">✕</button>
                     </div>
                 </div>
-                <div class="modal-body" id="modal-stickers-grid">
-                    <!-- Láminas vía JS -->
-                </div>
+                <div class="modal-body" id="modal-stickers-grid"></div>
             </div>
         </div>
 
@@ -148,10 +166,10 @@
                     <button class="close-modal" onclick="closeModal('modal-settings')">✕</button>
                 </div>
                 <div class="modal-body">
-                    <button onclick="exportData()" class="btn-block">Exportar datos JSON</button>
-                    <button onclick="document.getElementById('import-file').click()" class="btn-block">Importar datos JSON</button>
+                    <button onclick="exportData()" class="btn-block">Exportar datos JSON (Backup)</button>
+                    <button onclick="document.getElementById('import-file').click()" class="btn-block">Importar datos JSON (Restaurar)</button>
                     <input type="file" id="import-file" style="display:none" accept=".json" onchange="importData(event)">
-                    <button onclick="confirmReset()" class="btn-block btn-danger">Reiniciar álbum</button>
+                    <button onclick="confirmReset()" class="btn-block btn-danger" style="margin-top: 1rem;">Reiniciar álbum</button>
                 </div>
             </div>
         </div>
@@ -159,12 +177,12 @@
         <div id="modal-share" class="modal">
             <div class="modal-content share-modal">
                 <div class="modal-header">
-                    <h2>Compartir Cambios</h2>
+                    <h2>Compartir</h2>
                     <button class="close-modal" onclick="closeModal('modal-share')">✕</button>
                 </div>
                 <div class="modal-body">
                     <textarea id="share-textarea" readonly rows="10"></textarea>
-                    <button onclick="navigator.clipboard.writeText(document.getElementById('share-textarea').value); alert('Copiado!')" class="btn-block">Copiar al portapapeles</button>
+                    <button onclick="navigator.clipboard.writeText(document.getElementById('share-textarea').value); alert('¡Copiado!')" class="btn-block">Copiar al portapapeles</button>
                 </div>
             </div>
         </div>
@@ -173,7 +191,6 @@
     <script src="data.js"></script>
     <script src="app.js"></script>
     
-    <!-- Registro del Service Worker para PWA -->
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
