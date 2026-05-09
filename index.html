@@ -24,7 +24,7 @@
             <div class="header-top">
                 <div class="header-titles">
                     <h1 id="album-title" contenteditable="true" spellcheck="false" title="Toca para editar tu nombre">Mi Álbum</h1>
-                    <span class="subtitle">Mundial 2026 · 48 selecciones · 994 láminas <span class="app-version">v8</span></span>
+                    <span class="subtitle">Mundial 2026 · 48 selecciones · 994 láminas <span class="app-version">v9</span></span>
                 </div>
                 <div class="header-actions">
                     <button id="btn-theme" title="Cambiar Tema">🌙</button>
@@ -54,7 +54,6 @@
         </header>
 
         <main id="main-content">
-            <!-- Pestaña Álbum -->
             <section id="tab-home" class="tab-pane active">
                 <div class="dashboard">
                     <div class="main-card">
@@ -91,11 +90,9 @@
                 </div>
 
                 <div class="teams-grid" id="teams-grid">
-                    <!-- Cards se insertan vía JS -->
-                </div>
+                    </div>
             </section>
 
-            <!-- Pestaña Cambios -->
             <section id="tab-trades" class="tab-pane">
                 <div class="trades-header">
                     <h2>Gestión de Cambios</h2>
@@ -108,11 +105,9 @@
                     <button id="btn-download-missing" disabled>Descargar faltantes</button>
                 </div>
                 <div id="trades-list" class="trades-list">
-                    <!-- Lista de repetidas vía JS -->
-                </div>
+                    </div>
             </section>
 
-            <!-- Pestaña Match -->
             <section id="tab-match" class="tab-pane">
                 <div class="trades-header">
                     <h2>Validar Intercambio</h2>
@@ -124,7 +119,6 @@
                     <p style="text-align: center; margin: 1rem 0; font-size: 0.85rem; color: var(--text-muted);">o</p>
                     <textarea id="match-input" rows="4" placeholder="2. Pega aquí los datos (JSON) que te enviaron..."></textarea>
                     <button onclick="compareTrades()" class="btn-block">3. Comparar álbumes</button>
-                    <!-- Nuevo Botón para limpiar -->
                     <button onclick="clearMatchInput()" class="btn-block" style="background: transparent; color: var(--text-secondary); border: 1px solid var(--border-subtle); margin-top: 0.5rem;">Limpiar texto</button>
                 </div>
 
@@ -141,7 +135,6 @@
             <button class="nav-btn" data-target="tab-match">Match</button>
         </nav>
 
-        <!-- Modales -->
         <div id="modal-team" class="modal">
             <div class="modal-content team-modal">
                 <div class="modal-header">
