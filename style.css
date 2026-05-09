@@ -127,7 +127,6 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 .progress-info p { color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0.8rem; }
 .linear-progress { height: 8px; background: var(--bg-surface); border-radius: 4px; overflow: hidden; }
 .linear-bar { height: 100%; background: var(--blue-accent); border-radius: 4px; transition: width 0.3s; }
-
 .teams-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 1rem; }
 .team-card {
     background: var(--bg-card); border: 1px solid var(--border-subtle);
