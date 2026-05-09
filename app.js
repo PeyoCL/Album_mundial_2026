@@ -127,7 +127,6 @@ function getTeamProgress(teamCode) {
     return { have, total: team.stickers.length };
 }
 
-/* --- CORRECCIÓN V15: Evitar 100% prematuro --- */
 function getTotalProgress() {
     let have = getHaveCount(); 
     let total = window.DATA ? window.DATA.TOTAL_STICKERS : 994;
@@ -213,7 +212,6 @@ function renderTeamsGrid(teams) {
 
 function makeTeamCard(team) {
     const prog = getTeamProgress(team.code);
-    /* --- CORRECCIÓN V15: Evitar 100% prematuro --- */
     let pct = Math.round((prog.have / prog.total) * 100) || 0;
     if (pct === 100 && prog.have < prog.total) pct = 99;
     
@@ -234,12 +232,16 @@ function makeTeamCard(team) {
 function makeStickerCard(sticker) {
     const st = getStickerState(sticker.code);
     const div = document.createElement('div');
-    div.className = `sticker ${st.have ? 'have animate-pop' : ''} ${sticker.type === 'special' ? 'special' : ''}`;
+    
+    // CORRECCIÓN V16: Todas estas son especiales (1, 13, CC, FWC)
+    const isSpecial = sticker.type === 'special' || sticker.type === 'shield' || sticker.type === 'group';
+    
+    div.className = `sticker ${st.have ? 'have animate-pop' : ''} ${isSpecial ? 'special' : ''}`;
     div.onclick = (e) => toggleSticker(sticker.code, e);
     let badge = st.count > 1 ? `<span class="sticker-badge">+${st.count - 1}</span>` : '';
-    let isGold = sticker.type === 'special' || sticker.type === 'shield';
+    
     div.innerHTML = `
-        <span class="sticker-name" style="${isGold ? 'color: var(--gold)' : ''}">Lám. ${sticker.name.replace(/[A-Z]+/, '') || sticker.name}</span>
+        <span class="sticker-name" style="${isSpecial ? 'color: var(--gold)' : ''}">Lám. ${sticker.name.replace(/[A-Z]+/, '') || sticker.name}</span>
         ${badge}<button class="btn-minus" onclick="decrementSticker('${sticker.code}', event)">-</button>
     `;
     return div;
@@ -271,7 +273,6 @@ function updateTeamCount(teamCode) {
     const cardBar = document.getElementById(`card-bar-${teamCode}`);
     const card = document.getElementById(`team-card-${teamCode}`);
     if (cardCount) {
-        /* --- CORRECCIÓN V15: Evitar 100% prematuro --- */
         let pct = Math.round((p.have / p.total) * 100) || 0;
         if (pct === 100 && p.have < p.total) pct = 99;
         
