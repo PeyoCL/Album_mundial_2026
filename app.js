@@ -413,7 +413,6 @@ function exportMissingExcel() {
     const blob = new Blob([bom, csv], { type: 'text/csv;charset=utf-8;' });
     downloadBlob(blob, 'faltantes_album_mundial_2026.csv');
 }
-
 function exportTradesPdf() {
     const p = getTotalProgress();
     let html = `<!DOCTYPE html><html><head><title>Cambios Álbum 2026</title><style>body{font-family:sans-serif; padding: 20px;} table{width:100%;border-collapse:collapse; margin-top: 20px;} th,td{border:1px solid #ccc;padding:8px;text-align:left;}</style></head><body>`;
@@ -434,15 +433,25 @@ function exportTradesPdf() {
         setTimeout(() => document.body.removeChild(iframe), 1000);
     }, 500);
 }
+
+// MATCH / Intercambios Modificado para compresión JSON v13
 function copyMyJsonForTrade() {
     if (state.profile.name === 'Mi Álbum') {
         const userName = prompt('Antes de compartir, ¿Cómo te llamas? (Para que la otra persona te identifique)');
         if (userName) updateProfileName(userName);
     }
 
-    const json = JSON.stringify(state);
+    // Compresión ultra ligera para evitar el límite del portapapeles de WhatsApp
+    const minified = { n: state.profile.name, s: {} };
+    for (const [code, sticker] of Object.entries(state.stickers)) {
+        if (sticker.have && sticker.count > 0) {
+            minified.s[code] = sticker.count;
+        }
+    }
+
+    const json = JSON.stringify(minified);
     navigator.clipboard.writeText(json).then(() => {
-        alert(`¡Los datos de ${state.profile.name} han sido copiados!\n\nEnvíalos a tu contacto para que los pegue en su aplicación.`);
+        alert(`¡Los datos de ${state.profile.name} han sido copiados (formato ligero)!\n\nEnvíalos a tu contacto para que los pegue en su aplicación.`);
     });
 }
 
@@ -465,8 +474,20 @@ function compareTrades() {
     
     if (!input) { alert('Pega los datos recibidos en el recuadro primero.'); return; }
     try {
-        const friendState = JSON.parse(input);
-        if (!friendState.stickers) throw new Error();
+        const parsed = JSON.parse(input);
+        let friendState = { profile: { name: 'Tu contacto' }, stickers: {} };
+
+        // Compatibilidad con el nuevo formato comprimido y el antiguo JSON
+        if (parsed.s) {
+            friendState.profile.name = parsed.n || 'Tu contacto';
+            for (const [code, count] of Object.entries(parsed.s)) {
+                friendState.stickers[code] = { have: true, count: count };
+            }
+        } else if (parsed.stickers) {
+            friendState = parsed;
+        } else {
+            throw new Error();
+        }
 
         let iReceive = {}; 
         let iGive = {};    
