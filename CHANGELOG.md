@@ -2,6 +2,9 @@
 
 Todas las actualizaciones y cambios notables de la aplicación "Álbum Mundial 2026" se documentarán en este archivo.
 
+### v16 - Estilos de Láminas Especiales
+- **Láminas de equipo (1 y 13):** Se aplicó correctamente la decoración dorada (borde, fondo y texto) a las láminas tipo Escudo (1) y Foto de Equipo (13), para diferenciarlas visualmente del resto de láminas genéricas según las reglas iniciales de la colección.
+
 ### v15 - Precisión en Porcentajes (Bugfix)
 - **Corrección de Redondeo:** Se corrigió un error matemático donde la barra de progreso general y de equipo podía redondear a 100% prematuramente (ej. 991/994 láminas daba 99.7% = 100%). Ahora, el progreso de la colección está limitado de forma condicional: si no tienes exactamente todas las láminas, jamás mostrará el 100% ni lanzará las celebraciones antes de tiempo.
 
