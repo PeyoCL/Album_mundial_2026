@@ -59,7 +59,6 @@ function updateProfileName(newName, updateInput = true) {
         const inputEl = document.getElementById('input-profile-name');
         if (inputEl) inputEl.value = name === 'Mi Álbum' ? '' : name;
     }
-    
     saveState();
 }
 
@@ -108,7 +107,6 @@ function toggleSticker(code, ev) {
     if(currentOpenTeam) renderStickersGrid(currentOpenTeam);
     updateHomeProgress();
 }
-
 function decrementSticker(code, ev) {
     if(ev) ev.stopPropagation();
     let s = getStickerState(code);
@@ -151,6 +149,7 @@ function checkMilestones() {
         }
     }
 }
+
 function getRepeatedList() {
     let repeated = [];
     if (!window.DATA || !window.DATA.TEAMS) return repeated;
@@ -202,7 +201,6 @@ function renderDashboardCards() {
     const repEl = document.getElementById('metric-repeated');
     if (repEl) repEl.innerText = `${rep} rep.`;
 }
-
 function renderTeamsGrid(teams) {
     const grid = document.getElementById('teams-grid'); 
     if(!grid) return;
@@ -289,6 +287,7 @@ function updateTeamCount(teamCode) {
         } else { card.classList.remove('completed'); }
     }
 }
+
 function applyCollectionSearch() {
     if (!window.DATA || !window.DATA.TEAMS) return;
     let filtered = window.DATA.TEAMS.filter(t => {
@@ -309,17 +308,13 @@ function applyCollectionSearch() {
 
     renderTeamsGrid(filtered);
 }
-
 function clearFilters() {
     const searchInput = document.getElementById('search-input');
     if(searchInput) searchInput.value = '';
-    
     const filterTeam = document.getElementById('filter-team');
     if(filterTeam) filterTeam.value = 'all';
-    
     const filterGroup = document.getElementById('filter-group');
     if(filterGroup) filterGroup.value = 'all';
-    
     activeSearch = { ...activeSearch, text: '', team: 'all', group: 'all' };
     applyCollectionSearch();
 }
@@ -339,10 +334,8 @@ function populateGroupFilter() {
 
 function renderTrades() {
     const reps = getRepeatedList(); const total = getRepeatedTotal();
-    
     const textEl = document.getElementById('trades-total-text');
     if(textEl) textEl.innerText = `Total repetidas: ${total}`;
-    
     const list = document.getElementById('trades-list');
     if(!list) return;
     list.innerHTML = '';
@@ -361,16 +354,12 @@ function renderTrades() {
 
 function updateTradeExportButtons(hasRepeated) {
     const disabled = !hasRepeated;
-    
     const btnShare = document.getElementById('btn-share-list');
     if(btnShare) btnShare.disabled = disabled;
-    
     const btnPdf = document.getElementById('btn-export-pdf');
     if(btnPdf) btnPdf.disabled = disabled;
-    
     const btnExcel = document.getElementById('btn-export-excel');
     if(btnExcel) btnExcel.disabled = disabled;
-    
     const complete = getTotalProgress().percentage === 100;
     const btnMissing = document.getElementById('btn-download-missing');
     if(btnMissing) btnMissing.disabled = complete;
@@ -403,26 +392,21 @@ function generateShareText() {
     const p = getTotalProgress();
     let txt = `*${state.profile.name}*\nProgreso: ${p.have}/${p.total} (${p.percentage}%)\nRepetidas: ${getRepeatedTotal()}\n\n`;
     getTradeExportRows().forEach(r => { txt += `${r.section}: ${r.text}\n`; });
-    
     const shareText = document.getElementById('share-textarea');
     if(shareText) shareText.value = txt;
-    
     showModal('modal-share');
 }
 
-/* --- EXPORTACIONES EXCEL v19 (Codificación a prueba de balas) --- */
+/* --- EXPORTACIONES EXCEL v20 (UTF-8 Bytes Puros para Google Sheets) --- */
 function exportTradesExcel() {
     let csv = 'Sección,Láminas Repetidas\n';
     getTradeExportRows().forEach(r => { csv += `"${r.section}","${r.text}"\n`; });
-    
     const encoder = new TextEncoder();
     const csvBytes = encoder.encode(csv);
     const bom = new Uint8Array([0xEF, 0xBB, 0xBF]);
-    
     const finalBlobBytes = new Uint8Array(bom.byteLength + csvBytes.byteLength);
     finalBlobBytes.set(bom, 0);
     finalBlobBytes.set(csvBytes, bom.byteLength);
-    
     const blob = new Blob([finalBlobBytes], { type: 'text/csv;charset=utf-8' });
     downloadBlob(blob, 'cambios_album_mundial_2026.csv');
 }
@@ -430,18 +414,16 @@ function exportTradesExcel() {
 function exportMissingExcel() {
     let csv = 'Sección,Láminas Faltantes\n';
     getMissingExportRows().forEach(r => { csv += `"${r.section}","${r.text}"\n`; });
-    
     const encoder = new TextEncoder();
     const csvBytes = encoder.encode(csv);
     const bom = new Uint8Array([0xEF, 0xBB, 0xBF]);
-    
     const finalBlobBytes = new Uint8Array(bom.byteLength + csvBytes.byteLength);
     finalBlobBytes.set(bom, 0);
     finalBlobBytes.set(csvBytes, bom.byteLength);
-    
     const blob = new Blob([finalBlobBytes], { type: 'text/csv;charset=utf-8' });
     downloadBlob(blob, 'faltantes_album_mundial_2026.csv');
 }
+
 function exportTradesPdf() {
     const p = getTotalProgress();
     let html = `<!DOCTYPE html><html><head><title>Cambios Álbum 2026</title><style>body{font-family:sans-serif; padding: 20px;} table{width:100%;border-collapse:collapse; margin-top: 20px;} th,td{border:1px solid #ccc;padding:8px;text-align:left;}</style></head><body>`;
@@ -453,7 +435,6 @@ function exportTradesPdf() {
     const iframe = document.createElement('iframe');
     iframe.style.position = 'absolute'; iframe.style.width = '0px'; iframe.style.height = '0px'; iframe.style.border = 'none';
     document.body.appendChild(iframe);
-    
     const doc = iframe.contentWindow || iframe.contentDocument.document || iframe.contentDocument;
     doc.document.open(); doc.document.write(html); doc.document.close();
     iframe.contentWindow.focus();
@@ -468,14 +449,10 @@ function copyMyJsonForTrade() {
         const userName = prompt('Antes de compartir, ¿Cómo te llamas? (Para que la otra persona te identifique)');
         if (userName) updateProfileName(userName);
     }
-
     const minified = { n: state.profile.name, s: {} };
     for (const [code, sticker] of Object.entries(state.stickers)) {
-        if (sticker.have && sticker.count > 0) {
-            minified.s[code] = sticker.count;
-        }
+        if (sticker.have && sticker.count > 0) { minified.s[code] = sticker.count; }
     }
-
     const json = JSON.stringify(minified);
     navigator.clipboard.writeText(json).then(() => {
         alert(`¡Los datos de ${state.profile.name} han sido copiados (formato ligero)!\n\nEnvíalos a tu contacto para que los pegue en su aplicación.`);
@@ -487,10 +464,8 @@ let lastMatchResult = null;
 function clearMatchInput() {
     const matchInput = document.getElementById('match-input');
     if(matchInput) matchInput.value = '';
-    
     const resultsContainer = document.getElementById('match-results-container');
     if(resultsContainer) resultsContainer.style.display = 'none';
-    
     lastMatchResult = null;
 }
 
@@ -498,26 +473,18 @@ function compareTrades() {
     const inputEl = document.getElementById('match-input');
     if(!inputEl) return;
     const input = inputEl.value.trim();
-    
     if (!input) { alert('Pega los datos recibidos en el recuadro primero.'); return; }
     try {
         const parsed = JSON.parse(input);
         let friendState = { profile: { name: 'Tu contacto' }, stickers: {} };
-
         if (parsed.s) {
             friendState.profile.name = parsed.n || 'Tu contacto';
             for (const [code, count] of Object.entries(parsed.s)) {
                 friendState.stickers[code] = { have: true, count: count };
             }
-        } else if (parsed.stickers) {
-            friendState = parsed;
-        } else {
-            throw new Error();
-        }
+        } else if (parsed.stickers) { friendState = parsed; } else { throw new Error(); }
 
-        let iReceive = {}; 
-        let iGive = {};    
-        
+        let iReceive = {}; let iGive = {};    
         if (!window.DATA || !window.DATA.TEAMS) return;
 
         window.DATA.TEAMS.forEach(team => {
@@ -541,7 +508,6 @@ function compareTrades() {
 
         lastMatchResult = { iReceive, iGive, friendName: friendState.profile?.name || 'Tu contacto' };
         renderMatchResults();
-
     } catch(e) { alert('Los datos pegados no son válidos. Asegúrate de copiar el texto completo.'); }
 }
 
@@ -551,22 +517,15 @@ function renderMatchResults() {
     if(!lastMatchResult || !container || !wrap) return;
 
     let html = `<p style="text-align:center; color:var(--text-secondary); margin-bottom:1rem;">Comparación con: <strong style="color:var(--text-primary); font-size:1.1rem;">${lastMatchResult.friendName}</strong></p><div class="match-columns">`;
-    
     html += '<div class="match-col"><h3>⬇️ Me puede dar</h3>';
     let recCount = 0;
-    for(let team in lastMatchResult.iReceive) {
-        html += `<strong>${team}</strong><span>${lastMatchResult.iReceive[team].join(', ')}</span>`;
-        recCount += lastMatchResult.iReceive[team].length;
-    }
+    for(let team in lastMatchResult.iReceive) { html += `<strong>${team}</strong><span>${lastMatchResult.iReceive[team].join(', ')}</span>`; recCount++; }
     if(recCount === 0) html += '<p class="text-muted">Ninguna :(</p>';
     html += '</div>';
 
     html += '<div class="match-col"><h3>⬆️ Le puedo dar</h3>';
     let giveCount = 0;
-    for(let team in lastMatchResult.iGive) {
-        html += `<strong>${team}</strong><span>${lastMatchResult.iGive[team].join(', ')}</span>`;
-        giveCount += lastMatchResult.iGive[team].length;
-    }
+    for(let team in lastMatchResult.iGive) { html += `<strong>${team}</strong><span>${lastMatchResult.iGive[team].join(', ')}</span>`; giveCount++; }
     if(giveCount === 0) html += '<p class="text-muted">Ninguna :(</p>';
     html += '</div></div>';
 
@@ -577,21 +536,13 @@ function renderMatchResults() {
 function shareMatchWhatsApp() {
     if(!lastMatchResult) return;
     let text = `*¡Hola ${lastMatchResult.friendName}! He revisado las láminas para intercambiar:*\n\n`;
-    
     text += `*⬇️ Me puedes dar:*\n`;
     let recCount = 0;
-    for(let team in lastMatchResult.iReceive) {
-        text += `- ${team}: ${lastMatchResult.iReceive[team].join(', ')}\n`;
-        recCount++;
-    }
+    for(let team in lastMatchResult.iReceive) { text += `- ${team}: ${lastMatchResult.iReceive[team].join(', ')}\n`; recCount++; }
     if(recCount === 0) text += 'Ninguna\n';
-
     text += `\n*⬆️ Yo te puedo dar:*\n`;
     let giveCount = 0;
-    for(let team in lastMatchResult.iGive) {
-        text += `- ${team}: ${lastMatchResult.iGive[team].join(', ')}\n`;
-        giveCount++;
-    }
+    for(let team in lastMatchResult.iGive) { text += `- ${team}: ${lastMatchResult.iGive[team].join(', ')}\n`; giveCount++; }
     if(giveCount === 0) text += 'Ninguna\n';
 
     const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
@@ -623,6 +574,19 @@ function importData(e) {
 }
 
 function confirmReset() { if (confirm('¿Seguro que deseas reiniciar el álbum?')) { state.stickers = {}; state.milestones = {}; saveState(); closeModal('modal-settings'); init(); } }
+
+function forceUpdateCache() {
+    if ('caches' in window) {
+        caches.keys().then(function(names) {
+            for (let name of names) caches.delete(name);
+        }).then(() => {
+            alert("Caché borrada con éxito. La aplicación se recargará para descargar la nueva versión.");
+            window.location.href = window.location.pathname + '?v=' + new Date().getTime();
+        });
+    } else {
+        window.location.reload(true);
+    }
+}
 
 function toggleTheme() {
     const root = document.documentElement;
