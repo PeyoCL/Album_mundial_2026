@@ -2,6 +2,10 @@
 
 Todas las actualizaciones y cambios notables de la aplicación "Álbum Mundial 2026" se documentarán en este archivo.
 
+### v22 - Soporte Nativo de Instalación para iOS
+- **Detección Inteligente de Safari:** Se agregó un script que detecta si el usuario está abriendo la aplicación desde un dispositivo iOS (iPhone/iPad) a través de Safari, y si no está en modo "Standalone" (instalada).
+- **Guía Visual de Instalación:** Al detectar iOS, se muestra una ventana flotante discreta en la parte inferior explicando al usuario el proceso manual de Apple ("Compartir" > "Añadir a la pantalla de inicio"), incluyendo un ícono vectorial idéntico al nativo de iOS para facilitar su uso.
+
 ### v21 - Estandarización Universal de CSV (Anti-Encoding)
 - **Normalización de Tildes:** Al descargar archivos CSV de Faltantes o Repetidas, la app ahora remueve dinámicamente los acentos y tildes (`México` → `Mexico`) **solamente** en el archivo exportado (en la pantalla se siguen viendo perfectos). Esta es la única forma garantizada de que Google Sheets, Excel, Apple y Android abran el archivo sin romper la codificación de caracteres, independientemente de la configuración de región o idioma del celular.
 
