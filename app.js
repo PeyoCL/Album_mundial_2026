@@ -34,9 +34,34 @@ function init() {
         observeHeaderOffset();
         renderHome();
         updateTradeExportButtons();
+        
+        // Verificación de iPhone para PWA manual
+        checkIOSInstall();
     } catch (error) {
         console.error("Error crítico evitado en init():", error);
         bindEvents(); 
+    }
+}
+
+function checkIOSInstall() {
+    const isIos = () => {
+        const userAgent = window.navigator.userAgent.toLowerCase();
+        return /iphone|ipad|ipod/.test(userAgent);
+    };
+    const isStandalone = () => ('standalone' in window.navigator) && window.navigator.standalone;
+    
+    // Si es un iPhone y está en el navegador (no instalado)
+    if (isIos() && !isStandalone()) {
+        const prompt = document.getElementById('ios-install-prompt');
+        if (prompt && !localStorage.getItem('ios_prompt_dismissed')) {
+            prompt.style.display = 'block';
+            
+            // Cerrar el prompt guarda un flag para no molestar más
+            prompt.querySelector('.close-ios-prompt').onclick = () => {
+                prompt.style.display = 'none';
+                localStorage.setItem('ios_prompt_dismissed', 'true');
+            };
+        }
     }
 }
 
@@ -78,7 +103,6 @@ function saveState() {
     state.lastUpdated = Date.now();
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 }
-
 function migrateStickerCodes() {
     let migrated = false;
     const newStickers = {};
@@ -107,6 +131,7 @@ function toggleSticker(code, ev) {
     if(currentOpenTeam) renderStickersGrid(currentOpenTeam);
     updateHomeProgress();
 }
+
 function decrementSticker(code, ev) {
     if(ev) ev.stopPropagation();
     let s = getStickerState(code);
@@ -201,7 +226,6 @@ function renderDashboardCards() {
     const repEl = document.getElementById('metric-repeated');
     if (repEl) repEl.innerText = `${rep} rep.`;
 }
-
 function renderTeamsGrid(teams) {
     const grid = document.getElementById('teams-grid'); 
     if(!grid) return;
@@ -213,6 +237,7 @@ function renderTeamsGrid(teams) {
     
     toRender.forEach(team => { grid.appendChild(makeTeamCard(team)); });
 }
+
 function makeTeamCard(team) {
     const prog = getTeamProgress(team.code);
     let pct = Math.round((prog.have / prog.total) * 100) || 0;
@@ -401,14 +426,26 @@ function removeAccents(str) {
 function exportTradesExcel() {
     let csv = 'Seccion,Laminas Repetidas\n';
     getTradeExportRows().forEach(r => { csv += `"${removeAccents(r.section)}","${r.text}"\n`; });
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const encoder = new TextEncoder();
+    const csvBytes = encoder.encode(csv);
+    const bom = new Uint8Array([0xEF, 0xBB, 0xBF]);
+    const finalBlobBytes = new Uint8Array(bom.byteLength + csvBytes.byteLength);
+    finalBlobBytes.set(bom, 0);
+    finalBlobBytes.set(csvBytes, bom.byteLength);
+    const blob = new Blob([finalBlobBytes], { type: 'text/csv;charset=utf-8' });
     downloadBlob(blob, 'cambios_album_mundial_2026.csv');
 }
 
 function exportMissingExcel() {
     let csv = 'Seccion,Laminas Faltantes\n';
     getMissingExportRows().forEach(r => { csv += `"${removeAccents(r.section)}","${r.text}"\n`; });
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const encoder = new TextEncoder();
+    const csvBytes = encoder.encode(csv);
+    const bom = new Uint8Array([0xEF, 0xBB, 0xBF]);
+    const finalBlobBytes = new Uint8Array(bom.byteLength + csvBytes.byteLength);
+    finalBlobBytes.set(bom, 0);
+    finalBlobBytes.set(csvBytes, bom.byteLength);
+    const blob = new Blob([finalBlobBytes], { type: 'text/csv;charset=utf-8' });
     downloadBlob(blob, 'faltantes_album_mundial_2026.csv');
 }
 
