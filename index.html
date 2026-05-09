@@ -24,7 +24,7 @@
             <div class="header-top">
                 <div class="header-titles">
                     <h1 id="album-title" contenteditable="true" spellcheck="false" title="Toca para editar tu nombre">Mi Álbum</h1>
-                    <span class="subtitle">Mundial 2026 · 48 selecciones · 994 láminas <span class="app-version">v7</span></span>
+                    <span class="subtitle">Mundial 2026 · 48 selecciones · 994 láminas <span class="app-version">v8</span></span>
                 </div>
                 <div class="header-actions">
                     <button id="btn-theme" title="Cambiar Tema">🌙</button>
@@ -116,14 +116,16 @@
             <section id="tab-match" class="tab-pane">
                 <div class="trades-header">
                     <h2>Validar Intercambio</h2>
-                    <p style="color: var(--text-secondary); margin-top: 0.5rem; font-size: 0.9rem;">Compara tu álbum con el de un amigo para saber exactamente qué láminas pueden intercambiar.</p>
+                    <p style="color: var(--text-secondary); margin-top: 0.5rem; font-size: 0.9rem;">Compara tu álbum con el de un amigo o amiga para saber exactamente qué láminas pueden intercambiar.</p>
                 </div>
                 
                 <div class="match-setup">
                     <button id="btn-copy-match" onclick="copyMyJsonForTrade()" class="btn-block" style="background: var(--bg-card); color: var(--gold); border: 1px solid var(--gold);">1. Copiar mis datos</button>
                     <p style="text-align: center; margin: 1rem 0; font-size: 0.85rem; color: var(--text-muted);">o</p>
-                    <textarea id="match-input" rows="4" placeholder="2. Pega aquí los datos (JSON) que te envió tu amigo..."></textarea>
+                    <textarea id="match-input" rows="4" placeholder="2. Pega aquí los datos (JSON) que te enviaron..."></textarea>
                     <button onclick="compareTrades()" class="btn-block">3. Comparar álbumes</button>
+                    <!-- Nuevo Botón para limpiar -->
+                    <button onclick="clearMatchInput()" class="btn-block" style="background: transparent; color: var(--text-secondary); border: 1px solid var(--border-subtle); margin-top: 0.5rem;">Limpiar texto</button>
                 </div>
 
                 <div id="match-results-container" style="display: none; margin-top: 2rem;">
@@ -166,7 +168,6 @@
                     <button class="close-modal" onclick="closeModal('modal-settings')">✕</button>
                 </div>
                 <div class="modal-body">
-                    <!-- Nuevo campo para el nombre -->
                     <div style="margin-bottom: 1.5rem;">
                         <label style="display:block; margin-bottom: 0.5rem; font-size:0.9rem; color: var(--text-secondary);">Tu Nombre o Alias (Para intercambios):</label>
                         <input type="text" id="input-profile-name" placeholder="Ej. Juan Pérez" style="width: 100%;">
