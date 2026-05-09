@@ -322,16 +322,21 @@ function generateShareText() {
     showModal('modal-share');
 }
 
+/* Modificado para forzar UTF-8 con BOM en Windows/Excel */
 function exportTradesExcel() {
-    let csv = '\uFEFFSección,Láminas Repetidas\n';
+    let csv = 'Sección,Láminas Repetidas\n';
     getTradeExportRows().forEach(r => { csv += `"${r.section}","${r.text}"\n`; });
-    downloadBlob(csv, 'cambios_album_mundial_2026.csv', 'text/csv;charset=utf-8;');
+    const bom = new Uint8Array([0xEF, 0xBB, 0xBF]);
+    const blob = new Blob([bom, csv], { type: 'text/csv;charset=utf-8;' });
+    downloadBlob(blob, 'cambios_album_mundial_2026.csv');
 }
 
 function exportMissingExcel() {
-    let csv = '\uFEFFSección,Láminas Faltantes\n';
+    let csv = 'Sección,Láminas Faltantes\n';
     getMissingExportRows().forEach(r => { csv += `"${r.section}","${r.text}"\n`; });
-    downloadBlob(csv, 'faltantes_album_mundial_2026.csv', 'text/csv;charset=utf-8;');
+    const bom = new Uint8Array([0xEF, 0xBB, 0xBF]);
+    const blob = new Blob([bom, csv], { type: 'text/csv;charset=utf-8;' });
+    downloadBlob(blob, 'faltantes_album_mundial_2026.csv');
 }
 
 function exportTradesPdf() {
@@ -461,105 +466,3 @@ function shareMatchWhatsApp() {
     if(giveCount === 0) text += 'Ninguna\n';
 
     const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
-    window.open(url, '_blank');
-}
-
-function downloadBlob(content, filename, type) {
-    const blob = new Blob([content], { type: type }); const url = URL.createObjectURL(blob);
-    const a = document.createElement('a'); a.href = url; a.download = filename;
-    document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
-}
-
-function exportData() {
-    const json = JSON.stringify(state, null, 2);
-    downloadBlob(json, 'album_mundial_2026.json', 'application/json');
-}
-
-function importData(e) {
-    const file = e.target.files[0]; if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (event) => {
-        try {
-            const data = JSON.parse(event.target.result);
-            if (data.stickers) { state = data; saveState(); init(); closeModal('modal-settings'); alert('Álbum restaurado.'); }
-        } catch (err) { alert('Archivo JSON inválido.'); }
-    };
-    reader.readAsText(file);
-}
-
-function confirmReset() { if (confirm('¿Seguro que deseas reiniciar el álbum?')) { state.stickers = {}; state.milestones = {}; saveState(); closeModal('modal-settings'); init(); } }
-
-function toggleTheme() {
-    const root = document.documentElement;
-    if (root.getAttribute('data-theme') === 'light') { root.removeAttribute('data-theme'); localStorage.setItem('album_theme_2026', 'dark'); } 
-    else { root.setAttribute('data-theme', 'light'); localStorage.setItem('album_theme_2026', 'light'); }
-}
-
-function loadTheme() { const theme = localStorage.getItem('album_theme_2026'); if (theme === 'light') document.documentElement.setAttribute('data-theme', 'light'); }
-
-function showModal(id) { document.getElementById(id).style.display = 'flex'; }
-function closeModal(id) { document.getElementById(id).style.display = 'none'; currentOpenTeam = null; }
-
-function updateHeaderOffset() {
-    const header = document.querySelector('.app-header');
-    if(header) document.documentElement.style.setProperty('--header-offset', `${header.offsetHeight + 18}px`);
-}
-
-function observeHeaderOffset() {
-    updateHeaderOffset();
-    if(window.ResizeObserver) new ResizeObserver(() => updateHeaderOffset()).observe(document.querySelector('.app-header'));
-    window.addEventListener('resize', updateHeaderOffset);
-    window.addEventListener('orientationchange', () => { setTimeout(updateHeaderOffset, 150); });
-    if(document.fonts) document.fonts.ready.then(updateHeaderOffset);
-}
-
-function bindEvents() {
-    document.getElementById('btn-theme').onclick = toggleTheme;
-    document.getElementById('btn-settings').onclick = () => showModal('modal-settings');
-    document.getElementById('btn-clear-filters').onclick = clearFilters;
-    document.getElementById('search-input').oninput = (e) => { activeSearch.text = e.target.value; applyCollectionSearch(); };
-    document.getElementById('filter-team').onchange = (e) => { activeSearch.team = e.target.value; applyCollectionSearch(); };
-    document.getElementById('filter-group').onchange = (e) => { activeSearch.group = e.target.value; applyCollectionSearch(); };
-    document.getElementById('sort-select').onchange = (e) => { activeSearch.sort = e.target.value; applyCollectionSearch(); };
-    document.getElementById('btn-share-list').onclick = generateShareText;
-    document.getElementById('btn-export-excel').onclick = exportTradesExcel;
-    document.getElementById('btn-export-pdf').onclick = exportTradesPdf;
-    document.getElementById('btn-download-missing').onclick = exportMissingExcel;
-
-    document.querySelectorAll('.nav-btn').forEach(btn => {
-        btn.onclick = () => {
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-            document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
-            btn.classList.add('active');
-            const target = btn.getAttribute('data-target');
-            document.getElementById(target).classList.add('active');
-            if (target === 'tab-trades') renderTrades();
-            window.scrollTo(0, 0);
-        };
-    });
-}
-
-function triggerConfetti(x, y) {
-    const canvas = document.getElementById('confetti-canvas'); const ctx = canvas.getContext('2d');
-    canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-    let particles = [];
-    for(let i=0; i<30; i++) particles.push({ x: x, y: y, r: Math.random() * 4 + 2, dx: Math.random() * 6 - 3, dy: Math.random() * -6 - 2, color: `hsl(${Math.random() * 360}, 100%, 50%)` });
-    function animate() {
-        ctx.clearRect(0,0,canvas.width,canvas.height); let active = false;
-        particles.forEach(p => {
-            p.x += p.dx; p.y += p.dy; p.dy += 0.2;
-            ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fillStyle = p.color; ctx.fill();
-            if(p.y < canvas.height) active = true;
-        });
-        if(active) requestAnimationFrame(animate); else ctx.clearRect(0,0,canvas.width,canvas.height);
-    }
-    animate();
-}
-
-function shootBigConfetti() {
-    triggerConfetti(window.innerWidth/2, window.innerHeight/2);
-    setTimeout(() => triggerConfetti(window.innerWidth/3, window.innerHeight/2), 200);
-    setTimeout(() => triggerConfetti((window.innerWidth/3)*2, window.innerHeight/2), 400);
-}
-
-document.addEventListener('DOMContentLoaded', init);
