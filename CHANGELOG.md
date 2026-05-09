@@ -2,6 +2,9 @@
 
 Todas las actualizaciones y cambios notables de la aplicación "Álbum Mundial 2026" se documentarán en este archivo.
 
+### v17 - Formato de Nomenclatura
+- **Visualización de códigos:** A petición, se cambió el formato genérico de "Lám. 1" para mostrar el código completo de la lámina incluyendo la abreviatura del equipo y un espacio (ej: "MEX 1", "FWC 12"), tanto en la cuadrícula del álbum como en las exportaciones y en la sección Match.
+
 ### v16 - Estilos de Láminas Especiales
 - **Láminas de equipo (1 y 13):** Se aplicó correctamente la decoración dorada (borde, fondo y texto) a las láminas tipo Escudo (1) y Foto de Equipo (13), para diferenciarlas visualmente del resto de láminas genéricas según las reglas iniciales de la colección.
 
