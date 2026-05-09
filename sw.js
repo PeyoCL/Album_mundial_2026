@@ -1,4 +1,4 @@
-const CACHE_NAME = 'album-2026-v7'; 
+const CACHE_NAME = 'album-2026-v8'; 
 
 const urlsToCache = [
   './',
