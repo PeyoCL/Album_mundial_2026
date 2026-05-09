@@ -1,5 +1,5 @@
-// Aumentamos a la Versión 4
-const CACHE_NAME = 'album-2026-v4'; 
+// Aumentamos a la Versión 5
+const CACHE_NAME = 'album-2026-v5'; 
 
 const urlsToCache = [
   './',
