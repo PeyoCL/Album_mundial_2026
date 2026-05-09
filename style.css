@@ -60,9 +60,15 @@ h1, h2, h3, .kicker, .percentage, .results-counter, .modal-team-stats span {
     padding: 1rem;
     box-sizing: border-box;
 }
+
+/* Permitir que la cabecera fluya con la página en pantallas muy cortas (apaisadas) */
+@media (max-height: 500px) and (orientation: landscape) {
+    .app-header { position: absolute; }
+}
+
 [data-theme="light"] .app-header { background: rgba(255, 255, 255, 0.85); }
 
-.header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+.header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
 #album-title { font-size: 2rem; outline: none; border-bottom: 1px dashed transparent; transition: 0.3s; }
 #album-title:focus { border-bottom-color: var(--blue-accent); }
 .subtitle { font-size: 0.85rem; color: var(--text-secondary); }
@@ -72,10 +78,19 @@ h1, h2, h3, .kicker, .percentage, .results-counter, .modal-team-stats span {
     margin-left: 6px; font-weight: bold; letter-spacing: 0.5px;
 }
 
-.header-actions button { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-primary); }
+.header-actions button { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-primary); flex-shrink: 0;}
+
+/* Filtros en línea horizontales (Soluciona el problema de espacio) */
 .header-controls { display: flex; flex-direction: column; gap: 0.5rem; }
-.filters, .sort-bar { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
-.sort-bar { justify-content: center; width: 100%; margin-top: 0.5rem; }
+.filters, .sort-bar { 
+    display: flex; gap: 0.5rem; align-items: center; 
+    flex-wrap: nowrap; overflow-x: auto; 
+    padding-bottom: 4px; scrollbar-width: none; 
+    -webkit-overflow-scrolling: touch;
+}
+.filters::-webkit-scrollbar, .sort-bar::-webkit-scrollbar { display: none; }
+.sort-bar { width: 100%; margin-top: 0; justify-content: flex-start; }
+.filters > *, .sort-bar > * { flex-shrink: 0; }
 
 input, select, button {
     background: var(--bg-surface); color: var(--text-primary);
@@ -84,6 +99,7 @@ input, select, button {
 button { cursor: pointer; background: var(--bg-card); transition: background 0.2s; }
 button:hover:not(:disabled) { background: var(--bg-card-hover); }
 button:disabled { opacity: 0.5; cursor: not-allowed; }
+.search-bar { width: 100%; }
 .search-bar input { width: 100%; }
 
 #main-content { padding-bottom: 90px; }
@@ -107,12 +123,8 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 @media (min-width: 768px) {
     .main-card { flex: 1 1 60%; }
     .metric-cards { flex: 1 1 35%; flex-direction: column; }
-}
-@media (min-width: 1024px) {
-    .filters { flex-wrap: nowrap; }
-    .search-bar { flex: 1; }
-    .header-controls { flex-direction: row; align-items: center; }
-    .sort-bar { width: auto; margin-top: 0; margin-left: auto; justify-content: flex-end; }
+    .header-controls { flex-direction: row; }
+    .sort-bar { width: auto; justify-content: flex-end; margin-left: auto; }
 }
 
 .progress-ring-container { position: relative; width: 100px; height: 100px; flex-shrink: 0; }
@@ -182,7 +194,6 @@ textarea { width: 100%; background: var(--bg-base); color: var(--text-primary); 
 .trade-items { display: flex; flex-wrap: wrap; gap: 0.5rem; }
 .trade-item { background: var(--bg-base); padding: 0.3rem 0.6rem; border-radius: 4px; font-size: 0.85rem; border: 1px solid var(--border-subtle); }
 
-/* MATCH CSS */
 .match-columns { display: flex; gap: 1rem; flex-wrap: wrap; }
 .match-col { flex: 1; min-width: 250px; background: var(--bg-card); padding: 1.5rem; border-radius: 8px; border: 1px solid var(--border-subtle); }
 .match-col h3 { font-size: 1.2rem; margin-bottom: 1rem; color: var(--text-primary); }
