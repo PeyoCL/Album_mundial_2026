@@ -14,7 +14,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=13">
+    <link rel="stylesheet" href="style.css?v=14">
 </head>
 <body>
     <div id="app">
@@ -24,7 +24,7 @@
             <div class="header-top">
                 <div class="header-titles">
                     <h1 id="album-title" contenteditable="true" spellcheck="false" title="Toca para editar tu nombre">Mi Álbum</h1>
-                    <span class="subtitle">Mundial 2026 · 48 selecciones · 994 láminas <span class="app-version">v13</span></span>
+                    <span class="subtitle">Mundial 2026 · 48 selecciones · 994 láminas <span class="app-version">v14</span></span>
                 </div>
                 <div class="header-actions">
                     <button id="btn-theme" title="Cambiar Tema">🌙</button>
@@ -52,150 +52,3 @@
                 </div>
             </div>
         </header>
-        <main id="main-content">
-            <section id="tab-home" class="tab-pane active">
-                <div class="dashboard">
-                    <div class="main-card">
-                        <div class="progress-ring-container">
-                            <div class="progress-ring" id="main-progress-ring"></div>
-                            <div class="progress-ring-text">
-                                <span class="percentage" id="main-percentage">0%</span>
-                                <span class="label">Completado</span>
-                            </div>
-                        </div>
-                        <div class="progress-info">
-                            <span class="kicker">Tu colección</span>
-                            <h2>Progreso del álbum</h2>
-                            <p id="main-progress-text">Tienes 0 de 994 láminas únicas.</p>
-                            <div class="linear-progress">
-                                <div class="linear-bar" id="main-linear-bar" style="width: 0%;"></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="metric-cards">
-                        <div class="metric-card">
-                            <h3>Avance</h3>
-                            <p id="metric-advance">0%</p>
-                        </div>
-                        <div class="metric-card">
-                            <h3>Únicas</h3>
-                            <p id="metric-unique">0 / 994</p>
-                        </div>
-                        <div class="metric-card">
-                            <h3>Cambio</h3>
-                            <p id="metric-repeated">0 rep.</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="teams-grid" id="teams-grid"></div>
-            </section>
-
-            <section id="tab-trades" class="tab-pane">
-                <div class="trades-header">
-                    <h2>Gestión de Cambios</h2>
-                    <p class="repeated-total" id="trades-total-text">Total repetidas: 0</p>
-                </div>
-                <div class="trades-actions">
-                    <button id="btn-share-list" disabled>Compartir lista</button>
-                    <button id="btn-export-pdf" disabled>Exportar PDF</button>
-                    <button id="btn-export-excel" disabled>Exportar Excel</button>
-                    <button id="btn-download-missing" disabled>Descargar faltantes</button>
-                </div>
-                <div id="trades-list" class="trades-list"></div>
-            </section>
-
-            <section id="tab-match" class="tab-pane">
-                <div class="trades-header">
-                    <h2>Validar Intercambio</h2>
-                    <p style="color: var(--text-secondary); margin-top: 0.5rem; font-size: 0.9rem;">Compara tu álbum con el de un contacto para saber exactamente qué láminas pueden intercambiar.</p>
-                </div>
-                
-                <div class="match-setup">
-                    <button id="btn-copy-match" onclick="copyMyJsonForTrade()" class="btn-block" style="background: var(--bg-card); color: var(--gold); border: 1px solid var(--gold);">1. Copiar mis datos</button>
-                    <p style="text-align: center; margin: 1rem 0; font-size: 0.85rem; color: var(--text-muted);">o</p>
-                    <textarea id="match-input" rows="4" placeholder="2. Pega aquí los datos (código optimizado) que te enviaron..."></textarea>
-                    <button onclick="compareTrades()" class="btn-block">3. Comparar álbumes</button>
-                    <button onclick="clearMatchInput()" class="btn-block" style="background: transparent; color: var(--text-secondary); border: 1px solid var(--border-subtle); margin-top: 0.5rem;">Limpiar texto</button>
-                </div>
-
-                <div id="match-results-container" style="display: none; margin-top: 2rem;">
-                    <div id="match-results"></div>
-                    <button id="btn-share-match" onclick="shareMatchWhatsApp()" class="btn-block" style="margin-top: 1rem; background: #25D366; color: white;">Compartir resumen por WhatsApp</button>
-                </div>
-            </section>
-        </main>
-
-        <nav class="bottom-nav">
-            <button class="nav-btn active" data-target="tab-home">Álbum</button>
-            <button class="nav-btn" data-target="tab-trades">Cambios</button>
-            <button class="nav-btn" data-target="tab-match">Match</button>
-        </nav>
-
-        <div id="modal-team" class="modal">
-            <div class="modal-content team-modal">
-                <div class="modal-header">
-                    <div class="team-header-info">
-                        <img id="modal-team-icon" src="" alt="Icono" class="modal-icon">
-                        <div>
-                            <h2 id="modal-team-name">Equipo</h2>
-                            <span id="modal-team-group">Grupo</span>
-                        </div>
-                    </div>
-                    <div class="modal-team-stats">
-                        <span id="modal-team-count">0/20</span>
-                        <button class="close-modal" onclick="closeModal('modal-team')">✕</button>
-                    </div>
-                </div>
-                <div class="modal-body" id="modal-stickers-grid"></div>
-            </div>
-        </div>
-
-        <div id="modal-settings" class="modal">
-            <div class="modal-content settings-modal">
-                <div class="modal-header">
-                    <h2>Configuración</h2>
-                    <button class="close-modal" onclick="closeModal('modal-settings')">✕</button>
-                </div>
-                <div class="modal-body">
-                    <div style="margin-bottom: 1.5rem;">
-                        <label style="display:block; margin-bottom: 0.5rem; font-size:0.9rem; color: var(--text-secondary);">Tu Nombre o Alias (Para intercambios):</label>
-                        <input type="text" id="input-profile-name" placeholder="Ej. Juan Pérez" style="width: 100%;">
-                    </div>
-                    
-                    <button onclick="exportData()" class="btn-block">Exportar datos JSON (Backup)</button>
-                    <button onclick="document.getElementById('import-file').click()" class="btn-block">Importar datos JSON (Restaurar)</button>
-                    <input type="file" id="import-file" style="display:none" accept=".json" onchange="importData(event)">
-                    <button onclick="confirmReset()" class="btn-block btn-danger" style="margin-top: 1rem;">Reiniciar álbum</button>
-                </div>
-            </div>
-        </div>
-
-        <div id="modal-share" class="modal">
-            <div class="modal-content share-modal">
-                <div class="modal-header">
-                    <h2>Compartir</h2>
-                    <button class="close-modal" onclick="closeModal('modal-share')">✕</button>
-                </div>
-                <div class="modal-body">
-                    <textarea id="share-textarea" readonly rows="10"></textarea>
-                    <button onclick="navigator.clipboard.writeText(document.getElementById('share-textarea').value); alert('¡Copiado!')" class="btn-block">Copiar al portapapeles</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script src="data.js?v=13"></script>
-    <script src="app.js?v=13"></script>
-    
-    <script>
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('./sw.js')
-            .then(reg => console.log('Service Worker registrado con éxito'))
-            .catch(err => console.warn('Error al registrar Service Worker', err));
-        });
-      }
-    </script>
-</body>
-</html>
