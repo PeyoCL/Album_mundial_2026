@@ -2,6 +2,10 @@
 
 Todas las actualizaciones y cambios notables de la aplicación "Álbum Mundial 2026" se documentarán en este archivo.
 
+### v12 - Solución de Espacio en Pantalla (Layout móvil)
+- **Filtros deslizables (Scroll Horizontal):** Se evitó que los campos de búsqueda, botones y filtros del encabezado salten a múltiples líneas. Ahora se mantienen en una sola línea deslizable (`overflow-x: auto`), reduciendo la altura de la cabecera en móviles a la mitad.
+- **Cabecera Flotante (Landscape):** Al girar el celular en formato horizontal (menor a 500px de alto), la cabecera deja de estar anclada (`position: absolute`) y se desliza hacia arriba de forma natural, otorgando el 100% de la pantalla a la navegación del álbum.
+
 ### v11 (Actual) - Estabilidad y Rompe-caché
 - **Cache Busting:** Se añadieron parámetros `?v=11` en los enlaces de `style.css` y `app.js` en el HTML principal para forzar a los navegadores móviles a descargar siempre la última versión, ignorando cachés atascados.
 - **Protección Anti-Crash:** Se reescribió la función de inicio (`init()`) con programación defensiva (`try/catch`) para garantizar que la interfaz y los menús de navegación sigan funcionando incluso si los datos guardados (`localStorage`) en el dispositivo se corrompen.
