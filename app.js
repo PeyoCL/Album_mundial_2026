@@ -8,9 +8,18 @@ function init() {
     loadState();
     migrateStickerCodes();
     
+    // Sincronizar el nombre inicial en todas partes
+    updateProfileName(state.profile.name);
+
+    // Si edita dando clic al título principal en la cabecera
     const title = document.getElementById('album-title');
-    title.innerText = state.profile.name;
-    title.addEventListener('blur', () => { state.profile.name = title.innerText; saveState(); });
+    title.addEventListener('blur', () => { updateProfileName(title.innerText); });
+    title.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); title.blur(); } });
+
+    // Si edita desde el nuevo campo en Configuración
+    document.getElementById('input-profile-name').addEventListener('input', (e) => {
+        updateProfileName(e.target.value, false); 
+    });
 
     populateTeamFilter();
     populateGroupFilter();
@@ -19,6 +28,20 @@ function init() {
     observeHeaderOffset();
     renderHome();
     updateTradeExportButtons();
+}
+
+function updateProfileName(newName, updateInput = true) {
+    const name = newName.trim() || 'Mi Álbum';
+    state.profile.name = name;
+    
+    document.getElementById('album-title').innerText = name;
+    document.getElementById('btn-copy-match').innerText = `1. Copiar mis datos (${name})`;
+    
+    if(updateInput) {
+        document.getElementById('input-profile-name').value = name === 'Mi Álbum' ? '' : name;
+    }
+    
+    saveState();
 }
 
 function loadState() {
@@ -271,7 +294,6 @@ function updateTradeExportButtons(hasRepeated) {
     document.getElementById('btn-download-missing').disabled = complete;
 }
 
-// CORRECCIÓN: Agrupar exportaciones en una sola línea por país
 function getTradeExportRows() {
     let rows = [];
     getRepeatedList().forEach(g => {
@@ -336,10 +358,17 @@ function exportTradesPdf() {
     }, 500);
 }
 
-// NUEVO: Funciones de MATCH (Intercambio)
+// MATCH / Intercambios
 function copyMyJsonForTrade() {
+    if (state.profile.name === 'Mi Álbum') {
+        const userName = prompt('Antes de compartir, ¿Cómo te llamas? (Para que tu amigo te identifique)');
+        if (userName) updateProfileName(userName);
+    }
+
     const json = JSON.stringify(state);
-    navigator.clipboard.writeText(json).then(() => alert('¡Tus datos han sido copiados! Envíalos a tu amigo para que los pegue en su aplicación.'));
+    navigator.clipboard.writeText(json).then(() => {
+        alert(`¡Los datos de ${state.profile.name} han sido copiados!\n\nEnvíalos a tu amigo para que los pegue en su aplicación.`);
+    });
 }
 
 let lastMatchResult = null;
@@ -361,13 +390,11 @@ function compareTrades() {
                 const friendSticker = friendState.stickers[code] || { have: false, count: 0 };
                 const myName = s.name.replace(/[A-Z]+/, '') || s.name;
 
-                // Me sirve (Yo no la tengo, amigo tiene > 1)
                 if (!mySticker.have && friendSticker.have && friendSticker.count > 1) {
                     if(!iReceive[team.name]) iReceive[team.name] = [];
                     iReceive[team.name].push(myName);
                 }
 
-                // Le sirve (Amigo no la tiene, yo tengo > 1)
                 if (!friendSticker.have && mySticker.have && mySticker.count > 1) {
                     if(!iGive[team.name]) iGive[team.name] = [];
                     iGive[team.name].push(myName);
@@ -386,7 +413,7 @@ function renderMatchResults() {
     const wrap = document.getElementById('match-results-container');
     if(!lastMatchResult) return;
 
-    let html = `<p style="text-align:center; color:var(--text-secondary); margin-bottom:1rem;">Comparación con: <strong>${lastMatchResult.friendName}</strong></p><div class="match-columns">`;
+    let html = `<p style="text-align:center; color:var(--text-secondary); margin-bottom:1rem;">Comparación con: <strong style="color:var(--text-primary); font-size:1.1rem;">${lastMatchResult.friendName}</strong></p><div class="match-columns">`;
     
     html += '<div class="match-col"><h3>⬇️ Me puede dar</h3>';
     let recCount = 0;
@@ -412,7 +439,7 @@ function renderMatchResults() {
 
 function shareMatchWhatsApp() {
     if(!lastMatchResult) return;
-    let text = `*¡Hola! He revisado el álbum para intercambiar contigo:*\n\n`;
+    let text = `*¡Hola ${lastMatchResult.friendName}! He revisado el álbum para intercambiar contigo:*\n\n`;
     
     text += `*⬇️ Me puedes dar:*\n`;
     let recCount = 0;
