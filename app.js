@@ -31,7 +31,6 @@ function init() {
         updateTradeExportButtons();
     } catch (error) {
         console.error("Error crítico evitado en init():", error);
-        // Si hay un error, nos aseguramos que los botones sigan funcionando
         bindEvents(); 
     }
 }
@@ -145,7 +144,6 @@ function checkMilestones() {
         }
     }
 }
-
 function getRepeatedList() {
     let repeated = [];
     if (!window.DATA || !window.DATA.TEAMS) return repeated;
@@ -277,7 +275,6 @@ function updateTeamCount(teamCode) {
         } else { card.classList.remove('completed'); }
     }
 }
-
 function updateHomeProgress() { renderDashboardCards(); }
 
 function applyCollectionSearch() {
@@ -325,4 +322,349 @@ function populateGroupFilter() {
     const sel = document.getElementById('filter-group');
     if(!sel || !window.DATA || !window.DATA.TEAMS) return;
     const groups = new Set(window.DATA.TEAMS.map(t => t.group));
-    groups.forEach(g => { const opt = document.createElement('option'); opt.value = g
+    groups.forEach(g => { const opt = document.createElement('option'); opt.value = g; opt.innerText = g; sel.appendChild(opt); });
+}
+
+function renderTrades() {
+    const reps = getRepeatedList(); const total = getRepeatedTotal();
+    
+    const textEl = document.getElementById('trades-total-text');
+    if(textEl) textEl.innerText = `Total repetidas: ${total}`;
+    
+    const list = document.getElementById('trades-list');
+    if(!list) return;
+    list.innerHTML = '';
+    
+    if (reps.length === 0) { list.innerHTML = '<p style="color: var(--text-muted); text-align:center; padding: 2rem;">No tienes láminas repetidas aún.</p>'; }
+    else {
+        reps.forEach(group => {
+            const grpDiv = document.createElement('div'); grpDiv.className = 'trade-group';
+            let itemsHtml = group.items.map(i => `<span class="trade-item">Lám. ${i.name.replace(/[A-Z]+/, '') || i.name} (x${i.count})</span>`).join('');
+            grpDiv.innerHTML = `<h3>${group.team}</h3><div class="trade-items">${itemsHtml}</div>`;
+            list.appendChild(grpDiv);
+        });
+    }
+    updateTradeExportButtons(total > 0);
+}
+
+function updateTradeExportButtons(hasRepeated) {
+    const disabled = !hasRepeated;
+    
+    const btnShare = document.getElementById('btn-share-list');
+    if(btnShare) btnShare.disabled = disabled;
+    
+    const btnPdf = document.getElementById('btn-export-pdf');
+    if(btnPdf) btnPdf.disabled = disabled;
+    
+    const btnExcel = document.getElementById('btn-export-excel');
+    if(btnExcel) btnExcel.disabled = disabled;
+    
+    const complete = getTotalProgress().percentage === 100;
+    const btnMissing = document.getElementById('btn-download-missing');
+    if(btnMissing) btnMissing.disabled = complete;
+}
+
+function getTradeExportRows() {
+    let rows = [];
+    getRepeatedList().forEach(g => {
+        let itemsStr = g.items.map(i => {
+            let num = i.name.replace(/[A-Z]+/, '') || i.name;
+            return i.count > 1 ? `${num}(x${i.count})` : num;
+        }).join(', ');
+        rows.push({ section: g.team, text: itemsStr });
+    });
+    return rows;
+}
+
+function getMissingExportRows() {
+    let rows = [];
+    let map = {};
+    getMissingList().forEach(m => {
+        if(!map[m.team]) map[m.team] = [];
+        map[m.team].push(m.name.replace(/[A-Z]+/, '') || m.name);
+    });
+    for(let team in map){ rows.push({ section: team, text: map[team].join(', ') }); }
+    return rows;
+}
+
+function generateShareText() {
+    const p = getTotalProgress();
+    let txt = `*${state.profile.name}*\nProgreso: ${p.have}/${p.total} (${p.percentage}%)\nRepetidas: ${getRepeatedTotal()}\n\n`;
+    getTradeExportRows().forEach(r => { txt += `${r.section}: ${r.text}\n`; });
+    
+    const shareText = document.getElementById('share-textarea');
+    if(shareText) shareText.value = txt;
+    
+    showModal('modal-share');
+}
+
+function exportTradesExcel() {
+    let csv = 'Sección,Láminas Repetidas\n';
+    getTradeExportRows().forEach(r => { csv += `"${r.section}","${r.text}"\n`; });
+    const bom = new Uint8Array([0xEF, 0xBB, 0xBF]);
+    const blob = new Blob([bom, csv], { type: 'text/csv;charset=utf-8;' });
+    downloadBlob(blob, 'cambios_album_mundial_2026.csv');
+}
+
+function exportMissingExcel() {
+    let csv = 'Sección,Láminas Faltantes\n';
+    getMissingExportRows().forEach(r => { csv += `"${r.section}","${r.text}"\n`; });
+    const bom = new Uint8Array([0xEF, 0xBB, 0xBF]);
+    const blob = new Blob([bom, csv], { type: 'text/csv;charset=utf-8;' });
+    downloadBlob(blob, 'faltantes_album_mundial_2026.csv');
+}
+
+function exportTradesPdf() {
+    const p = getTotalProgress();
+    let html = `<!DOCTYPE html><html><head><title>Cambios Álbum 2026</title><style>body{font-family:sans-serif; padding: 20px;} table{width:100%;border-collapse:collapse; margin-top: 20px;} th,td{border:1px solid #ccc;padding:8px;text-align:left;}</style></head><body>`;
+    html += `<h1>Cambios - ${state.profile.name}</h1><p>Progreso: ${p.have}/${p.total} (${p.percentage}%) | Total repetidas: ${getRepeatedTotal()}</p>`;
+    html += `<table><tr><th style="width:150px">Sección</th><th>Láminas Repetidas</th></tr>`;
+    getTradeExportRows().forEach(r => { html += `<tr><td>${r.section}</td><td>${r.text}</td></tr>`; });
+    html += `</table></body></html>`;
+    
+    const iframe = document.createElement('iframe');
+    iframe.style.position = 'absolute'; iframe.style.width = '0px'; iframe.style.height = '0px'; iframe.style.border = 'none';
+    document.body.appendChild(iframe);
+    
+    const doc = iframe.contentWindow || iframe.contentDocument.document || iframe.contentDocument;
+    doc.document.open(); doc.document.write(html); doc.document.close();
+    iframe.contentWindow.focus();
+    setTimeout(() => {
+        try { iframe.contentWindow.print(); } catch (err) { alert('Bloqueado por el dispositivo. Usa Exportar Excel.'); }
+        setTimeout(() => document.body.removeChild(iframe), 1000);
+    }, 500);
+}
+function copyMyJsonForTrade() {
+    if (state.profile.name === 'Mi Álbum') {
+        const userName = prompt('Antes de compartir, ¿Cómo te llamas? (Para que la otra persona te identifique)');
+        if (userName) updateProfileName(userName);
+    }
+
+    const json = JSON.stringify(state);
+    navigator.clipboard.writeText(json).then(() => {
+        alert(`¡Los datos de ${state.profile.name} han sido copiados!\n\nEnvíalos a tu contacto para que los pegue en su aplicación.`);
+    });
+}
+
+let lastMatchResult = null;
+
+function clearMatchInput() {
+    const matchInput = document.getElementById('match-input');
+    if(matchInput) matchInput.value = '';
+    
+    const resultsContainer = document.getElementById('match-results-container');
+    if(resultsContainer) resultsContainer.style.display = 'none';
+    
+    lastMatchResult = null;
+}
+
+function compareTrades() {
+    const inputEl = document.getElementById('match-input');
+    if(!inputEl) return;
+    const input = inputEl.value.trim();
+    
+    if (!input) { alert('Pega los datos recibidos en el recuadro primero.'); return; }
+    try {
+        const friendState = JSON.parse(input);
+        if (!friendState.stickers) throw new Error();
+
+        let iReceive = {}; 
+        let iGive = {};    
+        
+        if (!window.DATA || !window.DATA.TEAMS) return;
+
+        window.DATA.TEAMS.forEach(team => {
+            team.stickers.forEach(s => {
+                const code = s.code;
+                const mySticker = getStickerState(code);
+                const friendSticker = friendState.stickers[code] || { have: false, count: 0 };
+                const myName = s.name.replace(/[A-Z]+/, '') || s.name;
+
+                if (!mySticker.have && friendSticker.have && friendSticker.count > 1) {
+                    if(!iReceive[team.name]) iReceive[team.name] = [];
+                    iReceive[team.name].push(myName);
+                }
+
+                if (!friendSticker.have && mySticker.have && mySticker.count > 1) {
+                    if(!iGive[team.name]) iGive[team.name] = [];
+                    iGive[team.name].push(myName);
+                }
+            });
+        });
+
+        lastMatchResult = { iReceive, iGive, friendName: friendState.profile?.name || 'Tu contacto' };
+        renderMatchResults();
+
+    } catch(e) { alert('Los datos pegados no son válidos. Asegúrate de copiar el texto completo.'); }
+}
+
+function renderMatchResults() {
+    const container = document.getElementById('match-results');
+    const wrap = document.getElementById('match-results-container');
+    if(!lastMatchResult || !container || !wrap) return;
+
+    let html = `<p style="text-align:center; color:var(--text-secondary); margin-bottom:1rem;">Comparación con: <strong style="color:var(--text-primary); font-size:1.1rem;">${lastMatchResult.friendName}</strong></p><div class="match-columns">`;
+    
+    html += '<div class="match-col"><h3>⬇️ Me puede dar</h3>';
+    let recCount = 0;
+    for(let team in lastMatchResult.iReceive) {
+        html += `<strong>${team}</strong><span>${lastMatchResult.iReceive[team].join(', ')}</span>`;
+        recCount += lastMatchResult.iReceive[team].length;
+    }
+    if(recCount === 0) html += '<p class="text-muted">Ninguna :(</p>';
+    html += '</div>';
+
+    html += '<div class="match-col"><h3>⬆️ Le puedo dar</h3>';
+    let giveCount = 0;
+    for(let team in lastMatchResult.iGive) {
+        html += `<strong>${team}</strong><span>${lastMatchResult.iGive[team].join(', ')}</span>`;
+        giveCount += lastMatchResult.iGive[team].length;
+    }
+    if(giveCount === 0) html += '<p class="text-muted">Ninguna :(</p>';
+    html += '</div></div>';
+
+    container.innerHTML = html;
+    wrap.style.display = 'block';
+}
+
+function shareMatchWhatsApp() {
+    if(!lastMatchResult) return;
+    let text = `*¡Hola ${lastMatchResult.friendName}! He revisado las láminas para intercambiar:*\n\n`;
+    
+    text += `*⬇️ Me puedes dar:*\n`;
+    let recCount = 0;
+    for(let team in lastMatchResult.iReceive) {
+        text += `- ${team}: ${lastMatchResult.iReceive[team].join(', ')}\n`;
+        recCount++;
+    }
+    if(recCount === 0) text += 'Ninguna\n';
+
+    text += `\n*⬆️ Yo te puedo dar:*\n`;
+    let giveCount = 0;
+    for(let team in lastMatchResult.iGive) {
+        text += `- ${team}: ${lastMatchResult.iGive[team].join(', ')}\n`;
+        giveCount++;
+    }
+    if(giveCount === 0) text += 'Ninguna\n';
+
+    const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
+    window.open(url, '_blank');
+}
+
+function downloadBlob(blob, filename) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+}
+
+function exportData() {
+    const json = JSON.stringify(state, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    downloadBlob(blob, 'album_mundial_2026.json');
+}
+
+function importData(e) {
+    const file = e.target.files[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+        try {
+            const data = JSON.parse(event.target.result);
+            if (data.stickers) { state = data; saveState(); init(); closeModal('modal-settings'); alert('Álbum restaurado.'); }
+        } catch (err) { alert('Archivo JSON inválido.'); }
+    };
+    reader.readAsText(file);
+}
+
+function confirmReset() { if (confirm('¿Seguro que deseas reiniciar el álbum?')) { state.stickers = {}; state.milestones = {}; saveState(); closeModal('modal-settings'); init(); } }
+
+function toggleTheme() {
+    const root = document.documentElement;
+    if (root.getAttribute('data-theme') === 'light') { root.removeAttribute('data-theme'); localStorage.setItem('album_theme_2026', 'dark'); } 
+    else { root.setAttribute('data-theme', 'light'); localStorage.setItem('album_theme_2026', 'light'); }
+}
+
+function loadTheme() { const theme = localStorage.getItem('album_theme_2026'); if (theme === 'light') document.documentElement.setAttribute('data-theme', 'light'); }
+
+function showModal(id) { 
+    const modal = document.getElementById(id);
+    if(modal) modal.style.display = 'flex'; 
+}
+function closeModal(id) { 
+    const modal = document.getElementById(id);
+    if(modal) modal.style.display = 'none'; 
+    currentOpenTeam = null; 
+}
+
+function updateHeaderOffset() {
+    const header = document.querySelector('.app-header');
+    if(header) document.documentElement.style.setProperty('--header-offset', `${header.offsetHeight + 18}px`);
+}
+
+function observeHeaderOffset() {
+    updateHeaderOffset();
+    if(window.ResizeObserver) new ResizeObserver(() => updateHeaderOffset()).observe(document.querySelector('.app-header'));
+    window.addEventListener('resize', updateHeaderOffset);
+    window.addEventListener('orientationchange', () => { setTimeout(updateHeaderOffset, 150); });
+    if(document.fonts) document.fonts.ready.then(updateHeaderOffset);
+}
+
+function bindEvents() {
+    const addClick = (id, fn) => { const el = document.getElementById(id); if(el) el.onclick = fn; };
+    const addInput = (id, fn) => { 
+        const el = document.getElementById(id); 
+        if(el) { if(el.tagName === 'SELECT') el.onchange = fn; else el.oninput = fn; } 
+    };
+
+    addClick('btn-theme', toggleTheme);
+    addClick('btn-settings', () => showModal('modal-settings'));
+    addClick('btn-clear-filters', clearFilters);
+    addClick('btn-share-list', generateShareText);
+    addClick('btn-export-excel', exportTradesExcel);
+    addClick('btn-export-pdf', exportTradesPdf);
+    addClick('btn-download-missing', exportMissingExcel);
+
+    addInput('search-input', (e) => { activeSearch.text = e.target.value; applyCollectionSearch(); });
+    addInput('filter-team', (e) => { activeSearch.team = e.target.value; applyCollectionSearch(); });
+    addInput('filter-group', (e) => { activeSearch.group = e.target.value; applyCollectionSearch(); });
+    addInput('sort-select', (e) => { activeSearch.sort = e.target.value; applyCollectionSearch(); });
+
+    document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.onclick = () => {
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+            btn.classList.add('active');
+            const target = btn.getAttribute('data-target');
+            const targetEl = document.getElementById(target);
+            if(targetEl) targetEl.classList.add('active');
+            if (target === 'tab-trades') renderTrades();
+            window.scrollTo(0, 0);
+        };
+    });
+}
+
+function triggerConfetti(x, y) {
+    const canvas = document.getElementById('confetti-canvas'); 
+    if(!canvas) return;
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+    let particles = [];
+    for(let i=0; i<30; i++) particles.push({ x: x, y: y, r: Math.random() * 4 + 2, dx: Math.random() * 6 - 3, dy: Math.random() * -6 - 2, color: `hsl(${Math.random() * 360}, 100%, 50%)` });
+    function animate() {
+        ctx.clearRect(0,0,canvas.width,canvas.height); let active = false;
+        particles.forEach(p => {
+            p.x += p.dx; p.y += p.dy; p.dy += 0.2;
+            ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fillStyle = p.color; ctx.fill();
+            if(p.y < canvas.height) active = true;
+        });
+        if(active) requestAnimationFrame(animate); else ctx.clearRect(0,0,canvas.width,canvas.height);
+    }
+    animate();
+}
+
+function shootBigConfetti() {
+    triggerConfetti(window.innerWidth/2, window.innerHeight/2);
+    setTimeout(() => triggerConfetti(window.innerWidth/3, window.innerHeight/2), 200);
+    setTimeout(() => triggerConfetti((window.innerWidth/3)*2, window.innerHeight/2), 400);
+}
+
+document.addEventListener('DOMContentLoaded', init);
