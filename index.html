@@ -14,7 +14,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=12">
+    <link rel="stylesheet" href="style.css?v=13">
 </head>
 <body>
     <div id="app">
@@ -24,7 +24,7 @@
             <div class="header-top">
                 <div class="header-titles">
                     <h1 id="album-title" contenteditable="true" spellcheck="false" title="Toca para editar tu nombre">Mi Álbum</h1>
-                    <span class="subtitle">Mundial 2026 · 48 selecciones · 994 láminas <span class="app-version">v12</span></span>
+                    <span class="subtitle">Mundial 2026 · 48 selecciones · 994 láminas <span class="app-version">v13</span></span>
                 </div>
                 <div class="header-actions">
                     <button id="btn-theme" title="Cambiar Tema">🌙</button>
@@ -114,7 +114,7 @@
                 <div class="match-setup">
                     <button id="btn-copy-match" onclick="copyMyJsonForTrade()" class="btn-block" style="background: var(--bg-card); color: var(--gold); border: 1px solid var(--gold);">1. Copiar mis datos</button>
                     <p style="text-align: center; margin: 1rem 0; font-size: 0.85rem; color: var(--text-muted);">o</p>
-                    <textarea id="match-input" rows="4" placeholder="2. Pega aquí los datos (JSON) que te enviaron..."></textarea>
+                    <textarea id="match-input" rows="4" placeholder="2. Pega aquí los datos (código optimizado) que te enviaron..."></textarea>
                     <button onclick="compareTrades()" class="btn-block">3. Comparar álbumes</button>
                     <button onclick="clearMatchInput()" class="btn-block" style="background: transparent; color: var(--text-secondary); border: 1px solid var(--border-subtle); margin-top: 0.5rem;">Limpiar texto</button>
                 </div>
@@ -185,8 +185,8 @@
         </div>
     </div>
 
-    <script src="data.js?v=12"></script>
-    <script src="app.js?v=12"></script>
+    <script src="data.js?v=13"></script>
+    <script src="app.js?v=13"></script>
     
     <script>
       if ('serviceWorker' in navigator) {
