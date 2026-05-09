@@ -398,21 +398,21 @@ function generateShareText() {
     showModal('modal-share');
 }
 
+/* --- EXPORTACIONES EXCEL CORREGIDAS (Separador ';' y BOM estricto) --- */
 function exportTradesExcel() {
-    let csv = 'Sección,Láminas Repetidas\n';
-    getTradeExportRows().forEach(r => { csv += `"${r.section}","${r.text}"\n`; });
-    const bom = new Uint8Array([0xEF, 0xBB, 0xBF]);
-    const blob = new Blob([bom, csv], { type: 'text/csv;charset=utf-8;' });
+    let csv = '\uFEFFSección;Láminas Repetidas\n';
+    getTradeExportRows().forEach(r => { csv += `"${r.section}";"${r.text}"\n`; });
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     downloadBlob(blob, 'cambios_album_mundial_2026.csv');
 }
 
 function exportMissingExcel() {
-    let csv = 'Sección,Láminas Faltantes\n';
-    getMissingExportRows().forEach(r => { csv += `"${r.section}","${r.text}"\n`; });
-    const bom = new Uint8Array([0xEF, 0xBB, 0xBF]);
-    const blob = new Blob([bom, csv], { type: 'text/csv;charset=utf-8;' });
+    let csv = '\uFEFFSección;Láminas Faltantes\n';
+    getMissingExportRows().forEach(r => { csv += `"${r.section}";"${r.text}"\n`; });
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     downloadBlob(blob, 'faltantes_album_mundial_2026.csv');
 }
+/* ---------------------------------------------------------------------- */
 function exportTradesPdf() {
     const p = getTotalProgress();
     let html = `<!DOCTYPE html><html><head><title>Cambios Álbum 2026</title><style>body{font-family:sans-serif; padding: 20px;} table{width:100%;border-collapse:collapse; margin-top: 20px;} th,td{border:1px solid #ccc;padding:8px;text-align:left;}</style></head><body>`;
@@ -441,7 +441,6 @@ function copyMyJsonForTrade() {
         if (userName) updateProfileName(userName);
     }
 
-    // Compresión ultra ligera para evitar el límite del portapapeles de WhatsApp
     const minified = { n: state.profile.name, s: {} };
     for (const [code, sticker] of Object.entries(state.stickers)) {
         if (sticker.have && sticker.count > 0) {
@@ -477,7 +476,6 @@ function compareTrades() {
         const parsed = JSON.parse(input);
         let friendState = { profile: { name: 'Tu contacto' }, stickers: {} };
 
-        // Compatibilidad con el nuevo formato comprimido y el antiguo JSON
         if (parsed.s) {
             friendState.profile.name = parsed.n || 'Tu contacto';
             for (const [code, count] of Object.entries(parsed.s)) {
