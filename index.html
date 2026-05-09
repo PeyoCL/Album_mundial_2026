@@ -14,7 +14,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=11">
 </head>
 <body>
     <div id="app">
@@ -24,7 +24,7 @@
             <div class="header-top">
                 <div class="header-titles">
                     <h1 id="album-title" contenteditable="true" spellcheck="false" title="Toca para editar tu nombre">Mi Álbum</h1>
-                    <span class="subtitle">Mundial 2026 · 48 selecciones · 994 láminas <span class="app-version">v10</span></span>
+                    <span class="subtitle">Mundial 2026 · 48 selecciones · 994 láminas <span class="app-version">v11</span></span>
                 </div>
                 <div class="header-actions">
                     <button id="btn-theme" title="Cambiar Tema">🌙</button>
@@ -147,19 +147,4 @@
                     </div>
                     <div class="modal-team-stats">
                         <span id="modal-team-count">0/20</span>
-                        <button class="close-modal" onclick="closeModal('modal-team')">✕</button>
-                    </div>
-                </div>
-                <div class="modal-body" id="modal-stickers-grid"></div>
-            </div>
-        </div>
-
-        <div id="modal-settings" class="modal">
-            <div class="modal-content settings-modal">
-                <div class="modal-header">
-                    <h2>Configuración</h2>
-                    <button class="close-modal" onclick="closeModal('modal-settings')">✕</button>
-                </div>
-                <div class="modal-body">
-                    <div style="margin-bottom: 1.5rem;">
-                        <label style="display:block; margin-bottom: 0.5rem; font-size:0.9rem; color: var(--text
+                        <button class="close-modal"
