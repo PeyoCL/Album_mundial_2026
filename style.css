@@ -83,7 +83,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 .search-bar input { width: 100%; }
 
 /* Main layout */
-#main-content { padding-bottom: 90px; } /* Espacio extra para el menú inferior */
+#main-content { padding-bottom: 90px; }
 .tab-pane { display: none; padding: 1rem; padding-top: var(--header-offset); }
 .tab-pane.active { display: block; }
 
@@ -138,7 +138,6 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 .team-card:hover { transform: translateY(-2px); background: var(--bg-card-hover); border-color: var(--border-accent); }
 .team-card.completed { border-color: var(--green-complete); }
 
-/* Arreglo alineación de texto y multilinea */
 .team-card-header { display: flex; align-items: flex-start; gap: 0.8rem; margin-bottom: 0.8rem; }
 .team-icon { width: 32px; height: 24px; object-fit: cover; border-radius: 2px; flex-shrink: 0; }
 .team-info { flex: 1; min-width: 0; }
@@ -192,27 +191,28 @@ textarea { width: 100%; background: var(--bg-base); color: var(--text-primary); 
 .trade-items { display: flex; flex-wrap: wrap; gap: 0.5rem; }
 .trade-item { background: var(--bg-base); padding: 0.3rem 0.6rem; border-radius: 4px; font-size: 0.85rem; border: 1px solid var(--border-subtle); }
 
-/* Nav Inferior - Fix Desbordamiento */
+/* Nav Inferior - Fix Desbordamiento y Horizontal */
 .bottom-nav {
     position: fixed; bottom: 0; left: 0; width: 100%; background: var(--bg-card);
     display: flex; border-top: 1px solid var(--border-subtle); z-index: 100;
-    box-sizing: border-box; /* Asegura que no se desborde la pantalla */
+    box-sizing: border-box;
 }
 .nav-btn { 
     flex: 1; 
     background: transparent; 
     border: none; 
-    padding: 1rem 0; /* Padding superior/inferior solamente */
+    padding: 1rem 0; 
     font-weight: bold; 
     font-size: 1rem; 
     border-radius: 0; 
     color: var(--text-secondary); 
     text-align: center;
-    min-width: 0; /* Evita que crezca más allá de la pantalla */
+    min-width: 0; 
 }
 .nav-btn.active { color: var(--blue-accent); border-top: 2px solid var(--blue-accent); background: var(--bg-surface); }
 
-@media (min-width: 768px) {
+/* Solo flota si la pantalla es ancha Y suficientemente alta (Tablet/Desktop en Portrait, no móviles en landscape) */
+@media (min-width: 768px) and (min-height: 500px) {
     .bottom-nav {
         bottom: 20px; left: 50%; transform: translateX(-50%); width: 100%; max-width: 300px;
         border-radius: 30px; border: 1px solid var(--border-subtle); overflow: hidden;
