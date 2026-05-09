@@ -322,7 +322,6 @@ function generateShareText() {
     showModal('modal-share');
 }
 
-/* Modificado para forzar UTF-8 con BOM en Windows/Excel */
 function exportTradesExcel() {
     let csv = 'Sección,Láminas Repetidas\n';
     getTradeExportRows().forEach(r => { csv += `"${r.section}","${r.text}"\n`; });
@@ -360,7 +359,6 @@ function exportTradesPdf() {
     }, 500);
 }
 
-// MATCH / Intercambios
 function copyMyJsonForTrade() {
     if (state.profile.name === 'Mi Álbum') {
         const userName = prompt('Antes de compartir, ¿Cómo te llamas? (Para que la otra persona te identifique)');
@@ -369,7 +367,7 @@ function copyMyJsonForTrade() {
 
     const json = JSON.stringify(state);
     navigator.clipboard.writeText(json).then(() => {
-        alert(`¡Los datos de ${state.profile.name} han sido copiados!\n\nEnvíalos a tu amigo o amiga para que los pegue en su aplicación.`);
+        alert(`¡Los datos de ${state.profile.name} han sido copiados!\n\nEnvíalos a tu contacto para que los pegue en su aplicación.`);
     });
 }
 
@@ -466,3 +464,87 @@ function shareMatchWhatsApp() {
     if(giveCount === 0) text += 'Ninguna\n';
 
     const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
+    window.open(url, '_blank');
+}
+
+function downloadBlob(blob, filename) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+}
+
+function exportData() {
+    const json = JSON.stringify(state, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    downloadBlob(blob, 'album_mundial_2026.json');
+}
+
+function importData(e) {
+    const file = e.target.files[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+        try {
+            const data = JSON.parse(event.target.result);
+            if (data.stickers) { state = data; saveState(); init(); closeModal('modal-settings'); alert('Álbum restaurado.'); }
+        } catch (err) { alert('Archivo JSON inválido.'); }
+    };
+    reader.readAsText(file);
+}
+
+function confirmReset() { if (confirm('¿Seguro que deseas reiniciar el álbum?')) { state.stickers = {}; state.milestones = {}; saveState(); closeModal('modal-settings'); init(); } }
+
+function toggleTheme() {
+    const root = document.documentElement;
+    if (root.getAttribute('data-theme') === 'light') { root.removeAttribute('data-theme'); localStorage.setItem('album_theme_2026', 'dark'); } 
+    else { root.setAttribute('data-theme', 'light'); localStorage.setItem('album_theme_2026', 'light'); }
+}
+
+function loadTheme() { const theme = localStorage.getItem('album_theme_2026'); if (theme === 'light') document.documentElement.setAttribute('data-theme', 'light'); }
+
+function showModal(id) { document.getElementById(id).style.display = 'flex'; }
+function closeModal(id) { document.getElementById(id).style.display = 'none'; currentOpenTeam = null; }
+
+function updateHeaderOffset() {
+    const header = document.querySelector('.app-header');
+    if(header) document.documentElement.style.setProperty('--header-offset', `${header.offsetHeight + 18}px`);
+}
+
+function observeHeaderOffset() {
+    updateHeaderOffset();
+    if(window.ResizeObserver) new ResizeObserver(() => updateHeaderOffset()).observe(document.querySelector('.app-header'));
+    window.addEventListener('resize', updateHeaderOffset);
+    window.addEventListener('orientationchange', () => { setTimeout(updateHeaderOffset, 150); });
+    if(document.fonts) document.fonts.ready.then(updateHeaderOffset);
+}
+
+function bindEvents() {
+    document.getElementById('btn-theme').onclick = toggleTheme;
+    document.getElementById('btn-settings').onclick = () => showModal('modal-settings');
+    document.getElementById('btn-clear-filters').onclick = clearFilters;
+    document.getElementById('search-input').oninput = (e) => { activeSearch.text = e.target.value; applyCollectionSearch(); };
+    document.getElementById('filter-team').onchange = (e) => { activeSearch.team = e.target.value; applyCollectionSearch(); };
+    document.getElementById('filter-group').onchange = (e) => { activeSearch.group = e.target.value; applyCollectionSearch(); };
+    document.getElementById('sort-select').onchange = (e) => { activeSearch.sort = e.target.value; applyCollectionSearch(); };
+    document.getElementById('btn-share-list').onclick = generateShareText;
+    document.getElementById('btn-export-excel').onclick = exportTradesExcel;
+    document.getElementById('btn-export-pdf').onclick = exportTradesPdf;
+    document.getElementById('btn-download-missing').onclick = exportMissingExcel;
+
+    document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.onclick = () => {
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+            btn.classList.add('active');
+            const target = btn.getAttribute('data-target');
+            document.getElementById(target).classList.add('active');
+            if (target === 'tab-trades') renderTrades();
+            window.scrollTo(0, 0);
+        };
+    });
+}
+
+function triggerConfetti(x, y) {
+    const canvas = document.getElementById('confetti-canvas'); const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+    let particles = [];
+    for(let i=0; i<30; i++) particles.push
