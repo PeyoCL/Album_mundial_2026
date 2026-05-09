@@ -67,6 +67,17 @@ h1, h2, h3, .kicker, .percentage, .results-counter, .modal-team-stats span {
 #album-title { font-size: 2rem; outline: none; border-bottom: 1px dashed transparent; transition: 0.3s; }
 #album-title:focus { border-bottom-color: var(--blue-accent); }
 .subtitle { font-size: 0.85rem; color: var(--text-secondary); }
+
+/* Nueva clase para la versión */
+.app-version {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    opacity: 0.6;
+    margin-left: 6px;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+}
+
 .header-actions button { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-primary); }
 
 .header-controls { display: flex; flex-direction: column; gap: 0.5rem; }
@@ -211,7 +222,7 @@ textarea { width: 100%; background: var(--bg-base); color: var(--text-primary); 
 }
 .nav-btn.active { color: var(--blue-accent); border-top: 2px solid var(--blue-accent); background: var(--bg-surface); }
 
-/* Solo flota si la pantalla es ancha Y suficientemente alta (Tablet/Desktop en Portrait, no móviles en landscape) */
+/* Solo flota si la pantalla es ancha Y suficientemente alta */
 @media (min-width: 768px) and (min-height: 500px) {
     .bottom-nav {
         bottom: 20px; left: 50%; transform: translateX(-50%); width: 100%; max-width: 300px;
