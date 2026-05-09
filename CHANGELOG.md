@@ -2,6 +2,10 @@
 
 Todas las actualizaciones y cambios notables de la aplicación "Álbum Mundial 2026" se documentarán en este archivo.
 
+### v19 - Corrección estricta de Codificación para Google Sheets
+- **TextEncoder (A prueba de balas):** Se eliminó la inyección de BOM mediante strings que los navegadores móviles a veces ignoran. Ahora el texto CSV se compila a un `Uint8Array` usando `TextEncoder` y el BOM se inyecta directamente a nivel de bytes en memoria antes de guardar el Blob.
+- **Formato universal:** Esto garantiza que el archivo generado sea detectado como un UTF-8 real por Google Sheets (separado por comas) y Excel, sin perder ni corromper jamás las tildes.
+
 ### v18 - Compatibilidad Absoluta CSV (Google Sheets)
 - **Corrección de delimitador:** Se regresó el separador del archivo de exportación de CSV a la coma estándar (`,`). Esto permite que plataformas modernas en la nube, particularmente **Google Sheets**, dividan las columnas automáticamente al importar sin importar el idioma del sistema.
 - **BOM Puro Integrado:** Se ajustó la inyección del marcador de bytes UTF-8 (BOM `0xEF, 0xBB, 0xBF`) usando `Uint8Array` directo en la memoria del Blob final. Esto asegura que al abrirse también en Microsoft Excel en español se mantengan todos los acentos (á, é, í) intactos.
