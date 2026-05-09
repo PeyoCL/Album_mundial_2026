@@ -14,7 +14,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=19">
+    <link rel="stylesheet" href="style.css?v=20">
 </head>
 <body>
     <div id="app">
@@ -24,7 +24,7 @@
             <div class="header-top">
                 <div class="header-titles">
                     <h1 id="album-title" contenteditable="true" spellcheck="false" title="Toca para editar tu nombre">Mi Álbum</h1>
-                    <span class="subtitle">Mundial 2026 · 48 selecciones · 994 láminas <span class="app-version">v19</span></span>
+                    <span class="subtitle">Mundial 2026 · 48 selecciones · 994 láminas <span class="app-version">v20</span></span>
                 </div>
                 <div class="header-actions">
                     <button id="btn-theme" title="Cambiar Tema">🌙</button>
@@ -166,7 +166,12 @@
                     <button onclick="exportData()" class="btn-block">Exportar datos JSON (Backup)</button>
                     <button onclick="document.getElementById('import-file').click()" class="btn-block">Importar datos JSON (Restaurar)</button>
                     <input type="file" id="import-file" style="display:none" accept=".json" onchange="importData(event)">
-                    <button onclick="confirmReset()" class="btn-block btn-danger" style="margin-top: 1rem;">Reiniciar álbum</button>
+                    
+                    <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border-subtle);">
+                        <button onclick="forceUpdateCache()" class="btn-block" style="background: #eab308; color: #fff;">Forzar Actualización (Limpiar Caché)</button>
+                        <p style="font-size: 0.75rem; color: var(--text-muted); text-align: center; margin-top: 0.5rem;">Usa este botón si la app no toma los cambios nuevos. (No borra tus láminas).</p>
+                        <button onclick="confirmReset()" class="btn-block btn-danger" style="margin-top: 1rem;">Reiniciar álbum completo</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -185,8 +190,8 @@
         </div>
     </div>
 
-    <script src="data.js?v=19"></script>
-    <script src="app.js?v=19"></script>
+    <script src="data.js?v=20"></script>
+    <script src="app.js?v=20"></script>
     
     <script>
       if ('serviceWorker' in navigator) {
