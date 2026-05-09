@@ -14,7 +14,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=21">
+    <link rel="stylesheet" href="style.css?v=22">
 </head>
 <body>
     <div id="app">
@@ -24,7 +24,7 @@
             <div class="header-top">
                 <div class="header-titles">
                     <h1 id="album-title" contenteditable="true" spellcheck="false" title="Toca para editar tu nombre">Mi Álbum</h1>
-                    <span class="subtitle">Mundial 2026 · 48 selecciones · 994 láminas <span class="app-version">v21</span></span>
+                    <span class="subtitle">Mundial 2026 · 48 selecciones · 994 láminas <span class="app-version">v22</span></span>
                 </div>
                 <div class="header-actions">
                     <button id="btn-theme" title="Cambiar Tema">🌙</button>
@@ -188,10 +188,16 @@
                 </div>
             </div>
         </div>
+        
+        <div id="ios-install-prompt" class="ios-prompt" style="display: none;">
+            <button class="close-ios-prompt" onclick="document.getElementById('ios-install-prompt').style.display='none'">✕</button>
+            <h3>Instalar App</h3>
+            <p>Para usar el álbum sin internet, toca el botón Compartir <svg style="width:16px; height:16px; vertical-align:middle; fill:currentColor;" viewBox="0 0 50 50"><path d="M25 2v18M25 2l-7 7M25 2l7 7M15 15H9v33h32V15h-6" stroke="currentColor" stroke-width="4" fill="none"/></svg> en la barra inferior y selecciona <strong>Añadir a la pantalla de inicio</strong>.</p>
+        </div>
     </div>
 
-    <script src="data.js?v=21"></script>
-    <script src="app.js?v=21"></script>
+    <script src="data.js?v=22"></script>
+    <script src="app.js?v=22"></script>
     
     <script>
       if ('serviceWorker' in navigator) {
