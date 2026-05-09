@@ -2,6 +2,10 @@
 
 Todas las actualizaciones y cambios notables de la aplicación "Álbum Mundial 2026" se documentarán en este archivo.
 
+### v18 - Compatibilidad Absoluta CSV (Google Sheets)
+- **Corrección de delimitador:** Se regresó el separador del archivo de exportación de CSV a la coma estándar (`,`). Esto permite que plataformas modernas en la nube, particularmente **Google Sheets**, dividan las columnas automáticamente al importar sin importar el idioma del sistema.
+- **BOM Puro Integrado:** Se ajustó la inyección del marcador de bytes UTF-8 (BOM `0xEF, 0xBB, 0xBF`) usando `Uint8Array` directo en la memoria del Blob final. Esto asegura que al abrirse también en Microsoft Excel en español se mantengan todos los acentos (á, é, í) intactos.
+
 ### v17 - Formato de Nomenclatura
 - **Visualización de códigos:** A petición, se cambió el formato genérico de "Lám. 1" para mostrar el código completo de la lámina incluyendo la abreviatura del equipo y un espacio (ej: "MEX 1", "FWC 12"), tanto en la cuadrícula del álbum como en las exportaciones y en la sección Match.
 
