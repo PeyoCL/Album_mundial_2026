@@ -4,6 +4,20 @@ let activeSearch = { text: '', team: 'all', group: 'all', sort: 'all' };
 let currentOpenTeam = null;
 let html5QrcodeScanner = null; 
 
+// FUNCIÓN AUTO-REPARABLE: Si el HTML falló, inyectamos los scripts a la fuerza
+function loadQRLibraries() {
+    if (typeof QRCode === 'undefined') {
+        const s1 = document.createElement('script');
+        s1.src = 'https://unpkg.com/qrcode@1.5.3/build/qrcode.min.js';
+        document.head.appendChild(s1);
+    }
+    if (typeof Html5Qrcode === 'undefined') {
+        const s2 = document.createElement('script');
+        s2.src = 'https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js';
+        document.head.appendChild(s2);
+    }
+}
+
 function formatCode(name) {
     if(name === '00') return '00';
     return name.replace(/^([A-Z]+)(\d+)$/, '$1 $2');
@@ -11,6 +25,7 @@ function formatCode(name) {
 
 function init() {
     try {
+        loadQRLibraries(); // Intentamos cargar forzosamente las librerías
         loadTheme(); loadState(); migrateStickerCodes(); updateProfileName(state.profile?.name);
         const title = document.getElementById('album-title');
         if(title) {
@@ -104,6 +119,7 @@ function getTeamProgress(teamCode) {
     let have = team.stickers.filter(s => getStickerState(s.code).have).length;
     return { have, total: team.stickers.length };
 }
+
 function getTotalProgress() {
     let have = getHaveCount(); let total = window.DATA ? window.DATA.TOTAL_STICKERS : 994;
     let percentage = Math.round((have / total) * 100) || 0;
@@ -206,7 +222,6 @@ function renderStickersGrid(team) {
     const grid = document.getElementById('modal-stickers-grid'); grid.innerHTML = '';
     team.stickers.forEach(s => { grid.appendChild(makeStickerCard(s)); }); updateTeamCount(team.code);
 }
-
 function updateTeamCount(teamCode) {
     const p = getTeamProgress(teamCode);
     const countEl = document.getElementById('modal-team-count'); if(countEl) countEl.innerText = `${p.have}/${p.total}`;
@@ -224,6 +239,7 @@ function updateTeamCount(teamCode) {
         } else { card.classList.remove('completed'); }
     }
 }
+
 function applyCollectionSearch() {
     if (!window.DATA || !window.DATA.TEAMS) return;
     let filtered = window.DATA.TEAMS.filter(t => {
@@ -348,10 +364,11 @@ function exportTradesPdf() {
     doc.document.open(); doc.document.write(html); doc.document.close();
     iframe.contentWindow.focus();
     setTimeout(() => {
-        try { iframe.contentWindow.print(); } catch (err) { alert('Bloqueado por el dispositivo.'); }
+        try { iframe.contentWindow.print(); } catch (err) { alert('Bloqueado por el dispositivo. Usa Exportar Excel.'); }
         setTimeout(() => document.body.removeChild(iframe), 1000);
     }, 500);
 }
+// ==== LÓGICA QR Y MATCH V26 ====
 function getMinifiedTradeData() {
     const minified = { n: state.profile.name, s: {} };
     for (const [code, sticker] of Object.entries(state.stickers)) {
@@ -360,48 +377,27 @@ function getMinifiedTradeData() {
     return JSON.stringify(minified);
 }
 
-
 function showMyQR() {
-    // 1. Verificamos si la librería cargó correctamente en el teléfono
     if (typeof QRCode === 'undefined') {
-        alert("La librería de QR no pudo cargar. Comprueba tu internet o usa el botón 'Copiar Texto'.");
-        return;
+        alert("Descargando el generador de QR por primera vez... Presiona el botón de nuevo en un par de segundos.");
+        loadQRLibraries(); return;
     }
-
     if (state.profile.name === 'Mi Álbum') {
         const userName = prompt('Antes de generar el QR, ¿Cómo te llamas?');
         if (userName) updateProfileName(userName);
     }
-    
     const jsonStr = getMinifiedTradeData();
-    
-    // 2. CONTROL ESTRICTO DE LÍMITE: Si tienes cientos de repetidas, el QR físico colapsa.
-    // Lo frenamos antes de que rompa el botón.
-    if (jsonStr.length > 2000) {
-        alert("⚠️ Tienes demasiadas láminas repetidas (" + getRepeatedTotal() + "). El código QR no soporta dibujar tantos datos juntos. Por favor, usa el botón 'Copiar Texto' y envíalo por WhatsApp.");
+    if (jsonStr.length > 2200) {
+        alert("⚠️ Tienes demasiadas láminas repetidas (" + getRepeatedTotal() + "). El código QR no soporta tantos datos. Por favor, usa el botón 'Copiar Texto' y envíalo por WhatsApp.");
         return;
     }
-
     const canvas = document.getElementById('qr-canvas');
-    
     try {
-        QRCode.toCanvas(canvas, jsonStr, { 
-            width: 250, 
-            margin: 2, 
-            errorCorrectionLevel: 'L', // Nivel L: Exprime al máximo la capacidad del QR
-            color: { dark: '#000', light: '#fff' } 
-        }, function (error) {
-            if (error) {
-                console.error(error);
-                alert("Ocurrió un error al dibujar el QR. Por favor, usa 'Copiar Texto'.");
-            } else {
-                showModal('modal-my-qr');
-            }
+        QRCode.toCanvas(canvas, jsonStr, { width: 250, margin: 2, errorCorrectionLevel: 'L', color: { dark: '#000', light: '#fff' } }, function (error) {
+            if (error) { console.error(error); alert("Error al dibujar el QR. Por favor, usa 'Copiar Texto'."); } 
+            else { showModal('modal-my-qr'); }
         });
-    } catch (e) {
-        console.error(e);
-        alert("Error interno en tu celular al generar el QR. Por favor, usa 'Copiar Texto'.");
-    }
+    } catch (e) { console.error(e); alert("Tu dispositivo bloqueó el QR. Usa 'Copiar Texto'."); }
 }
 
 function copyMyJsonForTrade() {
@@ -413,7 +409,7 @@ function copyMyJsonForTrade() {
 }
 
 function openCameraScanner() {
-    if(typeof Html5Qrcode === 'undefined') { alert("Cargando escáner..."); return; }
+    if(typeof Html5Qrcode === 'undefined') { alert("Descargando el escáner de QR... Presiona el botón de nuevo en un par de segundos."); loadQRLibraries(); return; }
     showModal('modal-scanner'); html5QrcodeScanner = new Html5Qrcode("qr-reader");
     html5QrcodeScanner.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 250 } },
         (decodedText) => { closeScannerModal(); document.getElementById('match-input').value = decodedText; compareTradesFromText(); },
@@ -428,7 +424,7 @@ function closeScannerModal() {
 
 function uploadQRImage(event) {
     const file = event.target.files[0]; if (!file) return;
-    if(typeof Html5Qrcode === 'undefined') { alert("Cargando lector..."); return; }
+    if(typeof Html5Qrcode === 'undefined') { alert("Descargando el escáner... Intenta en un segundo."); loadQRLibraries(); return; }
     const html5QrCode = new Html5Qrcode("hidden-qr-reader");
     html5QrCode.scanFile(file, true).then(decodedText => { document.getElementById('match-input').value = decodedText; compareTradesFromText(); })
     .catch(err => { alert('No se detectó un código QR válido en la imagen.'); });
@@ -436,7 +432,6 @@ function uploadQRImage(event) {
 }
 
 let lastMatchResult = null;
-
 function clearMatchInput() {
     const matchInput = document.getElementById('match-input'); if(matchInput) matchInput.value = '';
     const resultsContainer = document.getElementById('match-results-container'); if(resultsContainer) resultsContainer.style.display = 'none';
@@ -463,7 +458,6 @@ function compareTradesFromText() {
                 const code = s.code; const mySticker = getStickerState(code);
                 const friendSticker = friendState.stickers[code] || { have: false, count: 0 };
                 const myName = formatCode(s.name);
-
                 if (!mySticker.have && friendSticker.have && friendSticker.count > 1) {
                     if(!iReceive[team.name]) iReceive[team.name] = []; iReceive[team.name].push(myName);
                 }
@@ -472,31 +466,24 @@ function compareTradesFromText() {
                 }
             });
         });
+
         lastMatchResult = { iReceive, iGive, friendName: friendState.profile?.name || 'Tu contacto' };
         renderMatchResults();
     } catch(e) { alert('Los datos leídos no son válidos.'); }
 }
 
-// NUEVO: RENDER CON RESUMEN MATEMÁTICO
 function renderMatchResults() {
-    const container = document.getElementById('match-results');
-    const wrap = document.getElementById('match-results-container');
+    const container = document.getElementById('match-results'); const wrap = document.getElementById('match-results-container');
     if(!lastMatchResult || !container || !wrap) return;
 
-    let totalRec = 0;
-    for(let team in lastMatchResult.iReceive) totalRec += lastMatchResult.iReceive[team].length;
-    let totalGive = 0;
-    for(let team in lastMatchResult.iGive) totalGive += lastMatchResult.iGive[team].length;
-
-    let optimal = Math.min(totalRec, totalGive);
-    let bottleneck = "";
+    let totalRec = 0; for(let team in lastMatchResult.iReceive) totalRec += lastMatchResult.iReceive[team].length;
+    let totalGive = 0; for(let team in lastMatchResult.iGive) totalGive += lastMatchResult.iGive[team].length;
+    let optimal = Math.min(totalRec, totalGive); let bottleneck = "";
     if (totalRec < totalGive) bottleneck = `(Menos repetidas: ${lastMatchResult.friendName})`;
-    else if (totalGive < totalRec) bottleneck = `(Menos repetidas: Tú)`;
-    else bottleneck = `(Ambos ofrecen igual)`;
+    else if (totalGive < totalRec) bottleneck = `(Menos repetidas: Tú)`; else bottleneck = `(Ambos ofrecen igual)`;
 
     let html = `<p style="text-align:center; color:var(--text-secondary); margin-bottom:1rem;">Comparación con: <strong style="color:var(--text-primary); font-size:1.1rem;">${lastMatchResult.friendName}</strong></p>`;
     
-    // CAJA DE RESUMEN
     html += `<div style="background: rgba(59,130,246,0.1); border: 1px dashed var(--blue-accent); padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; text-align: center;">
         <p style="margin-bottom: 0.5rem; color: var(--text-primary);"><strong>📊 Resumen del Match</strong></p>
         <p style="font-size: 0.9rem; margin-bottom: 0.2rem; color: var(--text-secondary);">Recibes: <strong style="color:var(--green-complete)">${totalRec}</strong> láminas</p>
@@ -511,47 +498,33 @@ function renderMatchResults() {
     let recCount = 0;
     for(let team in lastMatchResult.iReceive) { html += `<strong>${team}</strong><span>${lastMatchResult.iReceive[team].join(', ')}</span>`; recCount++; }
     if(recCount === 0) html += '<p class="text-muted">Ninguna :(</p>';
-    html += '</div>';
-
-    html += '<div class="match-col"><h3>⬆️ Le puedo dar</h3>';
+    html += '</div><div class="match-col"><h3>⬆️ Le puedo dar</h3>';
     let giveCount = 0;
     for(let team in lastMatchResult.iGive) { html += `<strong>${team}</strong><span>${lastMatchResult.iGive[team].join(', ')}</span>`; giveCount++; }
     if(giveCount === 0) html += '<p class="text-muted">Ninguna :(</p>';
     html += '</div></div>';
 
-    container.innerHTML = html;
-    wrap.style.display = 'block';
+    container.innerHTML = html; wrap.style.display = 'block';
 }
 
 function shareMatchWhatsApp() {
     if(!lastMatchResult) return;
-    
     let totalRec = 0; for(let team in lastMatchResult.iReceive) totalRec += lastMatchResult.iReceive[team].length;
     let totalGive = 0; for(let team in lastMatchResult.iGive) totalGive += lastMatchResult.iGive[team].length;
-    let optimal = Math.min(totalRec, totalGive);
-    let bottleneck = "";
+    let optimal = Math.min(totalRec, totalGive); let bottleneck = "";
     if (totalRec < totalGive) bottleneck = `(Menos repetidas: ${lastMatchResult.friendName})`;
-    else if (totalGive < totalRec) bottleneck = `(Menos repetidas: Yo)`;
-    else bottleneck = `(Ambos igual)`;
+    else if (totalGive < totalRec) bottleneck = `(Menos repetidas: Yo)`; else bottleneck = `(Ambos igual)`;
 
-    let text = `*¡Hola ${lastMatchResult.friendName}! He revisado las láminas para intercambiar:*\n\n`;
-    text += `*📊 RESUMEN:*\n`;
-    text += `- Recibo de ti: ${totalRec}\n`;
-    text += `- Te entrego: ${totalGive}\n`;
-    text += `*🔥 Cambios posibles: ${optimal}* ${bottleneck}\n\n`;
-
-    text += `*⬇️ Me puedes dar:*\n`;
+    let text = `*¡Hola ${lastMatchResult.friendName}! He revisado las láminas para intercambiar:*\n\n*📊 RESUMEN:*\n- Recibo de ti: ${totalRec}\n- Te entrego: ${totalGive}\n*🔥 Cambios posibles: ${optimal}* ${bottleneck}\n\n*⬇️ Me puedes dar:*\n`;
     let recCount = 0;
     for(let team in lastMatchResult.iReceive) { text += `- ${team}: ${lastMatchResult.iReceive[team].join(', ')}\n`; recCount++; }
     if(recCount === 0) text += 'Ninguna\n';
-    
     text += `\n*⬆️ Yo te puedo dar:*\n`;
     let giveCount = 0;
     for(let team in lastMatchResult.iGive) { text += `- ${team}: ${lastMatchResult.iGive[team].join(', ')}\n`; giveCount++; }
     if(giveCount === 0) text += 'Ninguna\n';
 
-    const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
-    window.open(url, '_blank');
+    const url = `https://wa.me/?text=${encodeURIComponent(text)}`; window.open(url, '_blank');
 }
 
 function downloadBlob(blob, filename) { const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = filename; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url); }
