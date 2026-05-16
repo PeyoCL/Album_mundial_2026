@@ -2,6 +2,9 @@
 
 Todas las actualizaciones y cambios notables de la aplicación "Álbum Mundial 2026" se documentarán en este archivo.
 
+### v28 - Descarga de Código QR
+- **Guardar en Galería:** Se añadió un botón en el modal del código QR que permite descargar la imagen generada (`.png`) directamente al dispositivo del usuario. El archivo se nombra automáticamente de forma dinámica usando el nombre o alias configurado en el perfil (ej. `QR_Album_2026_Juan_Perez.png`), facilitando el envío de este código como foto por redes sociales y aplicaciones de mensajería.
+
 ### v27 - Descarga Resiliente de Códigos QR
 - **Protección contra Bloqueadores:** Se implementó una función asíncrona (`loadQRLibraries()`) que permite inyectar forzosamente los scripts necesarios para la generación y escaneo de Códigos QR incluso si el proveedor original falla. Si un usuario experimenta un bloqueo por caché antiguo o por AdBlock, la aplicación intercepta el error, descarga la herramienta en segundo plano e intenta ejecutar la función nuevamente de forma automática.
 - **Transición a CDNJS:** Se cambió el proveedor de librerías externas a `cdnjs.cloudflare.com`, que tiene menos restricciones corporativas de firewall en comparación con `unpkg.com`.
