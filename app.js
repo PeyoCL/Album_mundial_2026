@@ -361,16 +361,41 @@ function getMinifiedTradeData() {
 }
 
 function showMyQR() {
+    // 1. Verificamos si la librería cargó correctamente
+    if (typeof QRCode === 'undefined') {
+        alert("El generador de QR aún está cargando o tu navegador lo bloqueó. Verifica tu conexión o usa 'Copiar Texto'.");
+        return;
+    }
+
     if (state.profile.name === 'Mi Álbum') {
         const userName = prompt('Antes de generar el QR, ¿Cómo te llamas?');
         if (userName) updateProfileName(userName);
     }
+    
     const jsonStr = getMinifiedTradeData();
     const canvas = document.getElementById('qr-canvas');
-    QRCode.toCanvas(canvas, jsonStr, { width: 250, margin: 2, color: { dark: '#000', light: '#fff' } }, function (error) {
-        if (error) console.error(error); showModal('modal-my-qr');
-    });
+    
+    try {
+        // 2. errorCorrectionLevel: 'L' nos permite guardar el MÁXIMO de láminas posibles
+        QRCode.toCanvas(canvas, jsonStr, { 
+            width: 250, 
+            margin: 2, 
+            errorCorrectionLevel: 'L', // <-- La clave para que quepan más datos
+            color: { dark: '#000', light: '#fff' } 
+        }, function (error) {
+            if (error) {
+                console.error(error);
+                alert("Tienes demasiadas láminas repetidas para generar un solo código QR. Por favor, utiliza el botón 'Copiar Texto'.");
+            } else {
+                showModal('modal-my-qr');
+            }
+        });
+    } catch (e) {
+        console.error(e);
+        alert("Tienes demasiadas láminas repetidas para generar un solo código QR. Por favor, utiliza el botón 'Copiar Texto'.");
+    }
 }
+
 
 function copyMyJsonForTrade() {
     if (state.profile.name === 'Mi Álbum') {
