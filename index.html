@@ -14,7 +14,11 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=22">
+    
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    
+    <link rel="stylesheet" href="style.css?v=23">
 </head>
 <body>
     <div id="app">
@@ -24,7 +28,7 @@
             <div class="header-top">
                 <div class="header-titles">
                     <h1 id="album-title" contenteditable="true" spellcheck="false" title="Toca para editar tu nombre">Mi Álbum</h1>
-                    <span class="subtitle">Mundial 2026 · 48 selecciones · 994 láminas <span class="app-version">v22</span></span>
+                    <span class="subtitle">Mundial 2026 · 48 selecciones · 994 láminas <span class="app-version">v23</span></span>
                 </div>
                 <div class="header-actions">
                     <button id="btn-theme" title="Cambiar Tema">🌙</button>
@@ -108,15 +112,32 @@
             <section id="tab-match" class="tab-pane">
                 <div class="trades-header">
                     <h2>Validar Intercambio</h2>
-                    <p style="color: var(--text-secondary); margin-top: 0.5rem; font-size: 0.9rem;">Compara tu álbum con el de un contacto para saber exactamente qué láminas pueden intercambiar.</p>
+                    <p style="color: var(--text-secondary); margin-top: 0.5rem; font-size: 0.9rem;">Cruza tus datos con un contacto para descubrir qué láminas pueden intercambiar.</p>
                 </div>
                 
                 <div class="match-setup">
-                    <button id="btn-copy-match" onclick="copyMyJsonForTrade()" class="btn-block" style="background: var(--bg-card); color: var(--gold); border: 1px solid var(--gold);">1. Copiar mis datos</button>
-                    <p style="text-align: center; margin: 1rem 0; font-size: 0.85rem; color: var(--text-muted);">o</p>
-                    <textarea id="match-input" rows="4" placeholder="2. Pega aquí los datos (código optimizado) que te enviaron..."></textarea>
-                    <button onclick="compareTrades()" class="btn-block">3. Comparar álbumes</button>
-                    <button onclick="clearMatchInput()" class="btn-block" style="background: transparent; color: var(--text-secondary); border: 1px solid var(--border-subtle); margin-top: 0.5rem;">Limpiar texto</button>
+                    <h3 style="margin-bottom: 0.5rem; font-size: 1rem; color: var(--blue-accent);">1. Comparte tu álbum</h3>
+                    <div class="match-actions">
+                        <button onclick="showMyQR()" class="btn-block btn-qr">📷 Mostrar mi QR</button>
+                        <button onclick="copyMyJsonForTrade()" class="btn-block btn-outline">Copiar Texto</button>
+                    </div>
+                    
+                    <h3 style="margin-top: 1.5rem; margin-bottom: 0.5rem; font-size: 1rem; color: var(--blue-accent);">2. Recibe datos (Amigo)</h3>
+                    <div class="match-actions">
+                        <button onclick="openCameraScanner()" class="btn-block btn-qr">🔍 Escanear Cámara</button>
+                        <label class="btn-block btn-outline" style="display:block; text-align:center; cursor:pointer; padding: 0.8rem;">
+                            🖼️ Subir Foto QR
+                            <input type="file" accept="image/*" style="display:none" onchange="uploadQRImage(event)">
+                        </label>
+                    </div>
+                    
+                    <p style="text-align: center; margin: 0.8rem 0; font-size: 0.85rem; color: var(--text-muted);">o pega el texto directamente:</p>
+                    <textarea id="match-input" rows="3" placeholder="Pega los datos de texto aquí..."></textarea>
+                    
+                    <div class="match-actions">
+                        <button onclick="compareTradesFromText()" class="btn-block">Comparar</button>
+                        <button onclick="clearMatchInput()" class="btn-block btn-transparent">Limpiar</button>
+                    </div>
                 </div>
 
                 <div id="match-results-container" style="display: none; margin-top: 2rem;">
@@ -125,7 +146,6 @@
                 </div>
             </section>
         </main>
-
         <nav class="bottom-nav">
             <button class="nav-btn active" data-target="tab-home">Álbum</button>
             <button class="nav-btn" data-target="tab-trades">Cambios</button>
@@ -168,9 +188,8 @@
                     <input type="file" id="import-file" style="display:none" accept=".json" onchange="importData(event)">
                     
                     <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border-subtle);">
-                        <button onclick="forceUpdateCache()" class="btn-block" style="background: #eab308; color: #fff;">Forzar Actualización (Limpiar Caché)</button>
-                        <p style="font-size: 0.75rem; color: var(--text-muted); text-align: center; margin-top: 0.5rem;">Usa este botón si la app no toma los cambios nuevos. (No borra tus láminas).</p>
-                        <button onclick="confirmReset()" class="btn-block btn-danger" style="margin-top: 1rem;">Reiniciar álbum completo</button>
+                        <button onclick="forceUpdateCache()" class="btn-block" style="background: #eab308; color: #000;">Forzar Actualización (Limpiar Caché)</button>
+                        <button onclick="confirmReset()" class="btn-block btn-danger" style="margin-top: 0.5rem;">Reiniciar álbum completo</button>
                     </div>
                 </div>
             </div>
@@ -188,16 +207,42 @@
                 </div>
             </div>
         </div>
-        
+
+        <div id="modal-my-qr" class="modal">
+            <div class="modal-content" style="align-items: center; text-align: center;">
+                <div class="modal-header" style="width: 100%;">
+                    <h2>Mi Código QR</h2>
+                    <button class="close-modal" onclick="closeModal('modal-my-qr')">✕</button>
+                </div>
+                <div class="modal-body" style="display: flex; flex-direction: column; align-items: center;">
+                    <p style="margin-bottom:1rem; color:var(--text-secondary);">Muéstrale este código a tu contacto para que lo escanee desde su aplicación.</p>
+                    <canvas id="qr-canvas" style="background: #fff; padding: 10px; border-radius: 8px; width: 250px; height: 250px;"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div id="modal-scanner" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Escanear QR</h2>
+                    <button class="close-modal" onclick="closeScannerModal()">✕</button>
+                </div>
+                <div class="modal-body" style="padding: 0;">
+                    <div id="qr-reader" style="width: 100%; border-radius: 0 0 12px 12px; overflow: hidden;"></div>
+                </div>
+            </div>
+        </div>
+        <div id="hidden-qr-reader" style="display: none;"></div>
+
         <div id="ios-install-prompt" class="ios-prompt" style="display: none;">
             <button class="close-ios-prompt" onclick="document.getElementById('ios-install-prompt').style.display='none'">✕</button>
             <h3>Instalar App</h3>
-            <p>Para usar el álbum sin internet, toca el botón Compartir <svg style="width:16px; height:16px; vertical-align:middle; fill:currentColor;" viewBox="0 0 50 50"><path d="M25 2v18M25 2l-7 7M25 2l7 7M15 15H9v33h32V15h-6" stroke="currentColor" stroke-width="4" fill="none"/></svg> en la barra inferior y selecciona <strong>Añadir a la pantalla de inicio</strong>.</p>
+            <p>Para usar el álbum sin internet, toca Compartir <svg style="width:16px; height:16px; vertical-align:middle; fill:currentColor;" viewBox="0 0 50 50"><path d="M25 2v18M25 2l-7 7M25 2l7 7M15 15H9v33h32V15h-6" stroke="currentColor" stroke-width="4" fill="none"/></svg> y selecciona <strong>Añadir a la pantalla de inicio</strong>.</p>
         </div>
     </div>
 
-    <script src="data.js?v=22"></script>
-    <script src="app.js?v=22"></script>
+    <script src="data.js?v=23"></script>
+    <script src="app.js?v=23"></script>
     
     <script>
       if ('serviceWorker' in navigator) {
