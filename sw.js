@@ -1,11 +1,11 @@
-const CACHE_NAME = 'album-2026-v27'; 
+const CACHE_NAME = 'album-2026-v28'; 
 
 const urlsToCache = [
   './',
   './index.html',
-  './style.css?v=27',
-  './app.js?v=27',
-  './data.js?v=27',
+  './style.css?v=28',
+  './app.js?v=28',
+  './data.js?v=28',
   './manifest.json',
   './icon.svg'
 ];
@@ -14,11 +14,7 @@ self.addEventListener('install', event => {
   self.skipWaiting(); 
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => {
-      // Archivos locales que son críticos
       cache.addAll(urlsToCache);
-      
-      // Archivos externos de las librerías QR. Se cachean de forma segura
-      // sin bloquear la instalación si la red falla.
       cache.add('https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.1/qrcode.min.js').catch(()=>{});
       cache.add('https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js').catch(()=>{});
     })
