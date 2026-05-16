@@ -369,30 +369,27 @@ function exportTradesPdf() {
     }, 500);
 }
 
-// ==== LÓGICA QR Y MATCH V27 ====
+// ==== LÓGICA QR Y MATCH V29 ====
 
-// FUNCIÓN AUTO-REPARABLE: Fuerza la descarga de la librería si falló por caché o AdBlock
 function loadQRLibraries(callback) {
-    if (typeof QRCode !== 'undefined' && typeof Html5Qrcode !== 'undefined') {
+    if (typeof QRCode !== 'undefined' && typeof jsQR !== 'undefined') {
         if (callback) callback();
         return;
     }
 
     const loadScript = (src) => new Promise((resolve, reject) => {
         const script = document.createElement('script');
-        script.src = src; 
-        script.onload = resolve; 
-        script.onerror = reject;
+        script.src = src; script.onload = resolve; script.onerror = reject;
         document.head.appendChild(script);
     });
 
     Promise.all([
         typeof QRCode === 'undefined' ? loadScript('https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.1/qrcode.min.js') : Promise.resolve(),
-        typeof Html5Qrcode === 'undefined' ? loadScript('https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js') : Promise.resolve()
+        typeof jsQR === 'undefined' ? loadScript('https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js') : Promise.resolve()
     ]).then(() => {
         if (callback) callback();
     }).catch((e) => {
-        alert("No se pudo conectar con el servidor de códigos QR. Verifica tu internet o tu bloqueador de anuncios, y usa el botón 'Copiar Texto' en su lugar.");
+        alert("No se pudo conectar con el servidor de códigos QR. Verifica tu internet y usa 'Copiar Texto'.");
     });
 }
 
@@ -405,11 +402,7 @@ function getMinifiedTradeData() {
 }
 
 function showMyQR() {
-    if (typeof QRCode === 'undefined') {
-        loadQRLibraries(() => executeShowMyQR());
-    } else {
-        executeShowMyQR();
-    }
+    if (typeof QRCode === 'undefined') { loadQRLibraries(() => executeShowMyQR()); } else { executeShowMyQR(); }
 }
 
 function executeShowMyQR() {
@@ -424,11 +417,19 @@ function executeShowMyQR() {
     }
     const canvas = document.getElementById('qr-canvas');
     try {
-        QRCode.toCanvas(canvas, jsonStr, { width: 250, margin: 2, errorCorrectionLevel: 'L', color: { dark: '#000', light: '#fff' } }, function (error) {
+        QRCode.toCanvas(canvas, jsonStr, { width: 300, margin: 2, errorCorrectionLevel: 'L', color: { dark: '#000', light: '#fff' } }, function (error) {
             if (error) { console.error(error); alert("Error interno al dibujar el QR. Por favor, usa 'Copiar Texto'."); } 
             else { showModal('modal-my-qr'); }
         });
     } catch (e) { console.error(e); alert("Tu dispositivo bloqueó la generación del QR. Usa 'Copiar Texto'."); }
+}
+
+function downloadQR() {
+    const canvas = document.getElementById('qr-canvas'); if (!canvas) return;
+    const imageUrl = canvas.toDataURL("image/png");
+    const safeName = (state.profile.name || 'Mi_Album').replace(/\s+/g, '_');
+    const a = document.createElement('a'); a.href = imageUrl; a.download = `QR_Album_2026_${safeName}.png`;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
 }
 
 function copyMyJsonForTrade() {
@@ -439,31 +440,10 @@ function copyMyJsonForTrade() {
     navigator.clipboard.writeText(getMinifiedTradeData()).then(() => { alert(`¡Copiado! Envíalo a tu contacto.`); });
 }
 
-function openCameraScanner() {
-    if(typeof Html5Qrcode === 'undefined') {
-        loadQRLibraries(() => executeOpenCameraScanner());
-    } else {
-        executeOpenCameraScanner();
-    }
-}
-
-function executeOpenCameraScanner() {
-    showModal('modal-scanner'); 
-    html5QrcodeScanner = new Html5Qrcode("qr-reader");
-    html5QrcodeScanner.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 250 } },
-        (decodedText) => { closeScannerModal(); document.getElementById('match-input').value = decodedText; compareTradesFromText(); },
-        (errorMessage) => { }
-    ).catch(err => { alert("No se pudo iniciar la cámara. Revisa los permisos de tu navegador."); closeScannerModal(); });
-}
-
-function closeScannerModal() {
-    if (html5QrcodeScanner) { html5QrcodeScanner.stop().then(() => { html5QrcodeScanner.clear(); closeModal('modal-scanner'); }).catch(e => closeModal('modal-scanner'));
-    } else { closeModal('modal-scanner'); }
-}
-
+// === NUEVO PROCESAMIENTO DE IMÁGENES QR CON JSQR ===
 function uploadQRImage(event) {
     const file = event.target.files[0]; if (!file) return;
-    if(typeof Html5Qrcode === 'undefined') {
+    if (typeof jsQR === 'undefined') {
         loadQRLibraries(() => executeUploadQRImage(file));
         event.target.value = '';
         return;
@@ -473,9 +453,42 @@ function uploadQRImage(event) {
 }
 
 function executeUploadQRImage(file) {
-    const html5QrCode = new Html5Qrcode("hidden-qr-reader");
-    html5QrCode.scanFile(file, true).then(decodedText => { document.getElementById('match-input').value = decodedText; compareTradesFromText(); })
-    .catch(err => { alert('No se detectó un código QR válido en la imagen. Intenta con otra foto.'); });
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+            const canvas = document.getElementById('hidden-qr-canvas');
+            const context = canvas.getContext('2d', { willReadFrequently: true });
+            
+            // Limitamos el tamaño máximo para no colapsar la memoria, pero mantenemos buena resolución
+            const maxSize = 1000;
+            let width = img.width;
+            let height = img.height;
+            if (width > maxSize || height > maxSize) {
+                const ratio = Math.min(maxSize / width, maxSize / height);
+                width = width * ratio; height = height * ratio;
+            }
+            
+            canvas.width = width; canvas.height = height;
+            // Rellenamos de blanco por si hay transparencias
+            context.fillStyle = '#FFFFFF'; context.fillRect(0, 0, width, height);
+            context.drawImage(img, 0, 0, width, height);
+            
+            const imageData = context.getImageData(0, 0, width, height);
+            const code = jsQR(imageData.data, imageData.width, imageData.height, {
+                inversionAttempts: "dontInvert",
+            });
+
+            if (code) {
+                document.getElementById('match-input').value = code.data;
+                compareTradesFromText();
+            } else {
+                alert('No se pudo leer el código QR en la imagen. Intenta con una captura más nítida o pide que te envíen el "Texto Copiado".');
+            }
+        };
+        img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
 }
 
 let lastMatchResult = null;
@@ -519,7 +532,7 @@ function compareTradesFromText() {
 
         lastMatchResult = { iReceive, iGive, friendName: friendState.profile?.name || 'Tu contacto' };
         renderMatchResults();
-    } catch(e) { alert('Los datos leídos no son válidos.'); }
+    } catch(e) { alert('Los datos leídos no son válidos. Comprueba que el texto copiado esté completo.'); }
 }
 
 function renderMatchResults() {
@@ -603,28 +616,4 @@ function triggerConfetti(x, y) {
     function animate() { ctx.clearRect(0,0,canvas.width,canvas.height); let active = false; particles.forEach(p => { p.x += p.dx; p.y += p.dy; p.dy += 0.2; ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fillStyle = p.color; ctx.fill(); if(p.y < canvas.height) active = true; }); if(active) requestAnimationFrame(animate); else ctx.clearRect(0,0,canvas.width,canvas.height); } animate();
 }
 function shootBigConfetti() { triggerConfetti(window.innerWidth/2, window.innerHeight/2); setTimeout(() => triggerConfetti(window.innerWidth/3, window.innerHeight/2), 200); setTimeout(() => triggerConfetti((window.innerWidth/3)*2, window.innerHeight/2), 400); }
-
-// NUEVA FUNCIÓN v28: Descargar QR como imagen
-function downloadQR() {
-    const canvas = document.getElementById('qr-canvas');
-    if (!canvas) return;
-    
-    // Convertimos el canvas a una URL de imagen PNG
-    const imageUrl = canvas.toDataURL("image/png");
-    
-    // Formateamos el nombre del usuario para el nombre del archivo (ej. Juan_Perez)
-    const safeName = (state.profile.name || 'Mi_Album').replace(/\s+/g, '_');
-    
-    // Creamos un enlace invisible y forzamos la descarga
-    const a = document.createElement('a');
-    a.href = imageUrl;
-    a.download = `QR_Album_2026_${safeName}.png`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-}
-
 document.addEventListener('DOMContentLoaded', init);
-
-
-
