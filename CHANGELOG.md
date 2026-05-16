@@ -2,6 +2,10 @@
 
 Todas las actualizaciones y cambios notables de la aplicación "Álbum Mundial 2026" se documentarán en este archivo.
 
+### v29 - Decodificación de QR Densa
+- **Migración a jsQR:** Se reemplazó la librería de lectura de QR `html5-qrcode` por `jsQR`. Esta nueva librería es capaz de descifrar la matriz de píxeles directamente desde el binario de la imagen cargada, lo cual resuelve el fallo de "No se detectó un código QR" que ocurría con imágenes extremadamente densas (es decir, usuarios con cientos de láminas repetidas).
+- **Escalado Inteligente:** Antes de leer el QR, la app ahora redimensiona la imagen de manera invisible a un tamaño manejable (1000px). Esto mantiene un alto contraste para facilitar la lectura y previene que navegadores móviles con poca memoria RAM colapsen.
+
 ### v28 - Descarga de Código QR
 - **Guardar en Galería:** Se añadió un botón en el modal del código QR que permite descargar la imagen generada (`.png`) directamente al dispositivo del usuario. El archivo se nombra automáticamente de forma dinámica usando el nombre o alias configurado en el perfil (ej. `QR_Album_2026_Juan_Perez.png`), facilitando el envío de este código como foto por redes sociales y aplicaciones de mensajería.
 
