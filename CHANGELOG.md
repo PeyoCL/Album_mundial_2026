@@ -2,6 +2,11 @@
 
 Todas las actualizaciones y cambios notables de la aplicación "Álbum Mundial 2026" se documentarán en este archivo.
 
+### v26 - Auto-reparación del Generador QR y SW (Anti-Crash)
+- **Carga Inyectada de Librerías:** Si un dispositivo quedó estancado en una versión vieja del HTML por culpa de la caché y no encuentra las librerías QR en la cabecera, `app.js` ahora es capaz de detectarlo e inyectar forzosamente los scripts externos al hacer clic en los botones.
+- **Service Worker "Stale-While-Revalidate":** Se quitó la obligación de cachear las librerías CDN durante la instalación. Esto previene un bug gravísimo donde un bloqueador de anuncios (AdBlock) o CORS denegaban el acceso al script del QR, provocando que la PWA abortara la actualización completa de toda la aplicación.
+- **Control de Densidad QR:** Se agregó un límite de 2000 caracteres al generador. Si tienes cientos de repetidas y sobrepasas la capacidad física del `<canvas>`, la app lo intercepta y muestra una alerta recomendando usar "Copiar Texto", evitando el colapso silencioso de la UI.
+
 ### v25 - Optimización de QR y Auto-Actualización de Caché
 - **Maximización del Código QR:** Se ajustó el nivel de corrección de errores del generador QR al nivel más bajo (`errorCorrectionLevel: 'L'`) para permitir que quepa la máxima cantidad posible de láminas. Además, se agregó un "escudo de seguridad": si tienes cientos de repetidas y sobrepasas el límite físico absoluto de datos que un QR puede dibujar, la app ya no se congelará en silencio, sino que te mostrará una alerta indicándote que utilices la opción de "Copiar Texto".
 - **Caché Inteligente (Stale-While-Revalidate):** Se reescribió por completo la estrategia del Service Worker. A partir de ahora, la app cargará instantáneamente desde el caché, pero en segundo plano buscará silenciosamente si hay actualizaciones en GitHub. Esto garantiza que nunca más te quedes atascado en una versión vieja de la aplicación.
