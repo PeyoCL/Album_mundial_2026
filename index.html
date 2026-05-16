@@ -16,9 +16,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.1/qrcode.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
     
-    <link rel="stylesheet" href="style.css?v=28">
+    <link rel="stylesheet" href="style.css?v=29">
 </head>
 <body>
     <div id="app">
@@ -28,7 +28,7 @@
             <div class="header-top">
                 <div class="header-titles">
                     <h1 id="album-title" contenteditable="true" spellcheck="false" title="Toca para editar tu nombre">Mi Álbum</h1>
-                    <span class="subtitle">Mundial 2026 · 48 selecciones · 994 láminas <span class="app-version">v28</span></span>
+                    <span class="subtitle">Mundial 2026 · 48 selecciones · 994 láminas <span class="app-version">v29</span></span>
                 </div>
                 <div class="header-actions">
                     <button id="btn-theme" title="Cambiar Tema">🌙</button>
@@ -56,6 +56,7 @@
                 </div>
             </div>
         </header>
+
         <main id="main-content">
             <section id="tab-home" class="tab-pane active">
                 <div class="dashboard">
@@ -124,8 +125,7 @@
                     
                     <h3 style="margin-top: 1.5rem; margin-bottom: 0.5rem; font-size: 1rem; color: var(--blue-accent);">2. Recibe datos (Amigo)</h3>
                     <div class="match-actions">
-                        <button onclick="openCameraScanner()" class="btn-block btn-qr">🔍 Escanear Cámara</button>
-                        <label class="btn-block btn-outline" style="display:block; text-align:center; cursor:pointer; padding: 0.8rem;">
+                        <label class="btn-block btn-qr" style="display:block; text-align:center; cursor:pointer; padding: 0.8rem;">
                             🖼️ Subir Foto QR
                             <input type="file" accept="image/*" style="display:none" onchange="uploadQRImage(event)">
                         </label>
@@ -222,18 +222,7 @@
             </div>
         </div>
 
-        <div id="modal-scanner" class="modal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h2>Escanear QR</h2>
-                    <button class="close-modal" onclick="closeScannerModal()">✕</button>
-                </div>
-                <div class="modal-body" style="padding: 0;">
-                    <div id="qr-reader" style="width: 100%; border-radius: 0 0 12px 12px; overflow: hidden;"></div>
-                </div>
-            </div>
-        </div>
-        <div id="hidden-qr-reader" style="display: none;"></div>
+        <canvas id="hidden-qr-canvas" style="display: none;"></canvas>
 
         <div id="ios-install-prompt" class="ios-prompt" style="display: none;">
             <button class="close-ios-prompt" onclick="document.getElementById('ios-install-prompt').style.display='none'">✕</button>
@@ -242,8 +231,8 @@
         </div>
     </div>
 
-    <script src="data.js?v=28"></script>
-    <script src="app.js?v=28"></script>
+    <script src="data.js?v=29"></script>
+    <script src="app.js?v=29"></script>
     
     <script>
       if ('serviceWorker' in navigator) {
