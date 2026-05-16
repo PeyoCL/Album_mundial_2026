@@ -2,6 +2,10 @@
 
 Todas las actualizaciones y cambios notables de la aplicación "Álbum Mundial 2026" se documentarán en este archivo.
 
+### v32 - Integración Visual de Logo Oficial
+- **Rebranding UI:** Se añadió el logo oficial del Mundial 2026 en el header de la aplicación, directamente integrado junto al título de "Mi Álbum". Esto dota a la PWA de un aspecto mucho más inmersivo y oficial, reemplazando la cabecera genérica de puro texto.
+- **Actualización de Ícono Base:** El archivo `icon.svg` a nivel del sistema fue reemplazado, logrando que al instalar la aplicación en el home del dispositivo móvil, se muestre el escudo real del mundial.
+
 ### v31 - Corrección de Diseño (Responsive QR Modal)
 - **Bloqueo de Descuadre UI:** Al generar códigos QR de alta definición (800x800px), la ventana modal se deformaba empujando el botón de descarga fuera de la pantalla. Se cambió la arquitectura de renderizado: ahora el QR se procesa como una URL de datos (`DataURL`) en segundo plano y se inyecta en una etiqueta `<img>` con restricciones de CSS (`max-width: 250px`). Esto garantiza que el diseño visual se mantenga perfectamente encuadrado sin sacrificar la resolución HD del archivo al momento de descargarlo.
 
