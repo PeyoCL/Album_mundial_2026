@@ -18,7 +18,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.1/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
     
-    <link rel="stylesheet" href="style.css?v=31">
+    <link rel="stylesheet" href="style.css?v=32">
 </head>
 <body>
     <div id="app">
@@ -26,9 +26,12 @@
 
         <header class="app-header">
             <div class="header-top">
-                <div class="header-titles">
-                    <h1 id="album-title" contenteditable="true" spellcheck="false" title="Toca para editar tu nombre">Mi Álbum</h1>
-                    <span class="subtitle">Mundial 2026 · 48 selecciones · 994 láminas <span class="app-version">v31</span></span>
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <img src="icon.svg" alt="Logo Mundial 2026" style="height: 42px; width: auto; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));">
+                    <div class="header-titles">
+                        <h1 id="album-title" contenteditable="true" spellcheck="false" title="Toca para editar tu nombre">Mi Álbum</h1>
+                        <span class="subtitle">Mundial 2026 · 48 selecciones · 994 láminas <span class="app-version">v32</span></span>
+                    </div>
                 </div>
                 <div class="header-actions">
                     <button id="btn-theme" title="Cambiar Tema">🌙</button>
@@ -207,7 +210,7 @@
             </div>
         </div>
 
-                <div id="modal-my-qr" class="modal">
+        <div id="modal-my-qr" class="modal">
             <div class="modal-content" style="align-items: center; text-align: center;">
                 <div class="modal-header" style="width: 100%;">
                     <h2>Mi Código QR</h2>
@@ -215,14 +218,11 @@
                 </div>
                 <div class="modal-body" style="display: flex; flex-direction: column; align-items: center; width: 100%;">
                     <p style="margin-bottom:1rem; color:var(--text-secondary);">Muéstrale este código a tu contacto para que lo escanee desde su aplicación.</p>
-                    
                     <img id="qr-image" alt="QR Code" style="background: #fff; padding: 10px; border-radius: 8px; width: 100%; max-width: 250px; height: auto; aspect-ratio: 1/1; margin-bottom: 1.5rem; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">
-                    
                     <button onclick="downloadQR()" class="btn-block" style="background: #10b981; color: white;">💾 Descargar Imagen QR</button>
                 </div>
             </div>
         </div>
-
 
         <canvas id="hidden-qr-canvas" style="display: none;"></canvas>
 
@@ -233,8 +233,8 @@
         </div>
     </div>
 
-    <script src="data.js?v=31"></script>
-    <script src="app.js?v=31"></script>
+    <script src="data.js?v=32"></script>
+    <script src="app.js?v=32"></script>
     
     <script>
       if ('serviceWorker' in navigator) {
