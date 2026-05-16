@@ -1,13 +1,16 @@
-const CACHE_NAME = 'album-2026-v21'; 
+const CACHE_NAME = 'album-2026-v23'; 
 
+// Importante: Ahora cacheamos también las librerías CDN para que el QR funcione offline
 const urlsToCache = [
   './',
   './index.html',
-  './style.css?v=21',
-  './app.js?v=21',
-  './data.js?v=21',
+  './style.css?v=23',
+  './app.js?v=23',
+  './data.js?v=23',
   './manifest.json',
-  './icon.svg'
+  './icon.svg',
+  'https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js',
+  'https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js'
 ];
 
 self.addEventListener('install', event => {
