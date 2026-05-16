@@ -2,6 +2,10 @@
 
 Todas las actualizaciones y cambios notables de la aplicación "Álbum Mundial 2026" se documentarán en este archivo.
 
+### v30 - Generación de Código QR en Alta Definición (HD)
+- **Corrección de Anti-aliasing:** Se solucionó el error de "pixelado gris" que ocurría al generar códigos QR con más de 100 láminas. Ahora, la aplicación genera el QR internamente en Alta Definición (800x800 píxeles), forzando a que cada cuadro del QR sea un bloque de píxeles enteros, garantizando un alto contraste para los escáneres.
+- **Lector jsQR optimizado:** Se ajustó la función de escaneo para procesar imágenes con algoritmos agresivos (`inversionAttempts: attemptBoth`), permitiendo decodificar imágenes directamente desde la galería fotográfica del celular sin perder nitidez.
+
 ### v29 - Decodificación de QR Densa
 - **Migración a jsQR:** Se reemplazó la librería de lectura de QR `html5-qrcode` por `jsQR`. Esta nueva librería es capaz de descifrar la matriz de píxeles directamente desde el binario de la imagen cargada, lo cual resuelve el fallo de "No se detectó un código QR" que ocurría con imágenes extremadamente densas (es decir, usuarios con cientos de láminas repetidas).
 - **Escalado Inteligente:** Antes de leer el QR, la app ahora redimensiona la imagen de manera invisible a un tamaño manejable (1000px). Esto mantiene un alto contraste para facilitar la lectura y previene que navegadores móviles con poca memoria RAM colapsen.
