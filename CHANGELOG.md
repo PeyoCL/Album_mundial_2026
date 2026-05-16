@@ -2,6 +2,9 @@
 
 Todas las actualizaciones y cambios notables de la aplicación "Álbum Mundial 2026" se documentarán en este archivo.
 
+### v31 - Corrección de Diseño (Responsive QR Modal)
+- **Bloqueo de Descuadre UI:** Al generar códigos QR de alta definición (800x800px), la ventana modal se deformaba empujando el botón de descarga fuera de la pantalla. Se cambió la arquitectura de renderizado: ahora el QR se procesa como una URL de datos (`DataURL`) en segundo plano y se inyecta en una etiqueta `<img>` con restricciones de CSS (`max-width: 250px`). Esto garantiza que el diseño visual se mantenga perfectamente encuadrado sin sacrificar la resolución HD del archivo al momento de descargarlo.
+
 ### v30 - Generación de Código QR en Alta Definición (HD)
 - **Corrección de Anti-aliasing:** Se solucionó el error de "pixelado gris" que ocurría al generar códigos QR con más de 100 láminas. Ahora, la aplicación genera el QR internamente en Alta Definición (800x800 píxeles), forzando a que cada cuadro del QR sea un bloque de píxeles enteros, garantizando un alto contraste para los escáneres.
 - **Lector jsQR optimizado:** Se ajustó la función de escaneo para procesar imágenes con algoritmos agresivos (`inversionAttempts: attemptBoth`), permitiendo decodificar imágenes directamente desde la galería fotográfica del celular sin perder nitidez.
