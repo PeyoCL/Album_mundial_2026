@@ -1,15 +1,14 @@
-const CACHE_NAME = 'album-2026-v25'; 
+const CACHE_NAME = 'album-2026-v26'; 
 
+// Ya no obligamos al navegador a cachear enlaces externos durante la instalación
 const urlsToCache = [
   './',
   './index.html',
-  './style.css?v=25',
-  './app.js?v=25',
-  './data.js?v=25',
+  './style.css?v=26',
+  './app.js?v=26',
+  './data.js?v=26',
   './manifest.json',
-  './icon.svg',
-  'https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js',
-  'https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js'
+  './icon.svg'
 ];
 
 self.addEventListener('install', event => {
@@ -34,16 +33,17 @@ self.addEventListener('activate', event => {
   return self.clients.claim(); 
 });
 
-// NUEVA ESTRATEGIA: "Stale-While-Revalidate"
-// Muestra la app rápido desde el caché, pero en segundo plano descarga la última versión
-// para el próximo uso. Esto evita que el usuario se quede estancado en versiones viejas.
+// Cachea en segundo plano (Stale-While-Revalidate)
 self.addEventListener('fetch', event => {
   event.respondWith(
     caches.match(event.request).then(cachedResponse => {
       const fetchPromise = fetch(event.request).then(networkResponse => {
-        caches.open(CACHE_NAME).then(cache => {
-          cache.put(event.request, networkResponse.clone());
-        });
+        // Solo cachea recursos que no fallaron
+        if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
+          caches.open(CACHE_NAME).then(cache => {
+            cache.put(event.request, networkResponse.clone());
+          });
+        }
         return networkResponse;
       }).catch(() => {
         return cachedResponse;
