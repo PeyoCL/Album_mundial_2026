@@ -2,20 +2,25 @@ const STORAGE_KEY = 'album_mundial_2026_data';
 let state = { profile: { name: 'Mi Álbum', photo: null }, stickers: {}, lastUpdated: Date.now(), milestones: {} };
 let activeSearch = { text: '', team: 'all', group: 'all', sort: 'all' };
 let currentOpenTeam = null;
-let html5QrcodeScanner = null; 
+let html5QrcodeScanner = null;
 
-// FUNCIÓN AUTO-REPARABLE: Si el HTML falló, inyectamos los scripts a la fuerza
-function loadQRLibraries() {
-    if (typeof QRCode === 'undefined') {
-        const s1 = document.createElement('script');
-        s1.src = 'https://unpkg.com/qrcode@1.5.3/build/qrcode.min.js';
-        document.head.appendChild(s1);
+// FUNCIÓN AUTO-REPARABLE: Fuerza la descarga de las librerías si falló por caché o AdBlock
+function loadQRLibraries(callback) {
+    if (typeof QRCode !== 'undefined' && typeof jsQR !== 'undefined' && typeof Html5Qrcode !== 'undefined') {
+        if (callback) callback();
+        return;
     }
-    if (typeof Html5Qrcode === 'undefined') {
-        const s2 = document.createElement('script');
-        s2.src = 'https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js';
-        document.head.appendChild(s2);
-    }
+    const loadScript = (src) => new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = src; script.onload = resolve; script.onerror = reject;
+        document.head.appendChild(script);
+    });
+    Promise.all([
+        typeof QRCode === 'undefined' ? loadScript('https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.1/qrcode.min.js') : Promise.resolve(),
+        typeof jsQR === 'undefined' ? loadScript('https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js') : Promise.resolve(),
+        typeof Html5Qrcode === 'undefined' ? loadScript('https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js') : Promise.resolve()
+    ]).then(() => { if (callback) callback(); })
+    .catch((e) => { alert("No se pudo conectar con el servidor de códigos QR. Verifica tu internet y usa 'Copiar Texto'."); });
 }
 
 function formatCode(name) {
@@ -25,15 +30,18 @@ function formatCode(name) {
 
 function init() {
     try {
-        loadQRLibraries(); // Intentamos cargar forzosamente las librerías
+        loadQRLibraries(); // Intentamos cargar forzosamente las librerías en segundo plano
         loadTheme(); loadState(); migrateStickerCodes(); updateProfileName(state.profile?.name);
+        
         const title = document.getElementById('album-title');
         if(title) {
             title.addEventListener('blur', () => { updateProfileName(title.innerText); });
             title.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); title.blur(); } });
         }
+        
         const inputProfile = document.getElementById('input-profile-name');
         if(inputProfile) { inputProfile.addEventListener('input', (e) => { updateProfileName(e.target.value, false); }); }
+        
         populateTeamFilter(); populateGroupFilter(); bindEvents(); observeHeaderOffset(); renderHome(); updateTradeExportButtons(); checkIOSInstall();
     } catch (error) { console.error("Error en init():", error); bindEvents(); }
 }
@@ -88,16 +96,16 @@ function migrateStickerCodes() {
     }
     if (migrated) { state.stickers = newStickers; saveState(); }
 }
-
 function getStickerState(code) { return state.stickers[code] || { have: false, count: 0 }; }
 
+// ESTADÍSTICAS EN TIEMPO REAL AL TOCAR UNA LÁMINA
 function toggleSticker(code, ev) {
     if(ev) ev.stopPropagation();
     let s = getStickerState(code);
     if (!s.have) { s.have = true; s.count = 1; triggerConfetti(ev.clientX, ev.clientY); } else { s.count++; }
     state.stickers[code] = s; saveState(); checkMilestones();
     if(currentOpenTeam) renderStickersGrid(currentOpenTeam);
-    updateHomeProgress();
+    updateHomeProgress(); // Actualización en vivo del panel principal
 }
 
 function decrementSticker(code, ev) {
@@ -107,11 +115,12 @@ function decrementSticker(code, ev) {
         s.count--; if (s.count === 0) s.have = false;
         state.stickers[code] = s; saveState();
         if(currentOpenTeam) renderStickersGrid(currentOpenTeam);
-        updateHomeProgress();
+        updateHomeProgress(); // Actualización en vivo del panel principal
     }
 }
 
 function getHaveCount() { return Object.values(state.stickers || {}).filter(s => s.have).length; }
+
 function getTeamProgress(teamCode) {
     if (!window.DATA || !window.DATA.TEAMS) return { have: 0, total: 0 };
     const team = window.DATA.TEAMS.find(t => t.code === teamCode);
@@ -120,6 +129,7 @@ function getTeamProgress(teamCode) {
     return { have, total: team.stickers.length };
 }
 
+// EVITA BUG DE 100% PREMATURO
 function getTotalProgress() {
     let have = getHaveCount(); let total = window.DATA ? window.DATA.TOTAL_STICKERS : 994;
     let percentage = Math.round((have / total) * 100) || 0;
@@ -153,6 +163,7 @@ function getRepeatedList() {
 }
 
 function getRepeatedTotal() { return Object.values(state.stickers || {}).reduce((sum, s) => s.have && s.count > 1 ? sum + (s.count - 1) : sum, 0); }
+
 function getMissingList() {
     let missing = [];
     if (!window.DATA || !window.DATA.TEAMS) return missing;
@@ -161,8 +172,8 @@ function getMissingList() {
     });
     return missing;
 }
-
 function renderHome() { renderDashboardCards(); applyCollectionSearch(); }
+
 function updateHomeProgress() { renderDashboardCards(); }
 
 function renderDashboardCards() {
@@ -222,6 +233,7 @@ function renderStickersGrid(team) {
     const grid = document.getElementById('modal-stickers-grid'); grid.innerHTML = '';
     team.stickers.forEach(s => { grid.appendChild(makeStickerCard(s)); }); updateTeamCount(team.code);
 }
+
 function updateTeamCount(teamCode) {
     const p = getTeamProgress(teamCode);
     const countEl = document.getElementById('modal-team-count'); if(countEl) countEl.innerText = `${p.have}/${p.total}`;
@@ -278,7 +290,6 @@ function populateGroupFilter() {
     const groups = new Set(window.DATA.TEAMS.map(t => t.group));
     groups.forEach(g => { const opt = document.createElement('option'); opt.value = g; opt.innerText = g; sel.appendChild(opt); });
 }
-
 function renderTrades() {
     const reps = getRepeatedList(); const total = getRepeatedTotal();
     const textEl = document.getElementById('trades-total-text'); if(textEl) textEl.innerText = `Total repetidas: ${total}`;
@@ -329,6 +340,7 @@ function generateShareText() {
     showModal('modal-share');
 }
 
+// CORRECCIÓN UNIVERSAL PARA EXCEL/GOOGLE SHEETS
 function removeAccents(str) { if (!str) return ''; return str.normalize("NFD").replace(/[\u0300-\u036f]/g, ""); }
 
 function exportTradesExcel() {
@@ -368,25 +380,7 @@ function exportTradesPdf() {
         setTimeout(() => document.body.removeChild(iframe), 1000);
     }, 500);
 }
-
-// ==== LÓGICA QR Y MATCH V30 ====
-
-function loadQRLibraries(callback) {
-    if (typeof QRCode !== 'undefined' && typeof jsQR !== 'undefined') {
-        if (callback) callback();
-        return;
-    }
-    const loadScript = (src) => new Promise((resolve, reject) => {
-        const script = document.createElement('script');
-        script.src = src; script.onload = resolve; script.onerror = reject;
-        document.head.appendChild(script);
-    });
-    Promise.all([
-        typeof QRCode === 'undefined' ? loadScript('https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.1/qrcode.min.js') : Promise.resolve(),
-        typeof jsQR === 'undefined' ? loadScript('https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js') : Promise.resolve()
-    ]).then(() => { if (callback) callback(); })
-    .catch((e) => { alert("No se pudo conectar con el servidor de códigos QR. Verifica tu internet y usa 'Copiar Texto'."); });
-}
+// ==== LÓGICA QR Y MATCH COMPLETA ====
 
 function getMinifiedTradeData() {
     const minified = { n: state.profile.name, s: {} };
@@ -411,184 +405,6 @@ function executeShowMyQR() {
         return;
     }
     
-    // Obtenemos la etiqueta <img> en lugar del canvas
-    const imgEl = document.getElementById('qr-image');
-    
-    try {
-        // Usamos toDataURL para generar el archivo HD (800px) en segundo plano
-        QRCode.toDataURL(jsonStr, { width: 800, margin: 2, errorCorrectionLevel: 'L', color: { dark: '#000', light: '#fff' } }, function (error, url) {
-            if (error) { 
-                console.error(error); 
-                alert("Error interno al generar el QR. Por favor, usa 'Copiar Texto'."); 
-            } else { 
-                // Le inyectamos la imagen generada a la etiqueta
-                imgEl.src = url;
-                showModal('modal-my-qr'); 
-            }
-        });
-    } catch (e) { 
-        console.error(e); 
-        alert("Tu dispositivo bloqueó la generación del QR. Usa 'Copiar Texto'."); 
-    }
-}
-
-function downloadQR() {
-    const imgEl = document.getElementById('qr-image'); 
-    if (!imgEl || !imgEl.src) return;
-    
-    // Extraemos la imagen directamente del src
-    const imageUrl = imgEl.src;
-    const safeName = (state.profile.name || 'Mi_Album').replace(/\s+/g, '_');
-    
-    const a = document.createElement('a'); 
-    a.href = imageUrl; 
-    a.download = `QR_Album_2026_${safeName}.png`;
-    document.body.appendChild(a); 
-    a.click(); 
-    document.body.removeChild(a);
-}
-
-
-function copyMyJsonForTrade() {
-    if (state.profile.name === 'Mi Álbum') {
-        const userName = prompt('Antes de compartir, ¿Cómo te llamas?');
-        if (userName) updateProfileName(userName);
-    }
-    navigator.clipboard.writeText(getMinifiedTradeData()).then(() => { alert(`¡Copiado! Envíalo a tu contacto.`); });
-}
-
-function uploadQRImage(event) {
-    const file = event.target.files[0]; if (!file) return;
-    if (typeof jsQR === 'undefined') {
-        loadQRLibraries(() => executeUploadQRImage(file));
-        event.target.value = ''; return;
-    }
-    executeUploadQRImage(file);
-    event.target.value = ''; 
-}
-
-function executeUploadQRImage(file) {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-        const img = new Image();
-        img.onload = () => {
-            const canvas = document.getElementById('hidden-qr-canvas');
-            const context = canvas.getContext('2d', { willReadFrequently: true });
-            
-            // Limitamos a 2000px solo para que no colapsen celulares de gama baja
-            const maxSize = 2000;
-            let width = img.width; let height = img.height;
-            if (width > maxSize || height > maxSize) {
-                const ratio = Math.min(maxSize / width, maxSize / height);
-                width = width * ratio; height = height * ratio;
-            }
-            
-            canvas.width = width; canvas.height = height;
-            context.fillStyle = '#FFFFFF'; context.fillRect(0, 0, width, height);
-            context.drawImage(img, 0, 0, width, height);
-            
-            const imageData = context.getImageData(0, 0, width, height);
-            // attemptBoth es un método mucho más agresivo para leer códigos complicados
-            const code = jsQR(imageData.data, imageData.width, imageData.height, {
-                inversionAttempts: "attemptBoth",
-            });
-
-            if (code) {
-                document.getElementById('match-input').value = code.data;
-                compareTradesFromText();
-            } else {
-                alert('No se pudo leer el código QR en la imagen. Por favor, pide que generen el QR usando esta nueva versión para que esté en Alta Definición.');
-            }
-        };
-        img.src = e.target.result;
-    };
-    reader.readAsDataURL(file);
-}
-
-let lastMatchResult = null;
-
-function clearMatchInput() {
-    const matchInput = document.getElementById('match-input'); if(matchInput) matchInput.value = '';
-    const resultsContainer = document.getElementById('match-results-container'); if(resultsContainer) resultsContainer.style.display = 'none';
-    lastMatchResult = null;
-}
-
-function compareTradesFromText() {
-    const inputEl = document.getElementById('match-input'); if(!inputEl) return;
-    const input = inputEl.value.trim();
-    if (!input) { alert('No hay datos. Pega un texto válido o sube un QR.'); return; }
-    try {
-        const parsed = JSON.parse(input);
-        let friendState = { profile: { name: 'Tu contacto' }, stickers: {} };
-        if (parsed.s) {
-            friendState.profile.name = parsed.n || 'Tu contacto';
-            for (const [code, count] of Object.entries(parsed.s)) { friendState.stickers[code] = { have: true, count: count }; }
-        } else if (parsed.stickers) { friendState = parsed; } else { throw new Error(); }
-
-        let iReceive = {}; let iGive = {};    
-        if (!window.DATA || !window.DATA.TEAMS) return;
-
-        window.DATA.TEAMS.forEach(team => {
-            team.stickers.forEach(s => {
-                const code = s.code; const mySticker = getStickerState(code);
-                const friendSticker = friendState.stickers[code] || { have: false, count: 0 };
-                const myName = formatCode(s.name);
-
-                if (!mySticker.have && friendSticker.have && friendSticker.count > 1) {
-                    if(!iReceive[team.name]) iReceive[team.name] = []; iReceive[team.name].push(myName);
-                }
-
-                if (!friendSticker.have && mySticker.have && mySticker.count > 1) {
-                    if(!iGive[team.name]) iGive[team.name] = []; iGive[team.name].push(myName);
-                }
-            });
-        });
-
-        lastMatchResult = { iReceive, iGive, friendName: friendState.profile?.name || 'Tu contacto' };
-        renderMatchResults();
-// ==== LÓGICA QR Y MATCH V33 ====
-let html5QrcodeScanner = null;
-
-function loadQRLibraries(callback) {
-    if (typeof QRCode !== 'undefined' && typeof jsQR !== 'undefined' && typeof Html5Qrcode !== 'undefined') {
-        if (callback) callback();
-        return;
-    }
-    const loadScript = (src) => new Promise((resolve, reject) => {
-        const script = document.createElement('script');
-        script.src = src; script.onload = resolve; script.onerror = reject;
-        document.head.appendChild(script);
-    });
-    Promise.all([
-        typeof QRCode === 'undefined' ? loadScript('https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.1/qrcode.min.js') : Promise.resolve(),
-        typeof jsQR === 'undefined' ? loadScript('https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js') : Promise.resolve(),
-        typeof Html5Qrcode === 'undefined' ? loadScript('https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js') : Promise.resolve()
-    ]).then(() => { if (callback) callback(); })
-    .catch((e) => { alert("No se pudo conectar con el servidor de códigos QR. Verifica tu internet y usa 'Copiar Texto'."); });
-}
-
-function getMinifiedTradeData() {
-    const minified = { n: state.profile.name, s: {} };
-    for (const [code, sticker] of Object.entries(state.stickers)) {
-        if (sticker.have && sticker.count > 1) { minified.s[code] = sticker.count; }
-    }
-    return JSON.stringify(minified);
-}
-
-function showMyQR() {
-    if (typeof QRCode === 'undefined') { loadQRLibraries(() => executeShowMyQR()); } else { executeShowMyQR(); }
-}
-
-function executeShowMyQR() {
-    if (state.profile.name === 'Mi Álbum') {
-        const userName = prompt('Antes de generar el QR, ¿Cómo te llamas?');
-        if (userName) updateProfileName(userName);
-    }
-    const jsonStr = getMinifiedTradeData();
-    if (jsonStr.length > 2500) {
-        alert("⚠️ Tienes demasiadas láminas repetidas. El código QR superó el límite. Por favor, usa el botón 'Copiar Texto' y envíalo por WhatsApp.");
-        return;
-    }
     const imgEl = document.getElementById('qr-image');
     try {
         QRCode.toDataURL(jsonStr, { width: 800, margin: 2, errorCorrectionLevel: 'L', color: { dark: '#000', light: '#fff' } }, function (error, url) {
@@ -614,13 +430,8 @@ function copyMyJsonForTrade() {
     navigator.clipboard.writeText(getMinifiedTradeData()).then(() => { alert(`¡Copiado! Envíalo a tu contacto.`); });
 }
 
-// RESTAURADO: Escáner de cámara en vivo
 function openCameraScanner() {
-    if (typeof Html5Qrcode === 'undefined') {
-        loadQRLibraries(() => executeOpenCameraScanner());
-    } else {
-        executeOpenCameraScanner();
-    }
+    if (typeof Html5Qrcode === 'undefined') { loadQRLibraries(() => executeOpenCameraScanner()); } else { executeOpenCameraScanner(); }
 }
 
 function executeOpenCameraScanner() {
@@ -633,8 +444,7 @@ function executeOpenCameraScanner() {
 }
 
 function closeScannerModal() {
-    if (html5QrcodeScanner) { 
-        html5QrcodeScanner.stop().then(() => { html5QrcodeScanner.clear(); closeModal('modal-scanner'); }).catch(e => closeModal('modal-scanner'));
+    if (html5QrcodeScanner) { html5QrcodeScanner.stop().then(() => { html5QrcodeScanner.clear(); closeModal('modal-scanner'); }).catch(e => closeModal('modal-scanner'));
     } else { closeModal('modal-scanner'); }
 }
 
@@ -668,12 +478,8 @@ function executeUploadQRImage(file) {
             const imageData = context.getImageData(0, 0, width, height);
             const code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: "attemptBoth" });
 
-            if (code) {
-                document.getElementById('match-input').value = code.data;
-                compareTradesFromText();
-            } else {
-                alert('No se pudo leer el código QR en la imagen. Por favor, pide que generen el QR usando esta nueva versión para que esté en Alta Definición.');
-            }
+            if (code) { document.getElementById('match-input').value = code.data; compareTradesFromText(); } 
+            else { alert('No se pudo leer el código QR en la imagen. Por favor, pide que generen el QR usando esta nueva versión para que esté en Alta Definición.'); }
         };
         img.src = e.target.result;
     };
@@ -778,6 +584,7 @@ function shareMatchWhatsApp() {
     const url = `https://wa.me/?text=${encodeURIComponent(text)}`; window.open(url, '_blank');
 }
 
+// UTILIDADES Y EVENTOS
 function downloadBlob(blob, filename) { const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = filename; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url); }
 function exportData() { const json = JSON.stringify(state, null, 2); const blob = new Blob([json], { type: 'application/json' }); downloadBlob(blob, 'album_mundial_2026.json'); }
 function importData(e) { const file = e.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = (event) => { try { const data = JSON.parse(event.target.result); if (data.stickers) { state = data; saveState(); init(); closeModal('modal-settings'); alert('Álbum restaurado.'); } } catch (err) { alert('Archivo JSON inválido.'); } }; reader.readAsText(file); }
@@ -804,5 +611,5 @@ function triggerConfetti(x, y) {
     function animate() { ctx.clearRect(0,0,canvas.width,canvas.height); let active = false; particles.forEach(p => { p.x += p.dx; p.y += p.dy; p.dy += 0.2; ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fillStyle = p.color; ctx.fill(); if(p.y < canvas.height) active = true; }); if(active) requestAnimationFrame(animate); else ctx.clearRect(0,0,canvas.width,canvas.height); } animate();
 }
 function shootBigConfetti() { triggerConfetti(window.innerWidth/2, window.innerHeight/2); setTimeout(() => triggerConfetti(window.innerWidth/3, window.innerHeight/2), 200); setTimeout(() => triggerConfetti((window.innerWidth/3)*2, window.innerHeight/2), 400); }
-document.addEventListener('DOMContentLoaded', init);
 
+document.addEventListener('DOMContentLoaded', init);
