@@ -2,6 +2,10 @@
 
 Todas las actualizaciones y cambios notables de la aplicación "Álbum Mundial 2026" se documentarán en este archivo.
 
+### v23 - Intercambio por QR y Reactividad en Tiempo Real
+- **Sistema de Códigos QR (Offline):** Se integraron las librerías `qrcode.js` y `html5-qrcode` (cacheadas vía Service Worker para funcionar sin internet). Ahora puedes generar un QR con tus láminas repetidas para que un amigo lo escanee físicamente con la cámara de su celular, o subir una captura de pantalla del QR enviada por WhatsApp para hacer el cruce de datos al instante.
+- **Estadísticas Reactivas:** Se optimizó la función `updateHomeProgress()`. Ahora, en el momento exacto en que sumas o restas una lámina en el modal, el anillo de progreso general, las barras y los contadores del panel principal (Dashboard) se actualizan en vivo en segundo plano sin requerir recargar la página.
+
 ### v22 - Soporte Nativo de Instalación para iOS
 - **Detección Inteligente de Safari:** Se agregó un script que detecta si el usuario está abriendo la aplicación desde un dispositivo iOS (iPhone/iPad) a través de Safari, y si no está en modo "Standalone" (instalada).
 - **Guía Visual de Instalación:** Al detectar iOS, se muestra una ventana flotante discreta en la parte inferior explicando al usuario el proceso manual de Apple ("Compartir" > "Añadir a la pantalla de inicio"), incluyendo un ícono vectorial idéntico al nativo de iOS para facilitar su uso.
