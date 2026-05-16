@@ -1,11 +1,11 @@
-const CACHE_NAME = 'album-2026-v31'; 
+const CACHE_NAME = 'album-2026-v32'; 
 
 const urlsToCache = [
   './',
   './index.html',
-  './style.css?v=31',
-  './app.js?v=31',
-  './data.js?v=31',
+  './style.css?v=32',
+  './app.js?v=32',
+  './data.js?v=32',
   './manifest.json',
   './icon.svg'
 ];
