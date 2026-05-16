@@ -603,6 +603,27 @@ function triggerConfetti(x, y) {
     function animate() { ctx.clearRect(0,0,canvas.width,canvas.height); let active = false; particles.forEach(p => { p.x += p.dx; p.y += p.dy; p.dy += 0.2; ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fillStyle = p.color; ctx.fill(); if(p.y < canvas.height) active = true; }); if(active) requestAnimationFrame(animate); else ctx.clearRect(0,0,canvas.width,canvas.height); } animate();
 }
 function shootBigConfetti() { triggerConfetti(window.innerWidth/2, window.innerHeight/2); setTimeout(() => triggerConfetti(window.innerWidth/3, window.innerHeight/2), 200); setTimeout(() => triggerConfetti((window.innerWidth/3)*2, window.innerHeight/2), 400); }
+
+// NUEVA FUNCIÓN v28: Descargar QR como imagen
+function downloadQR() {
+    const canvas = document.getElementById('qr-canvas');
+    if (!canvas) return;
+    
+    // Convertimos el canvas a una URL de imagen PNG
+    const imageUrl = canvas.toDataURL("image/png");
+    
+    // Formateamos el nombre del usuario para el nombre del archivo (ej. Juan_Perez)
+    const safeName = (state.profile.name || 'Mi_Album').replace(/\s+/g, '_');
+    
+    // Creamos un enlace invisible y forzamos la descarga
+    const a = document.createElement('a');
+    a.href = imageUrl;
+    a.download = `QR_Album_2026_${safeName}.png`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+}
+
 document.addEventListener('DOMContentLoaded', init);
 
 
