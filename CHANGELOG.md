@@ -2,6 +2,9 @@
 
 Todas las actualizaciones y cambios notables de la aplicación "Álbum Mundial 2026" se documentarán en este archivo.
 
+### v33 - Restauración de Escáner por Cámara
+- **Lector Dual:** Se reincorporó la funcionalidad de `html5-qrcode` para permitir abrir la cámara en vivo ("Escanear Cámara"). Ahora la aplicación soporta lectura Dual: la cámara en vivo para códigos QR rápidos/sencillos, y la decodificación por "Subida de Foto" con `jsQR` como respaldo para QRs de alta densidad o capturas de pantalla de WhatsApp.
+
 ### v32 - Integración Visual de Logo Oficial
 - **Rebranding UI:** Se añadió el logo oficial del Mundial 2026 en el header de la aplicación, directamente integrado junto al título de "Mi Álbum". Esto dota a la PWA de un aspecto mucho más inmersivo y oficial, reemplazando la cabecera genérica de puro texto.
 - **Actualización de Ícono Base:** El archivo `icon.svg` a nivel del sistema fue reemplazado, logrando que al instalar la aplicación en el home del dispositivo móvil, se muestre el escudo real del mundial.
