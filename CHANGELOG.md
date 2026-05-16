@@ -2,6 +2,10 @@
 
 Todas las actualizaciones y cambios notables de la aplicación "Álbum Mundial 2026" se documentarán en este archivo.
 
+### v24 - Resumen Matemático de Intercambios
+- **Calculadora de Match:** La pantalla de validación de intercambios ahora cuenta cada lámina individual y muestra un "Resumen del Match" en la parte superior.
+- **Identificador de Límite:** Calcula matemáticamente el número máximo de intercambios posibles, indicando claramente entre paréntesis cuál de las dos partes tiene menos láminas para ofrecer y limita la operación (Ej: "Máx. cambios: 5 (Menos repetidas: Amigo)"). Este resumen también se exporta en el texto para WhatsApp.
+
 ### v23 - Intercambio por QR y Reactividad en Tiempo Real
 - **Sistema de Códigos QR (Offline):** Se integraron las librerías `qrcode.js` y `html5-qrcode` (cacheadas vía Service Worker para funcionar sin internet). Ahora puedes generar un QR con tus láminas repetidas para que un amigo lo escanee físicamente con la cámara de su celular, o subir una captura de pantalla del QR enviada por WhatsApp para hacer el cruce de datos al instante.
 - **Estadísticas Reactivas:** Se optimizó la función `updateHomeProgress()`. Ahora, en el momento exacto en que sumas o restas una lámina en el modal, el anillo de progreso general, las barras y los contadores del panel principal (Dashboard) se actualizan en vivo en segundo plano sin requerir recargar la página.
