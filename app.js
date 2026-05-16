@@ -546,6 +546,180 @@ function compareTradesFromText() {
 
         lastMatchResult = { iReceive, iGive, friendName: friendState.profile?.name || 'Tu contacto' };
         renderMatchResults();
+// ==== LÓGICA QR Y MATCH V33 ====
+let html5QrcodeScanner = null;
+
+function loadQRLibraries(callback) {
+    if (typeof QRCode !== 'undefined' && typeof jsQR !== 'undefined' && typeof Html5Qrcode !== 'undefined') {
+        if (callback) callback();
+        return;
+    }
+    const loadScript = (src) => new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = src; script.onload = resolve; script.onerror = reject;
+        document.head.appendChild(script);
+    });
+    Promise.all([
+        typeof QRCode === 'undefined' ? loadScript('https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.1/qrcode.min.js') : Promise.resolve(),
+        typeof jsQR === 'undefined' ? loadScript('https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js') : Promise.resolve(),
+        typeof Html5Qrcode === 'undefined' ? loadScript('https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js') : Promise.resolve()
+    ]).then(() => { if (callback) callback(); })
+    .catch((e) => { alert("No se pudo conectar con el servidor de códigos QR. Verifica tu internet y usa 'Copiar Texto'."); });
+}
+
+function getMinifiedTradeData() {
+    const minified = { n: state.profile.name, s: {} };
+    for (const [code, sticker] of Object.entries(state.stickers)) {
+        if (sticker.have && sticker.count > 1) { minified.s[code] = sticker.count; }
+    }
+    return JSON.stringify(minified);
+}
+
+function showMyQR() {
+    if (typeof QRCode === 'undefined') { loadQRLibraries(() => executeShowMyQR()); } else { executeShowMyQR(); }
+}
+
+function executeShowMyQR() {
+    if (state.profile.name === 'Mi Álbum') {
+        const userName = prompt('Antes de generar el QR, ¿Cómo te llamas?');
+        if (userName) updateProfileName(userName);
+    }
+    const jsonStr = getMinifiedTradeData();
+    if (jsonStr.length > 2500) {
+        alert("⚠️ Tienes demasiadas láminas repetidas. El código QR superó el límite. Por favor, usa el botón 'Copiar Texto' y envíalo por WhatsApp.");
+        return;
+    }
+    const imgEl = document.getElementById('qr-image');
+    try {
+        QRCode.toDataURL(jsonStr, { width: 800, margin: 2, errorCorrectionLevel: 'L', color: { dark: '#000', light: '#fff' } }, function (error, url) {
+            if (error) { console.error(error); alert("Error interno al generar el QR. Por favor, usa 'Copiar Texto'."); } 
+            else { imgEl.src = url; showModal('modal-my-qr'); }
+        });
+    } catch (e) { console.error(e); alert("Tu dispositivo bloqueó la generación del QR. Usa 'Copiar Texto'."); }
+}
+
+function downloadQR() {
+    const imgEl = document.getElementById('qr-image'); if (!imgEl || !imgEl.src) return;
+    const imageUrl = imgEl.src;
+    const safeName = (state.profile.name || 'Mi_Album').replace(/\s+/g, '_');
+    const a = document.createElement('a'); a.href = imageUrl; a.download = `QR_Album_2026_${safeName}.png`;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+}
+
+function copyMyJsonForTrade() {
+    if (state.profile.name === 'Mi Álbum') {
+        const userName = prompt('Antes de compartir, ¿Cómo te llamas?');
+        if (userName) updateProfileName(userName);
+    }
+    navigator.clipboard.writeText(getMinifiedTradeData()).then(() => { alert(`¡Copiado! Envíalo a tu contacto.`); });
+}
+
+// RESTAURADO: Escáner de cámara en vivo
+function openCameraScanner() {
+    if (typeof Html5Qrcode === 'undefined') {
+        loadQRLibraries(() => executeOpenCameraScanner());
+    } else {
+        executeOpenCameraScanner();
+    }
+}
+
+function executeOpenCameraScanner() {
+    showModal('modal-scanner'); 
+    html5QrcodeScanner = new Html5Qrcode("qr-reader");
+    html5QrcodeScanner.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 250 } },
+        (decodedText) => { closeScannerModal(); document.getElementById('match-input').value = decodedText; compareTradesFromText(); },
+        (errorMessage) => { }
+    ).catch(err => { alert("No se pudo iniciar la cámara. Revisa los permisos de tu navegador."); closeScannerModal(); });
+}
+
+function closeScannerModal() {
+    if (html5QrcodeScanner) { 
+        html5QrcodeScanner.stop().then(() => { html5QrcodeScanner.clear(); closeModal('modal-scanner'); }).catch(e => closeModal('modal-scanner'));
+    } else { closeModal('modal-scanner'); }
+}
+
+function uploadQRImage(event) {
+    const file = event.target.files[0]; if (!file) return;
+    if (typeof jsQR === 'undefined') {
+        loadQRLibraries(() => executeUploadQRImage(file));
+        event.target.value = ''; return;
+    }
+    executeUploadQRImage(file);
+    event.target.value = ''; 
+}
+
+function executeUploadQRImage(file) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+            const canvas = document.getElementById('hidden-qr-canvas');
+            const context = canvas.getContext('2d', { willReadFrequently: true });
+            const maxSize = 2000;
+            let width = img.width; let height = img.height;
+            if (width > maxSize || height > maxSize) {
+                const ratio = Math.min(maxSize / width, maxSize / height);
+                width = width * ratio; height = height * ratio;
+            }
+            canvas.width = width; canvas.height = height;
+            context.fillStyle = '#FFFFFF'; context.fillRect(0, 0, width, height);
+            context.drawImage(img, 0, 0, width, height);
+            
+            const imageData = context.getImageData(0, 0, width, height);
+            const code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: "attemptBoth" });
+
+            if (code) {
+                document.getElementById('match-input').value = code.data;
+                compareTradesFromText();
+            } else {
+                alert('No se pudo leer el código QR en la imagen. Por favor, pide que generen el QR usando esta nueva versión para que esté en Alta Definición.');
+            }
+        };
+        img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+}
+
+let lastMatchResult = null;
+
+function clearMatchInput() {
+    const matchInput = document.getElementById('match-input'); if(matchInput) matchInput.value = '';
+    const resultsContainer = document.getElementById('match-results-container'); if(resultsContainer) resultsContainer.style.display = 'none';
+    lastMatchResult = null;
+}
+
+function compareTradesFromText() {
+    const inputEl = document.getElementById('match-input'); if(!inputEl) return;
+    const input = inputEl.value.trim();
+    if (!input) { alert('No hay datos. Pega un texto válido o sube un QR.'); return; }
+    try {
+        const parsed = JSON.parse(input);
+        let friendState = { profile: { name: 'Tu contacto' }, stickers: {} };
+        if (parsed.s) {
+            friendState.profile.name = parsed.n || 'Tu contacto';
+            for (const [code, count] of Object.entries(parsed.s)) { friendState.stickers[code] = { have: true, count: count }; }
+        } else if (parsed.stickers) { friendState = parsed; } else { throw new Error(); }
+
+        let iReceive = {}; let iGive = {};    
+        if (!window.DATA || !window.DATA.TEAMS) return;
+
+        window.DATA.TEAMS.forEach(team => {
+            team.stickers.forEach(s => {
+                const code = s.code; const mySticker = getStickerState(code);
+                const friendSticker = friendState.stickers[code] || { have: false, count: 0 };
+                const myName = formatCode(s.name);
+
+                if (!mySticker.have && friendSticker.have && friendSticker.count > 1) {
+                    if(!iReceive[team.name]) iReceive[team.name] = []; iReceive[team.name].push(myName);
+                }
+                if (!friendSticker.have && mySticker.have && mySticker.count > 1) {
+                    if(!iGive[team.name]) iGive[team.name] = []; iGive[team.name].push(myName);
+                }
+            });
+        });
+
+        lastMatchResult = { iReceive, iGive, friendName: friendState.profile?.name || 'Tu contacto' };
+        renderMatchResults();
     } catch(e) { alert('Los datos leídos no son válidos. Comprueba que el texto esté completo.'); }
 }
 
@@ -631,5 +805,4 @@ function triggerConfetti(x, y) {
 }
 function shootBigConfetti() { triggerConfetti(window.innerWidth/2, window.innerHeight/2); setTimeout(() => triggerConfetti(window.innerWidth/3, window.innerHeight/2), 200); setTimeout(() => triggerConfetti((window.innerWidth/3)*2, window.innerHeight/2), 400); }
 document.addEventListener('DOMContentLoaded', init);
-
 
