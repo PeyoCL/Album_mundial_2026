@@ -360,10 +360,11 @@ function getMinifiedTradeData() {
     return JSON.stringify(minified);
 }
 
+
 function showMyQR() {
-    // 1. Verificamos si la librería cargó correctamente
+    // 1. Verificamos si la librería cargó correctamente en el teléfono
     if (typeof QRCode === 'undefined') {
-        alert("El generador de QR aún está cargando o tu navegador lo bloqueó. Verifica tu conexión o usa 'Copiar Texto'.");
+        alert("La librería de QR no pudo cargar. Comprueba tu internet o usa el botón 'Copiar Texto'.");
         return;
     }
 
@@ -373,29 +374,35 @@ function showMyQR() {
     }
     
     const jsonStr = getMinifiedTradeData();
+    
+    // 2. CONTROL ESTRICTO DE LÍMITE: Si tienes cientos de repetidas, el QR físico colapsa.
+    // Lo frenamos antes de que rompa el botón.
+    if (jsonStr.length > 2000) {
+        alert("⚠️ Tienes demasiadas láminas repetidas (" + getRepeatedTotal() + "). El código QR no soporta dibujar tantos datos juntos. Por favor, usa el botón 'Copiar Texto' y envíalo por WhatsApp.");
+        return;
+    }
+
     const canvas = document.getElementById('qr-canvas');
     
     try {
-        // 2. errorCorrectionLevel: 'L' nos permite guardar el MÁXIMO de láminas posibles
         QRCode.toCanvas(canvas, jsonStr, { 
             width: 250, 
             margin: 2, 
-            errorCorrectionLevel: 'L', // <-- La clave para que quepan más datos
+            errorCorrectionLevel: 'L', // Nivel L: Exprime al máximo la capacidad del QR
             color: { dark: '#000', light: '#fff' } 
         }, function (error) {
             if (error) {
                 console.error(error);
-                alert("Tienes demasiadas láminas repetidas para generar un solo código QR. Por favor, utiliza el botón 'Copiar Texto'.");
+                alert("Ocurrió un error al dibujar el QR. Por favor, usa 'Copiar Texto'.");
             } else {
                 showModal('modal-my-qr');
             }
         });
     } catch (e) {
         console.error(e);
-        alert("Tienes demasiadas láminas repetidas para generar un solo código QR. Por favor, utiliza el botón 'Copiar Texto'.");
+        alert("Error interno en tu celular al generar el QR. Por favor, usa 'Copiar Texto'.");
     }
 }
-
 
 function copyMyJsonForTrade() {
     if (state.profile.name === 'Mi Álbum') {
