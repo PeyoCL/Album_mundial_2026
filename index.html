@@ -17,6 +17,7 @@
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.1/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
     
     <link rel="stylesheet" href="style.css?v=33">
 </head>
@@ -44,80 +45,14 @@
                     <input type="text" id="search-input" placeholder="Buscar equipo, sección, lámina...">
                 </div>
                 <div class="filters">
-                    <select id="filter-team"><option value="all">Todos los Equipos</option></select>
-                    <select id="filter-group"><option value="all">Todos los Grupos</option></select>
-                    <button id="btn-clear-filters">Borrar</button>
-                </div>
-                <div class="sort-bar">
-                    <span class="results-counter" id="results-counter">0 resultados</span>
-                    <select id="sort-select">
-                        <option value="all">Todos (Orden base)</option>
-                        <option value="most">Más completos</option>
-                        <option value="least">Menos completos</option>
-                        <option value="az">Equipos A-Z</option>
-                    </select>
-                </div>
-            </div>
-        </header>
-        <main id="main-content">
-            <section id="tab-home" class="tab-pane active">
-                <div class="dashboard">
-                    <div class="main-card">
-                        <div class="progress-ring-container">
-                            <div class="progress-ring" id="main-progress-ring"></div>
-                            <div class="progress-ring-text">
-                                <span class="percentage" id="main-percentage">0%</span>
-                                <span class="label">Completado</span>
-                            </div>
-                        </div>
-                        <div class="progress-info">
-                            <span class="kicker">Tu colección</span>
-                            <h2>Progreso del álbum</h2>
-                            <p id="main-progress-text">Tienes 0 de 994 láminas únicas.</p>
-                            <div class="linear-progress">
-                                <div class="linear-bar" id="main-linear-bar" style="width: 0%;"></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="metric-cards">
-                        <div class="metric-card">
-                            <h3>Avance</h3>
-                            <p id="metric-advance">0%</p>
-                        </div>
-                        <div class="metric-card">
-                            <h3>Únicas</h3>
-                            <p id="metric-unique">0 / 994</p>
-                        </div>
-                        <div class="metric-card">
-                            <h3>Cambio</h3>
-                            <p id="metric-repeated">0 rep.</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="teams-grid" id="teams-grid"></div>
-            </section>
-
-            <section id="tab-trades" class="tab-pane">
-                <div class="trades-header">
-                    <h2>Gestión de Cambios</h2>
-                    <p class="repeated-total" id="trades-total-text">Total repetidas: 0</p>
-                </div>
-                <div class="trades-actions">
-                    <button id="btn-share-list" disabled>Compartir lista</button>
-                    <button id="btn-export-pdf" disabled>Exportar PDF</button>
-                    <button id="btn-export-excel" disabled>Exportar Excel</button>
-                    <button id="btn-download-missing" disabled>Descargar faltantes</button>
-                </div>
-                <div id="trades-list" class="trades-list"></div>
-            </section>
-
+                    <select id="filter-team"><option value="
             <section id="tab-match" class="tab-pane">
                 <div class="trades-header">
                     <h2>Validar Intercambio</h2>
                     <p style="color: var(--text-secondary); margin-top: 0.5rem; font-size: 0.9rem;">Cruza tus datos con un contacto para descubrir qué láminas pueden intercambiar.</p>
                 </div>
-                                <div class="match-setup">
+                
+                <div class="match-setup">
                     <h3 style="margin-bottom: 0.5rem; font-size: 1rem; color: var(--blue-accent);">1. Comparte tu álbum</h3>
                     <div class="match-actions">
                         <button onclick="showMyQR()" class="btn-block btn-qr">📷 Mostrar mi QR</button>
@@ -141,8 +76,6 @@
                         <button onclick="clearMatchInput()" class="btn-block btn-transparent">Limpiar</button>
                     </div>
                 </div>
-
-                
 
                 <div id="match-results-container" style="display: none; margin-top: 2rem;">
                     <div id="match-results"></div>
@@ -222,6 +155,18 @@
                     <p style="margin-bottom:1rem; color:var(--text-secondary);">Muéstrale este código a tu contacto para que lo escanee desde su aplicación.</p>
                     <img id="qr-image" alt="QR Code" style="background: #fff; padding: 10px; border-radius: 8px; width: 100%; max-width: 250px; height: auto; aspect-ratio: 1/1; margin-bottom: 1.5rem; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">
                     <button onclick="downloadQR()" class="btn-block" style="background: #10b981; color: white;">💾 Descargar Imagen QR</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="modal-scanner" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Escanear QR</h2>
+                    <button class="close-modal" onclick="closeScannerModal()">✕</button>
+                </div>
+                <div class="modal-body" style="padding: 0;">
+                    <div id="qr-reader" style="width: 100%; border-radius: 0 0 12px 12px; overflow: hidden;"></div>
                 </div>
             </div>
         </div>
