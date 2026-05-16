@@ -410,23 +410,44 @@ function executeShowMyQR() {
         alert("⚠️ Tienes demasiadas láminas repetidas. El código QR superó el límite de la cámara. Por favor, usa el botón 'Copiar Texto' y envíalo por WhatsApp.");
         return;
     }
-    const canvas = document.getElementById('qr-canvas');
+    
+    // Obtenemos la etiqueta <img> en lugar del canvas
+    const imgEl = document.getElementById('qr-image');
+    
     try {
-        // 🔥 ALTA DEFINICIÓN: width 800px para evitar el anti-aliasing borroso en QRs muy densos
-        QRCode.toCanvas(canvas, jsonStr, { width: 800, margin: 2, errorCorrectionLevel: 'L', color: { dark: '#000', light: '#fff' } }, function (error) {
-            if (error) { console.error(error); alert("Error interno al dibujar el QR. Por favor, usa 'Copiar Texto'."); } 
-            else { showModal('modal-my-qr'); }
+        // Usamos toDataURL para generar el archivo HD (800px) en segundo plano
+        QRCode.toDataURL(jsonStr, { width: 800, margin: 2, errorCorrectionLevel: 'L', color: { dark: '#000', light: '#fff' } }, function (error, url) {
+            if (error) { 
+                console.error(error); 
+                alert("Error interno al generar el QR. Por favor, usa 'Copiar Texto'."); 
+            } else { 
+                // Le inyectamos la imagen generada a la etiqueta
+                imgEl.src = url;
+                showModal('modal-my-qr'); 
+            }
         });
-    } catch (e) { console.error(e); alert("Tu dispositivo bloqueó la generación del QR. Usa 'Copiar Texto'."); }
+    } catch (e) { 
+        console.error(e); 
+        alert("Tu dispositivo bloqueó la generación del QR. Usa 'Copiar Texto'."); 
+    }
 }
 
 function downloadQR() {
-    const canvas = document.getElementById('qr-canvas'); if (!canvas) return;
-    const imageUrl = canvas.toDataURL("image/png");
+    const imgEl = document.getElementById('qr-image'); 
+    if (!imgEl || !imgEl.src) return;
+    
+    // Extraemos la imagen directamente del src
+    const imageUrl = imgEl.src;
     const safeName = (state.profile.name || 'Mi_Album').replace(/\s+/g, '_');
-    const a = document.createElement('a'); a.href = imageUrl; a.download = `QR_Album_2026_${safeName}.png`;
-    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    
+    const a = document.createElement('a'); 
+    a.href = imageUrl; 
+    a.download = `QR_Album_2026_${safeName}.png`;
+    document.body.appendChild(a); 
+    a.click(); 
+    document.body.removeChild(a);
 }
+
 
 function copyMyJsonForTrade() {
     if (state.profile.name === 'Mi Álbum') {
