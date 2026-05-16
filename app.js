@@ -369,28 +369,23 @@ function exportTradesPdf() {
     }, 500);
 }
 
-// ==== LÓGICA QR Y MATCH V29 ====
+// ==== LÓGICA QR Y MATCH V30 ====
 
 function loadQRLibraries(callback) {
     if (typeof QRCode !== 'undefined' && typeof jsQR !== 'undefined') {
         if (callback) callback();
         return;
     }
-
     const loadScript = (src) => new Promise((resolve, reject) => {
         const script = document.createElement('script');
         script.src = src; script.onload = resolve; script.onerror = reject;
         document.head.appendChild(script);
     });
-
     Promise.all([
         typeof QRCode === 'undefined' ? loadScript('https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.1/qrcode.min.js') : Promise.resolve(),
         typeof jsQR === 'undefined' ? loadScript('https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js') : Promise.resolve()
-    ]).then(() => {
-        if (callback) callback();
-    }).catch((e) => {
-        alert("No se pudo conectar con el servidor de códigos QR. Verifica tu internet y usa 'Copiar Texto'.");
-    });
+    ]).then(() => { if (callback) callback(); })
+    .catch((e) => { alert("No se pudo conectar con el servidor de códigos QR. Verifica tu internet y usa 'Copiar Texto'."); });
 }
 
 function getMinifiedTradeData() {
@@ -411,13 +406,14 @@ function executeShowMyQR() {
         if (userName) updateProfileName(userName);
     }
     const jsonStr = getMinifiedTradeData();
-    if (jsonStr.length > 2000) {
-        alert("⚠️ Tienes demasiadas láminas repetidas (" + getRepeatedTotal() + "). El código QR no soporta dibujar tantos datos juntos. Por favor, usa el botón 'Copiar Texto' y envíalo por WhatsApp.");
+    if (jsonStr.length > 2500) {
+        alert("⚠️ Tienes demasiadas láminas repetidas. El código QR superó el límite de la cámara. Por favor, usa el botón 'Copiar Texto' y envíalo por WhatsApp.");
         return;
     }
     const canvas = document.getElementById('qr-canvas');
     try {
-        QRCode.toCanvas(canvas, jsonStr, { width: 300, margin: 2, errorCorrectionLevel: 'L', color: { dark: '#000', light: '#fff' } }, function (error) {
+        // 🔥 ALTA DEFINICIÓN: width 800px para evitar el anti-aliasing borroso en QRs muy densos
+        QRCode.toCanvas(canvas, jsonStr, { width: 800, margin: 2, errorCorrectionLevel: 'L', color: { dark: '#000', light: '#fff' } }, function (error) {
             if (error) { console.error(error); alert("Error interno al dibujar el QR. Por favor, usa 'Copiar Texto'."); } 
             else { showModal('modal-my-qr'); }
         });
@@ -440,13 +436,11 @@ function copyMyJsonForTrade() {
     navigator.clipboard.writeText(getMinifiedTradeData()).then(() => { alert(`¡Copiado! Envíalo a tu contacto.`); });
 }
 
-// === NUEVO PROCESAMIENTO DE IMÁGENES QR CON JSQR ===
 function uploadQRImage(event) {
     const file = event.target.files[0]; if (!file) return;
     if (typeof jsQR === 'undefined') {
         loadQRLibraries(() => executeUploadQRImage(file));
-        event.target.value = '';
-        return;
+        event.target.value = ''; return;
     }
     executeUploadQRImage(file);
     event.target.value = ''; 
@@ -460,30 +454,29 @@ function executeUploadQRImage(file) {
             const canvas = document.getElementById('hidden-qr-canvas');
             const context = canvas.getContext('2d', { willReadFrequently: true });
             
-            // Limitamos el tamaño máximo para no colapsar la memoria, pero mantenemos buena resolución
-            const maxSize = 1000;
-            let width = img.width;
-            let height = img.height;
+            // Limitamos a 2000px solo para que no colapsen celulares de gama baja
+            const maxSize = 2000;
+            let width = img.width; let height = img.height;
             if (width > maxSize || height > maxSize) {
                 const ratio = Math.min(maxSize / width, maxSize / height);
                 width = width * ratio; height = height * ratio;
             }
             
             canvas.width = width; canvas.height = height;
-            // Rellenamos de blanco por si hay transparencias
             context.fillStyle = '#FFFFFF'; context.fillRect(0, 0, width, height);
             context.drawImage(img, 0, 0, width, height);
             
             const imageData = context.getImageData(0, 0, width, height);
+            // attemptBoth es un método mucho más agresivo para leer códigos complicados
             const code = jsQR(imageData.data, imageData.width, imageData.height, {
-                inversionAttempts: "dontInvert",
+                inversionAttempts: "attemptBoth",
             });
 
             if (code) {
                 document.getElementById('match-input').value = code.data;
                 compareTradesFromText();
             } else {
-                alert('No se pudo leer el código QR en la imagen. Intenta con una captura más nítida o pide que te envíen el "Texto Copiado".');
+                alert('No se pudo leer el código QR en la imagen. Por favor, pide que generen el QR usando esta nueva versión para que esté en Alta Definición.');
             }
         };
         img.src = e.target.result;
@@ -502,7 +495,7 @@ function clearMatchInput() {
 function compareTradesFromText() {
     const inputEl = document.getElementById('match-input'); if(!inputEl) return;
     const input = inputEl.value.trim();
-    if (!input) { alert('No hay datos. Pega un texto válido o escanea un QR.'); return; }
+    if (!input) { alert('No hay datos. Pega un texto válido o sube un QR.'); return; }
     try {
         const parsed = JSON.parse(input);
         let friendState = { profile: { name: 'Tu contacto' }, stickers: {} };
@@ -532,7 +525,7 @@ function compareTradesFromText() {
 
         lastMatchResult = { iReceive, iGive, friendName: friendState.profile?.name || 'Tu contacto' };
         renderMatchResults();
-    } catch(e) { alert('Los datos leídos no son válidos. Comprueba que el texto copiado esté completo.'); }
+    } catch(e) { alert('Los datos leídos no son válidos. Comprueba que el texto esté completo.'); }
 }
 
 function renderMatchResults() {
@@ -617,3 +610,5 @@ function triggerConfetti(x, y) {
 }
 function shootBigConfetti() { triggerConfetti(window.innerWidth/2, window.innerHeight/2); setTimeout(() => triggerConfetti(window.innerWidth/3, window.innerHeight/2), 200); setTimeout(() => triggerConfetti((window.innerWidth/3)*2, window.innerHeight/2), 400); }
 document.addEventListener('DOMContentLoaded', init);
+
+
