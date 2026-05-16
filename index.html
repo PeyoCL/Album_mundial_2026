@@ -18,7 +18,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.1/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
     
-    <link rel="stylesheet" href="style.css?v=32">
+    <link rel="stylesheet" href="style.css?v=33">
 </head>
 <body>
     <div id="app">
@@ -30,7 +30,7 @@
                     <img src="icon.svg" alt="Logo Mundial 2026" style="height: 42px; width: auto; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));">
                     <div class="header-titles">
                         <h1 id="album-title" contenteditable="true" spellcheck="false" title="Toca para editar tu nombre">Mi Álbum</h1>
-                        <span class="subtitle">Mundial 2026 · 48 selecciones · 994 láminas <span class="app-version">v32</span></span>
+                        <span class="subtitle">Mundial 2026 · 48 selecciones · 994 láminas <span class="app-version">v33</span></span>
                     </div>
                 </div>
                 <div class="header-actions">
@@ -117,8 +117,7 @@
                     <h2>Validar Intercambio</h2>
                     <p style="color: var(--text-secondary); margin-top: 0.5rem; font-size: 0.9rem;">Cruza tus datos con un contacto para descubrir qué láminas pueden intercambiar.</p>
                 </div>
-                
-                <div class="match-setup">
+                                <div class="match-setup">
                     <h3 style="margin-bottom: 0.5rem; font-size: 1rem; color: var(--blue-accent);">1. Comparte tu álbum</h3>
                     <div class="match-actions">
                         <button onclick="showMyQR()" class="btn-block btn-qr">📷 Mostrar mi QR</button>
@@ -127,7 +126,8 @@
                     
                     <h3 style="margin-top: 1.5rem; margin-bottom: 0.5rem; font-size: 1rem; color: var(--blue-accent);">2. Recibe datos (Amigo)</h3>
                     <div class="match-actions">
-                        <label class="btn-block btn-qr" style="display:block; text-align:center; cursor:pointer; padding: 0.8rem;">
+                        <button onclick="openCameraScanner()" class="btn-block btn-qr">🔍 Escanear Cámara</button>
+                        <label class="btn-block btn-outline" style="display:flex; align-items:center; justify-content:center; cursor:pointer; margin-bottom:0.5rem;">
                             🖼️ Subir Foto QR
                             <input type="file" accept="image/*" style="display:none" onchange="uploadQRImage(event)">
                         </label>
@@ -141,6 +141,8 @@
                         <button onclick="clearMatchInput()" class="btn-block btn-transparent">Limpiar</button>
                     </div>
                 </div>
+
+                
 
                 <div id="match-results-container" style="display: none; margin-top: 2rem;">
                     <div id="match-results"></div>
@@ -233,8 +235,8 @@
         </div>
     </div>
 
-    <script src="data.js?v=32"></script>
-    <script src="app.js?v=32"></script>
+    <script src="data.js?v=33"></script>
+    <script src="app.js?v=33"></script>
     
     <script>
       if ('serviceWorker' in navigator) {
