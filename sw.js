@@ -1,11 +1,11 @@
-const CACHE_NAME = 'album-2026-v28'; 
+const CACHE_NAME = 'album-2026-v29'; 
 
 const urlsToCache = [
   './',
   './index.html',
-  './style.css?v=28',
-  './app.js?v=28',
-  './data.js?v=28',
+  './style.css?v=29',
+  './app.js?v=29',
+  './data.js?v=29',
   './manifest.json',
   './icon.svg'
 ];
@@ -16,7 +16,7 @@ self.addEventListener('install', event => {
     caches.open(CACHE_NAME).then(cache => {
       cache.addAll(urlsToCache);
       cache.add('https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.1/qrcode.min.js').catch(()=>{});
-      cache.add('https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js').catch(()=>{});
+      cache.add('https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js').catch(()=>{});
     })
   );
 });
