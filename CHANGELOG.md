@@ -2,6 +2,10 @@
 
 Todas las actualizaciones y cambios notables de la aplicación "Álbum Mundial 2026" se documentarán en este archivo.
 
+### v27 - Descarga Resiliente de Códigos QR
+- **Protección contra Bloqueadores:** Se implementó una función asíncrona (`loadQRLibraries()`) que permite inyectar forzosamente los scripts necesarios para la generación y escaneo de Códigos QR incluso si el proveedor original falla. Si un usuario experimenta un bloqueo por caché antiguo o por AdBlock, la aplicación intercepta el error, descarga la herramienta en segundo plano e intenta ejecutar la función nuevamente de forma automática.
+- **Transición a CDNJS:** Se cambió el proveedor de librerías externas a `cdnjs.cloudflare.com`, que tiene menos restricciones corporativas de firewall en comparación con `unpkg.com`.
+
 ### v26 - Auto-reparación del Generador QR y SW (Anti-Crash)
 - **Carga Inyectada de Librerías:** Si un dispositivo quedó estancado en una versión vieja del HTML por culpa de la caché y no encuentra las librerías QR en la cabecera, `app.js` ahora es capaz de detectarlo e inyectar forzosamente los scripts externos al hacer clic en los botones.
 - **Service Worker "Stale-While-Revalidate":** Se quitó la obligación de cachear las librerías CDN durante la instalación. Esto previene un bug gravísimo donde un bloqueador de anuncios (AdBlock) o CORS denegaban el acceso al script del QR, provocando que la PWA abortara la actualización completa de toda la aplicación.
