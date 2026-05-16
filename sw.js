@@ -1,12 +1,11 @@
-const CACHE_NAME = 'album-2026-v26'; 
+const CACHE_NAME = 'album-2026-v27'; 
 
-// Ya no obligamos al navegador a cachear enlaces externos durante la instalación
 const urlsToCache = [
   './',
   './index.html',
-  './style.css?v=26',
-  './app.js?v=26',
-  './data.js?v=26',
+  './style.css?v=27',
+  './app.js?v=27',
+  './data.js?v=27',
   './manifest.json',
   './icon.svg'
 ];
@@ -14,7 +13,15 @@ const urlsToCache = [
 self.addEventListener('install', event => {
   self.skipWaiting(); 
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache))
+    caches.open(CACHE_NAME).then(cache => {
+      // Archivos locales que son críticos
+      cache.addAll(urlsToCache);
+      
+      // Archivos externos de las librerías QR. Se cachean de forma segura
+      // sin bloquear la instalación si la red falla.
+      cache.add('https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.1/qrcode.min.js').catch(()=>{});
+      cache.add('https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js').catch(()=>{});
+    })
   );
 });
 
@@ -33,12 +40,10 @@ self.addEventListener('activate', event => {
   return self.clients.claim(); 
 });
 
-// Cachea en segundo plano (Stale-While-Revalidate)
 self.addEventListener('fetch', event => {
   event.respondWith(
     caches.match(event.request).then(cachedResponse => {
       const fetchPromise = fetch(event.request).then(networkResponse => {
-        // Solo cachea recursos que no fallaron
         if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
           caches.open(CACHE_NAME).then(cache => {
             cache.put(event.request, networkResponse.clone());
