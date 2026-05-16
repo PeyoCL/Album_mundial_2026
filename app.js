@@ -2,6 +2,7 @@ const STORAGE_KEY = 'album_mundial_2026_data';
 let state = { profile: { name: 'Mi Álbum', photo: null }, stickers: {}, lastUpdated: Date.now(), milestones: {} };
 let activeSearch = { text: '', team: 'all', group: 'all', sort: 'all' };
 let currentOpenTeam = null;
+let html5QrcodeScanner = null; // Instancia global del escáner
 
 function formatCode(name) {
     if(name === '00') return '00';
@@ -35,7 +36,6 @@ function init() {
         renderHome();
         updateTradeExportButtons();
         
-        // Verificación de iPhone para PWA manual
         checkIOSInstall();
     } catch (error) {
         console.error("Error crítico evitado en init():", error);
@@ -44,19 +44,13 @@ function init() {
 }
 
 function checkIOSInstall() {
-    const isIos = () => {
-        const userAgent = window.navigator.userAgent.toLowerCase();
-        return /iphone|ipad|ipod/.test(userAgent);
-    };
+    const isIos = () => /iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase());
     const isStandalone = () => ('standalone' in window.navigator) && window.navigator.standalone;
     
-    // Si es un iPhone y está en el navegador (no instalado)
     if (isIos() && !isStandalone()) {
         const prompt = document.getElementById('ios-install-prompt');
         if (prompt && !localStorage.getItem('ios_prompt_dismissed')) {
             prompt.style.display = 'block';
-            
-            // Cerrar el prompt guarda un flag para no molestar más
             prompt.querySelector('.close-ios-prompt').onclick = () => {
                 prompt.style.display = 'none';
                 localStorage.setItem('ios_prompt_dismissed', 'true');
@@ -67,19 +61,12 @@ function checkIOSInstall() {
 
 function updateProfileName(newName, updateInput = true) {
     let name = 'Mi Álbum';
-    if (newName && typeof newName === 'string') {
-        name = newName.trim() || 'Mi Álbum';
-    }
-    
+    if (newName && typeof newName === 'string') { name = newName.trim() || 'Mi Álbum'; }
     if (!state.profile) state.profile = {};
     state.profile.name = name;
     
     const titleEl = document.getElementById('album-title');
     if (titleEl) titleEl.innerText = name;
-    
-    const btnCopy = document.getElementById('btn-copy-match');
-    if (btnCopy) btnCopy.innerText = `1. Copiar mis datos (${name})`;
-    
     if (updateInput) {
         const inputEl = document.getElementById('input-profile-name');
         if (inputEl) inputEl.value = name === 'Mi Álbum' ? '' : name;
@@ -118,6 +105,7 @@ function migrateStickerCodes() {
 
 function getStickerState(code) { return state.stickers[code] || { have: false, count: 0 }; }
 
+// UPDATE ESTADISTICAS REAL-TIME
 function toggleSticker(code, ev) {
     if(ev) ev.stopPropagation();
     let s = getStickerState(code);
@@ -129,7 +117,7 @@ function toggleSticker(code, ev) {
     saveState();
     checkMilestones();
     if(currentOpenTeam) renderStickersGrid(currentOpenTeam);
-    updateHomeProgress();
+    updateHomeProgress(); // Llama a la actualización en vivo
 }
 
 function decrementSticker(code, ev) {
@@ -141,7 +129,7 @@ function decrementSticker(code, ev) {
         state.stickers[code] = s;
         saveState();
         if(currentOpenTeam) renderStickersGrid(currentOpenTeam);
-        updateHomeProgress();
+        updateHomeProgress(); // Llama a la actualización en vivo
     }
 }
 
@@ -190,7 +178,6 @@ function getRepeatedList() {
 }
 
 function getRepeatedTotal() { return Object.values(state.stickers || {}).reduce((sum, s) => s.have && s.count > 1 ? sum + (s.count - 1) : sum, 0); }
-
 function getMissingList() {
     let missing = [];
     if (!window.DATA || !window.DATA.TEAMS) return missing;
@@ -201,6 +188,9 @@ function getMissingList() {
 }
 
 function renderHome() { renderDashboardCards(); applyCollectionSearch(); }
+
+// FUNCIÓN REAL-TIME PARA ESTADÍSTICAS GLOBALES
+function updateHomeProgress() { renderDashboardCards(); }
 
 function renderDashboardCards() {
     const p = getTotalProgress(); const rep = getRepeatedTotal();
@@ -226,6 +216,7 @@ function renderDashboardCards() {
     const repEl = document.getElementById('metric-repeated');
     if (repEl) repEl.innerText = `${rep} rep.`;
 }
+
 function renderTeamsGrid(teams) {
     const grid = document.getElementById('teams-grid'); 
     if(!grid) return;
@@ -270,7 +261,6 @@ function makeStickerCard(sticker) {
     `;
     return div;
 }
-
 function openTeamDetail(team) {
     currentOpenTeam = team;
     document.getElementById('modal-team-name').innerText = team.name;
@@ -325,7 +315,6 @@ function applyCollectionSearch() {
     if (activeSearch.sort === 'most') { filtered.sort((a,b) => (getTeamProgress(b.code).have / b.stickers.length) - (getTeamProgress(a.code).have / a.stickers.length)); }
     else if (activeSearch.sort === 'least') { filtered.sort((a,b) => (getTeamProgress(a.code).have / a.stickers.length) - (getTeamProgress(b.code).have / b.stickers.length)); }
     else if (activeSearch.sort === 'az') { filtered.sort((a,b) => a.name.localeCompare(b.name)); }
-
     renderTeamsGrid(filtered);
 }
 
@@ -339,6 +328,7 @@ function clearFilters() {
     activeSearch = { ...activeSearch, text: '', team: 'all', group: 'all' };
     applyCollectionSearch();
 }
+
 function populateTeamFilter() {
     const sel = document.getElementById('filter-team');
     if(!sel || !window.DATA || !window.DATA.TEAMS) return;
@@ -388,15 +378,11 @@ function updateTradeExportButtons(hasRepeated) {
 function getTradeExportRows() {
     let rows = [];
     getRepeatedList().forEach(g => {
-        let itemsStr = g.items.map(i => {
-            let num = formatCode(i.name);
-            return i.count > 1 ? `${num}(x${i.count})` : num;
-        }).join(', ');
+        let itemsStr = g.items.map(i => { let num = formatCode(i.name); return i.count > 1 ? `${num}(x${i.count})` : num; }).join(', ');
         rows.push({ section: g.team, text: itemsStr });
     });
     return rows;
 }
-
 function getMissingExportRows() {
     let rows = [];
     let map = {};
@@ -417,7 +403,6 @@ function generateShareText() {
     showModal('modal-share');
 }
 
-/* --- EXPORTACIONES EXCEL v21 (Solución Universal ASCII Puro) --- */
 function removeAccents(str) {
     if (!str) return '';
     return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
@@ -430,8 +415,7 @@ function exportTradesExcel() {
     const csvBytes = encoder.encode(csv);
     const bom = new Uint8Array([0xEF, 0xBB, 0xBF]);
     const finalBlobBytes = new Uint8Array(bom.byteLength + csvBytes.byteLength);
-    finalBlobBytes.set(bom, 0);
-    finalBlobBytes.set(csvBytes, bom.byteLength);
+    finalBlobBytes.set(bom, 0); finalBlobBytes.set(csvBytes, bom.byteLength);
     const blob = new Blob([finalBlobBytes], { type: 'text/csv;charset=utf-8' });
     downloadBlob(blob, 'cambios_album_mundial_2026.csv');
 }
@@ -443,8 +427,7 @@ function exportMissingExcel() {
     const csvBytes = encoder.encode(csv);
     const bom = new Uint8Array([0xEF, 0xBB, 0xBF]);
     const finalBlobBytes = new Uint8Array(bom.byteLength + csvBytes.byteLength);
-    finalBlobBytes.set(bom, 0);
-    finalBlobBytes.set(csvBytes, bom.byteLength);
+    finalBlobBytes.set(bom, 0); finalBlobBytes.set(csvBytes, bom.byteLength);
     const blob = new Blob([finalBlobBytes], { type: 'text/csv;charset=utf-8' });
     downloadBlob(blob, 'faltantes_album_mundial_2026.csv');
 }
@@ -456,7 +439,6 @@ function exportTradesPdf() {
     html += `<table><tr><th style="width:150px">Sección</th><th>Láminas Repetidas</th></tr>`;
     getTradeExportRows().forEach(r => { html += `<tr><td>${r.section}</td><td>${r.text}</td></tr>`; });
     html += `</table></body></html>`;
-    
     const iframe = document.createElement('iframe');
     iframe.style.position = 'absolute'; iframe.style.width = '0px'; iframe.style.height = '0px'; iframe.style.border = 'none';
     document.body.appendChild(iframe);
@@ -469,19 +451,71 @@ function exportTradesPdf() {
     }, 500);
 }
 
-function copyMyJsonForTrade() {
-    if (state.profile.name === 'Mi Álbum') {
-        const userName = prompt('Antes de compartir, ¿Cómo te llamas? (Para que la otra persona te identifique)');
-        if (userName) updateProfileName(userName);
-    }
+// ==== LÓGICA QR Y MATCH V23 ====
+function getMinifiedTradeData() {
     const minified = { n: state.profile.name, s: {} };
     for (const [code, sticker] of Object.entries(state.stickers)) {
-        if (sticker.have && sticker.count > 0) { minified.s[code] = sticker.count; }
+        if (sticker.have && sticker.count > 1) { minified.s[code] = sticker.count; }
     }
-    const json = JSON.stringify(minified);
-    navigator.clipboard.writeText(json).then(() => {
-        alert(`¡Los datos de ${state.profile.name} han sido copiados (formato ligero)!\n\nEnvíalos a tu contacto para que los pegue en su aplicación.`);
+    return JSON.stringify(minified);
+}
+
+function showMyQR() {
+    if (state.profile.name === 'Mi Álbum') {
+        const userName = prompt('Antes de generar el QR, ¿Cómo te llamas? (Para que te identifiquen)');
+        if (userName) updateProfileName(userName);
+    }
+    const jsonStr = getMinifiedTradeData();
+    const canvas = document.getElementById('qr-canvas');
+    QRCode.toCanvas(canvas, jsonStr, { width: 250, margin: 2, color: { dark: '#000', light: '#fff' } }, function (error) {
+        if (error) console.error(error);
+        showModal('modal-my-qr');
     });
+}
+
+function copyMyJsonForTrade() {
+    if (state.profile.name === 'Mi Álbum') {
+        const userName = prompt('Antes de compartir, ¿Cómo te llamas?');
+        if (userName) updateProfileName(userName);
+    }
+    const json = getMinifiedTradeData();
+    navigator.clipboard.writeText(json).then(() => {
+        alert(`¡Los datos han sido copiados como texto!\nEnvíalos para que los peguen en su app.`);
+    });
+}
+
+function openCameraScanner() {
+    if(typeof Html5Qrcode === 'undefined') { alert("El escáner aún está cargando. Intenta en unos segundos."); return; }
+    showModal('modal-scanner');
+    html5QrcodeScanner = new Html5Qrcode("qr-reader");
+    html5QrcodeScanner.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 250 } },
+        (decodedText) => { closeScannerModal(); document.getElementById('match-input').value = decodedText; compareTradesFromText(); },
+        (errorMessage) => { /* Ignorar errores de frame vacío */ }
+    ).catch(err => {
+        alert("No se pudo iniciar la cámara. Verifica los permisos.");
+        closeScannerModal();
+    });
+}
+
+function closeScannerModal() {
+    if (html5QrcodeScanner) {
+        html5QrcodeScanner.stop().then(() => { html5QrcodeScanner.clear(); closeModal('modal-scanner'); }).catch(err => closeModal('modal-scanner'));
+    } else { closeModal('modal-scanner'); }
+}
+
+function uploadQRImage(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    if(typeof Html5Qrcode === 'undefined') { alert("El lector aún está cargando."); return; }
+    
+    const html5QrCode = new Html5Qrcode("hidden-qr-reader");
+    html5QrCode.scanFile(file, true)
+    .then(decodedText => {
+        document.getElementById('match-input').value = decodedText;
+        compareTradesFromText();
+    })
+    .catch(err => { alert('No se detectó un código QR válido en la imagen. Intenta con otra foto.'); });
+    event.target.value = ''; // Reset input
 }
 
 let lastMatchResult = null;
@@ -494,11 +528,11 @@ function clearMatchInput() {
     lastMatchResult = null;
 }
 
-function compareTrades() {
+function compareTradesFromText() {
     const inputEl = document.getElementById('match-input');
     if(!inputEl) return;
     const input = inputEl.value.trim();
-    if (!input) { alert('Pega los datos recibidos en el recuadro primero.'); return; }
+    if (!input) { alert('No hay datos para comparar. Pega un texto válido o escanea un QR primero.'); return; }
     try {
         const parsed = JSON.parse(input);
         let friendState = { profile: { name: 'Tu contacto' }, stickers: {} };
@@ -533,7 +567,7 @@ function compareTrades() {
 
         lastMatchResult = { iReceive, iGive, friendName: friendState.profile?.name || 'Tu contacto' };
         renderMatchResults();
-    } catch(e) { alert('Los datos pegados no son válidos. Asegúrate de copiar el texto completo.'); }
+    } catch(e) { alert('Los datos leídos no son válidos o están incompletos.'); }
 }
 
 function renderMatchResults() {
@@ -618,18 +652,10 @@ function toggleTheme() {
     if (root.getAttribute('data-theme') === 'light') { root.removeAttribute('data-theme'); localStorage.setItem('album_theme_2026', 'dark'); } 
     else { root.setAttribute('data-theme', 'light'); localStorage.setItem('album_theme_2026', 'light'); }
 }
-
 function loadTheme() { const theme = localStorage.getItem('album_theme_2026'); if (theme === 'light') document.documentElement.setAttribute('data-theme', 'light'); }
 
-function showModal(id) { 
-    const modal = document.getElementById(id);
-    if(modal) modal.style.display = 'flex'; 
-}
-function closeModal(id) { 
-    const modal = document.getElementById(id);
-    if(modal) modal.style.display = 'none'; 
-    currentOpenTeam = null; 
-}
+function showModal(id) { const modal = document.getElementById(id); if(modal) modal.style.display = 'flex'; }
+function closeModal(id) { const modal = document.getElementById(id); if(modal) modal.style.display = 'none'; currentOpenTeam = null; }
 
 function updateHeaderOffset() {
     const header = document.querySelector('.app-header');
@@ -646,17 +672,11 @@ function observeHeaderOffset() {
 
 function bindEvents() {
     const addClick = (id, fn) => { const el = document.getElementById(id); if(el) el.onclick = fn; };
-    const addInput = (id, fn) => { 
-        const el = document.getElementById(id); 
-        if(el) { if(el.tagName === 'SELECT') el.onchange = fn; else el.oninput = fn; } 
-    };
+    const addInput = (id, fn) => { const el = document.getElementById(id); if(el) { if(el.tagName === 'SELECT') el.onchange = fn; else el.oninput = fn; } };
 
-    addClick('btn-theme', toggleTheme);
-    addClick('btn-settings', () => showModal('modal-settings'));
-    addClick('btn-clear-filters', clearFilters);
-    addClick('btn-share-list', generateShareText);
-    addClick('btn-export-excel', exportTradesExcel);
-    addClick('btn-export-pdf', exportTradesPdf);
+    addClick('btn-theme', toggleTheme); addClick('btn-settings', () => showModal('modal-settings'));
+    addClick('btn-clear-filters', clearFilters); addClick('btn-share-list', generateShareText);
+    addClick('btn-export-excel', exportTradesExcel); addClick('btn-export-pdf', exportTradesPdf);
     addClick('btn-download-missing', exportMissingExcel);
 
     addInput('search-input', (e) => { activeSearch.text = e.target.value; applyCollectionSearch(); });
@@ -679,19 +699,13 @@ function bindEvents() {
 }
 
 function triggerConfetti(x, y) {
-    const canvas = document.getElementById('confetti-canvas'); 
-    if(!canvas) return;
-    const ctx = canvas.getContext('2d');
-    canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+    const canvas = document.getElementById('confetti-canvas'); if(!canvas) return;
+    const ctx = canvas.getContext('2d'); canvas.width = window.innerWidth; canvas.height = window.innerHeight;
     let particles = [];
     for(let i=0; i<30; i++) particles.push({ x: x, y: y, r: Math.random() * 4 + 2, dx: Math.random() * 6 - 3, dy: Math.random() * -6 - 2, color: `hsl(${Math.random() * 360}, 100%, 50%)` });
     function animate() {
         ctx.clearRect(0,0,canvas.width,canvas.height); let active = false;
-        particles.forEach(p => {
-            p.x += p.dx; p.y += p.dy; p.dy += 0.2;
-            ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fillStyle = p.color; ctx.fill();
-            if(p.y < canvas.height) active = true;
-        });
+        particles.forEach(p => { p.x += p.dx; p.y += p.dy; p.dy += 0.2; ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fillStyle = p.color; ctx.fill(); if(p.y < canvas.height) active = true; });
         if(active) requestAnimationFrame(animate); else ctx.clearRect(0,0,canvas.width,canvas.height);
     }
     animate();
@@ -702,5 +716,4 @@ function shootBigConfetti() {
     setTimeout(() => triggerConfetti(window.innerWidth/3, window.innerHeight/2), 200);
     setTimeout(() => triggerConfetti((window.innerWidth/3)*2, window.innerHeight/2), 400);
 }
-
 document.addEventListener('DOMContentLoaded', init);
