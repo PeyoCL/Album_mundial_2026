@@ -2,6 +2,10 @@
 
 Todas las actualizaciones y cambios notables de la aplicación "Álbum Mundial 2026" se documentarán en este archivo.
 
+### v25 - Optimización de QR y Auto-Actualización de Caché
+- **Maximización del Código QR:** Se ajustó el nivel de corrección de errores del generador QR al nivel más bajo (`errorCorrectionLevel: 'L'`) para permitir que quepa la máxima cantidad posible de láminas. Además, se agregó un "escudo de seguridad": si tienes cientos de repetidas y sobrepasas el límite físico absoluto de datos que un QR puede dibujar, la app ya no se congelará en silencio, sino que te mostrará una alerta indicándote que utilices la opción de "Copiar Texto".
+- **Caché Inteligente (Stale-While-Revalidate):** Se reescribió por completo la estrategia del Service Worker. A partir de ahora, la app cargará instantáneamente desde el caché, pero en segundo plano buscará silenciosamente si hay actualizaciones en GitHub. Esto garantiza que nunca más te quedes atascado en una versión vieja de la aplicación.
+
 ### v24 - Resumen Matemático de Intercambios
 - **Calculadora de Match:** La pantalla de validación de intercambios ahora cuenta cada lámina individual y muestra un "Resumen del Match" en la parte superior.
 - **Identificador de Límite:** Calcula matemáticamente el número máximo de intercambios posibles, indicando claramente entre paréntesis cuál de las dos partes tiene menos láminas para ofrecer y limita la operación (Ej: "Máx. cambios: 5 (Menos repetidas: Amigo)"). Este resumen también se exporta en el texto para WhatsApp.
