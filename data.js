@@ -1,4 +1,4 @@
-// data.js v44 - Fetch Dinámico de CSV
+// data.js v45 - Fetch Dinámico de CSV + Fix Matricial EGV
 if (!window.DATA) window.DATA = {};
 window.DATA.TOTAL_STICKERS = 994;
 
@@ -23,7 +23,7 @@ window.DATA.TEAMS = [];
 
 window.LOAD_DATA = async function() {
     try {
-        const response = await fetch('./album_names_2026_v1.csv?v=44');
+        const response = await fetch('./album_names_2026_v1.csv?v=45');
         if (!response.ok) throw new Error('Archivo CSV no encontrado en el servidor');
         const text = await response.text();
         const lines = text.split('\n').map(l => l.trim()).filter(l => l);
@@ -31,7 +31,6 @@ window.LOAD_DATA = async function() {
         const teamsDict = {};
         const teamOrder = [];
         
-        // Detecta si la primera línea es el encabezado y la salta
         let startIndex = lines[0].toLowerCase().includes('codigo') ? 1 : 0;
 
         for (let i = startIndex; i < lines.length; i++) {
@@ -75,7 +74,9 @@ window.LOAD_DATA = async function() {
             
             let st = t.stickers.map((stk, idx) => {
                 let num = idx + 1;
-                let c = stk.c; let n = stk.n;
+                // FIX CRÍTICO: Reemplaza el código interno de la lámina de EGY a EGV para que calce con el respaldo del usuario
+                let c = stk.c.replace('EGY', 'EGV'); 
+                let n = stk.n;
                 let type = isSp ? 'special' : ((num === 1) ? 'shield' : (num === 13 ? 'group' : 'normal'));
                 let nf = c === '00' ? '00' : c.replace(/^([A-Za-z\-]+)(\d+.*)$/, "$1 $2").toUpperCase();
                 return { code: c.toUpperCase(), name: isSp ? nf : t.prefix + " " + num, playerName: n, type: type };
