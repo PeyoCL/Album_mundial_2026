@@ -4,17 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Álbum Mundial 2026</title>
-    
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0a0e1a">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="icon.svg">
-    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    
     <link rel="stylesheet" href="style.css?v=39">
 </head>
 <body>
@@ -48,32 +45,20 @@
                 <div class="sort-bar">
                     <span class="results-counter" id="results-counter">0 resultados</span>
                     <select id="sort-select">
-                        <option value="all">Todos (Orden base)</option>
-                        <option value="most">Más completos</option>
-                        <option value="least">Menos completos</option>
-                        <option value="az">Equipos A-Z</option>
-                    </select>
+            <section id="tab-trades" class="tab-pane">
+                <div class="trades-header">
+                    <h2>Gestión de Cambios</h2>
+                    <p class="repeated-total" id="trades-total-text">Total repetidas: 0</p>
                 </div>
-            </div>
-        </header>
+                <div class="trades-actions">
+                    <button id="btn-share-list" disabled>Compartir lista</button>
+                    <button id="btn-export-pdf" disabled>Exportar PDF</button>
+                    <button id="btn-export-excel" disabled>Exportar Excel</button>
+                    <button id="btn-download-missing" disabled>Descargar faltantes</button>
+                </div>
+                <div id="trades-list" class="trades-list"></div>
+            </section>
 
-        <main id="main-content">
-            <section id="tab-home" class="tab-pane active">
-                <div class="dashboard">
-                    <div class="main-card">
-                        <div class="progress-ring-container">
-                            <div class="progress-ring" id="main-progress-ring"></div>
-                            <div class="progress-ring-text">
-                                <span class="percentage" id="main-percentage">0%</span>
-                                <span class="label">Completado</span>
-                            </div>
-                        </div>
-                        <div class="progress-info">
-                            <span class="kicker">Tu colección</span>
-                            <h2>Progreso del álbum</h2>
-                            <p id="main-progress-text">Tienes 0 de 994 láminas únicas.</p>
-                            <div class="linear-progress">
-                                <div class="linear-bar" id="main
             <section id="tab-match" class="tab-pane">
                 <div class="trades-header">
                     <h2>Validar Intercambio</h2>
@@ -117,7 +102,6 @@
             <button class="nav-btn" data-target="tab-trades">Cambios</button>
             <button class="nav-btn" data-target="tab-match">Match</button>
         </nav>
-
         <div id="modal-team" class="modal">
             <div class="modal-content team-modal">
                 <div class="modal-header">
@@ -169,7 +153,6 @@
                 </div>
             </div>
         </div>
-
         <div id="modal-share" class="modal">
             <div class="modal-content share-modal">
                 <div class="modal-header">
