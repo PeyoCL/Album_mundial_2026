@@ -2,6 +2,12 @@
 
 Todas las actualizaciones y cambios notables de la aplicación "Álbum Mundial 2026" se documentarán en este archivo.
 
+### v44 - Fetch Dinámico de CSV y Sincronización de Matrices
+- **Explicación de Matrices JSON (Hotfix):** El desfase de "láminas erróneas" al importar un código viejo se debía a la discrepancia estructural en el algoritmo del mapa de bits comprimido (`m`). Al ordenar los países por Grupos Oficiales (A-L), el índice matricial cambió. Con esta versión estable, los usuarios solo necesitan generar códigos nuevos para garantizar un intercambio sincronizado.
+- **Motor CSV en `data.js`:** Se integró la función asíncrona `window.LOAD_DATA` que intercepta y lee `album_names_2026_v1.csv` vía Fetch API en tiempo real. Esto elimina los datos en crudo (hardcoded) del archivo `.js` garantizando un 100% de precisión y facilidad de mantenimiento.
+- **Asincronía `app.js`:** La inicialización de la app (`init`) fue refactorizada con `async/await` para poner la construcción del DOM y la rehidratación del caché en pausa hasta asegurar que el CSV se ha procesado en memoria.
+- **Caché Offline Expandida:** El archivo `album_names_2026_v1.csv` fue indexado como activo de prerenderizado en `sw.js`. Esto evita conflictos CORS y permite a la aplicación procesar correctamente los nombres de las láminas incluso en Modo Avión.
+
 ### v43 - Desacoplamiento de Base de Datos y Fetch Dinámico
 - **Lectura Asíncrona (Fetch API):** Se reescribió `data.js` para desacoplar completamente la base de datos estática del código base. Ahora la aplicación lee e interpreta los datos directamente desde el archivo subido `album_names_2026_v1.csv` mediante una petición Fetch en tiempo real.
 - **Motor de Parseo Integrado:** Se programó un lector de CSV liviano dentro de `data.js` capaz de asociar prefijos de código, agrupar las secciones especiales, mantener retrocompatibilidad (fix: `EGV`), inyectar íconos nativos y clasificar la metadata de los 994 cromos al vuelo.
