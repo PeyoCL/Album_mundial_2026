@@ -2,7 +2,15 @@
 
 Todas las actualizaciones y cambios notables de la aplicación "Álbum Mundial 2026" se documentarán en este archivo.
 
+### v42 - Data Recovery y Precisión Absoluta
+- **Corrección Crítica de Metadatos:** Se reescribió la base de datos `data.js` extrayendo la información en crudo directamente desde el archivo maestro oficial proveído por el usuario (`panini_fifa_world_cup_2026_standard_edition_lista`), recuperando las traducciones locales, alineaciones finales de jugadores, e integrando la estructura exacta de 994 cromos.
+- **Resolución "EGV":** Se incluyó un soporte de retro-compatibilidad nativa en el que el código `EGV` asume el rol del grupo y nombre correspondiente a Egipto (`EGY`) para evitar pérdida de progreso asimétrico en respaldos pasados de los usuarios.
+- **Micro-Compresión a un Bloque:** Toda la base de datos y la lógica de descompresión interna (`r` + `nameMap`) fue reorganizada en un único bloque continuo, garantizando la copia por portapapeles sin riesgos de pérdida de sintaxis JSON en PC.
 
+### v41 - Hotfix de Sintaxis y Prevención de Caché (Service Worker)
+- **Fix "Pantalla en Blanco":** Se solucionó un error crítico de sintaxis (`Unexpected end of input`) provocado por el recorte del portapapeles en editores móviles al copiar el archivo `data.js`. Para resolverlo, el archivo se fragmentó en una estructura de carga secuencial en matriz (`compactData.push`).
+- **Service Worker Patch (`sw.js`):** Se corrigió un error en el manejo de Promesas del entorno Offline (`Failed to execute 'clone' on 'Response'`). Ahora el motor realiza correctamente la clonación de la respuesta HTTP antes de guardarla en la caché local para su uso sin conexión.
+- **Forzado de Caché:** Se actualizó la firma global de los archivos estáticos (`?v=41`) obligando a los navegadores móviles (iOS/Android) a descartar el caché antiguo corrupto y montar la versión operativa.
 
 ### v40 - Nombres Reales, Agrupación Oficial y Corrección de UI
 - **Base de Datos Dinámica:** El archivo `data.js` fue reconstruido con la información oficial de las 994 láminas de la "Standard Edition", asignando a cada lámina el nombre real de su jugador o equipo correspondiente (ej: "ARG 16 - Lionel Messi").
