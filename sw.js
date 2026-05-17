@@ -39,17 +39,26 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
   event.respondWith(
     caches.match(event.request).then(cachedResponse => {
-      const fetchPromise = fetch(event.request).then(networkResponse => {
-        if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
-          caches.open(CACHE_NAME).then(cache => {
-            cache.put(event.request, networkResponse.clone());
-          });
+      // 1. Si está en caché, lo devuelve inmediato
+      if (cachedResponse) {
+        return cachedResponse;
+      }
+      
+      // 2. Si no, lo pide a internet y lo clona ANTES de guardarlo
+      return fetch(event.request).then(networkResponse => {
+        if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
+          return networkResponse;
         }
+        
+        const responseToCache = networkResponse.clone();
+        caches.open(CACHE_NAME).then(cache => {
+          cache.put(event.request, responseToCache);
+        });
+        
         return networkResponse;
       }).catch(() => {
-        return cachedResponse;
+        // Fallback en caso de no haber internet y no estar en caché
       });
-      return cachedResponse || fetchPromise;
     })
   );
 });

@@ -45,7 +45,7 @@ function updateProfileName(newName, updateInput = true) {
 function loadState() {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) { try { const parsed = JSON.parse(saved); state = { ...state, ...parsed }; if (!state.profile) state.profile = { name: 'Mi Álbum' }; if (!state.stickers) state.stickers = {}; } catch(e) {} }
-    if (!state.displayMode) state.displayMode = 'code'; 
+    if (!state.displayMode) state.displayMode = 'code';
 }
 
 function saveState() { state.lastUpdated = Date.now(); localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
@@ -118,13 +118,15 @@ function renderTeamsGrid(teams) {
 
 function makeTeamCard(team) {
     const prog = getTeamProgress(team.code); let pct = Math.round((prog.have / prog.total) * 100) || 0; if (pct === 100 && prog.have < prog.total) pct = 99;
-    const div = document.createElement('div'); div.className = `team-card ${prog.have === prog.total ? 'completed' : ''}`; div.id = `team-card-${team.code}`; div.onclick = () => openTeamDetail(team);
+    const div = document.createElement('div'); div.className = `team-card ${prog.have === prog.total && prog.total > 0 ? 'completed' : ''}`; div.id = `team-card-${team.code}`; div.onclick = () => openTeamDetail(team);
     let iconHtml = '';
-    if (team.flag) { iconHtml = `<img src="${team.flag}" class="team-icon" alt="${team.name}" style="object-fit: cover;">`; } 
-    else if (team.icon) { 
-        if (typeof team.icon === 'string' && team.icon.endsWith('.svg')) { iconHtml = `<img src="${team.icon}" class="team-icon section-logo" alt="${team.name}" style="object-fit: contain; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5)); padding: 2px;">`; } 
-        else { iconHtml = `<div class="team-icon emoji-icon" style="font-size:24px; display:flex; align-items:center; justify-content:center;">${team.icon}</div>`; } 
-    } else { iconHtml = `<div class="team-icon placeholder">?</div>`; }
+    if (team.icon && team.icon.endsWith('.svg')) { 
+        iconHtml = `<img src="${team.icon}" class="team-icon section-logo" alt="${team.name}" style="object-fit: contain; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5)); padding: 2px;">`; 
+    } else if (team.icon) { 
+        iconHtml = `<div class="team-icon emoji-icon" style="font-size:24px; display:flex; align-items:center; justify-content:center;">${team.icon}</div>`; 
+    } else { 
+        iconHtml = `<div class="team-icon placeholder">?</div>`; 
+    }
     div.innerHTML = `<div class="team-card-header">${iconHtml}<div class="team-info"><h3>${team.name}</h3><span>${team.group}</span></div></div><div class="team-stats"><span>Progreso</span><span id="card-count-${team.code}">${prog.have}/${prog.total} (${pct}%)</span></div><div class="linear-progress"><div class="linear-bar" id="card-bar-${team.code}" style="width: ${pct}%;"></div></div>`; return div;
 }
 
@@ -138,14 +140,11 @@ function makeStickerCard(sticker) {
 }
 
 function openTeamDetail(team) {
-function openTeamDetail(team) {
     currentOpenTeam = team; 
     document.getElementById('modal-team-name').innerText = team.name; 
     document.getElementById('modal-team-group').innerText = team.group;
     
     const iconEl = document.getElementById('modal-team-icon');
-    
-    // Buscar si ya creamos el contenedor para el Emoji, si no, lo creamos
     let emojiEl = document.getElementById('modal-team-emoji');
     if (!emojiEl) {
         emojiEl = document.createElement('div');
@@ -158,30 +157,19 @@ function openTeamDetail(team) {
         iconEl.parentNode.insertBefore(emojiEl, iconEl);
     }
 
-    // Lógica para mostrar Logo SVG o Emoji
     if (team.icon && team.icon.endsWith('.svg')) {
-        // Es un logo de sección especial (FIFA o Coca-Cola)
-        iconEl.src = team.icon;
-        iconEl.style.display = 'block';
-        iconEl.style.objectFit = 'contain';
-        iconEl.style.padding = '2px';
-        emojiEl.style.display = 'none';
+        iconEl.src = team.icon; iconEl.style.display = 'block'; iconEl.style.objectFit = 'contain'; iconEl.style.padding = '2px'; emojiEl.style.display = 'none';
     } else if (team.icon) {
-        // Es una bandera Emoji de selección nacional
-        iconEl.style.display = 'none';
-        emojiEl.innerText = team.icon;
-        emojiEl.style.display = 'flex';
+        iconEl.style.display = 'none'; emojiEl.innerText = team.icon; emojiEl.style.display = 'flex';
     } else {
-        iconEl.style.display = 'none';
-        emojiEl.style.display = 'none';
+        iconEl.style.display = 'none'; emojiEl.style.display = 'none';
     }
     
-    renderStickersGrid(team); 
-    showModal('modal-team');
+    renderStickersGrid(team); showModal('modal-team');
 }
 
-
 function renderStickersGrid(team) { const grid = document.getElementById('modal-stickers-grid'); grid.innerHTML = ''; team.stickers.forEach(s => { grid.appendChild(makeStickerCard(s)); }); updateTeamCount(team.code); }
+
 function updateTeamCount(teamCode) {
     const p = getTeamProgress(teamCode); 
     const countEl = document.getElementById('modal-team-count'); 
@@ -197,23 +185,17 @@ function updateTeamCount(teamCode) {
     if (cardCount) {
         cardCount.innerText = `${p.have}/${p.total} (${pct}%)`; 
         cardBar.style.width = `${pct}%`;
-        if (p.have === p.total && p.total > 0) { 
-            card.classList.add('completed'); 
-        } else { 
-            card.classList.remove('completed'); 
-        }
+        if (p.have === p.total && p.total > 0) { card.classList.add('completed'); } else { card.classList.remove('completed'); }
     }
     
     if (p.have === p.total && p.total > 0) {
         if(!state.milestones) state.milestones = {}; 
         if(!state.milestones[`team_${teamCode}`]) { 
             state.milestones[`team_${teamCode}`] = true; 
-            saveState(); // <-- LÍNEA AGREGADA: GUARDA EL ESTADO PARA QUE EL CONFETI NO SE REPITA
-            shootBigConfetti(); 
+            saveState(); shootBigConfetti(); 
         }
     }
 }
-
 
 function applyCollectionSearch() {
     if (!window.DATA || !window.DATA.TEAMS) return;
@@ -343,7 +325,7 @@ function downloadBlob(b, f) { const u = URL.createObjectURL(b); const a = docume
 function exportData() { downloadBlob(new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' }), 'album_mundial_2026.json'); }
 function importData(e) { const f = e.target.files[0]; if (!f) return; const r = new FileReader(); r.onload = (ev) => { try { const d = JSON.parse(ev.target.result); if (d.stickers) { state = d; saveState(); init(); closeModal('modal-settings'); alert('Álbum restaurado.'); } } catch (err) { alert('Archivo JSON inválido.'); } }; r.readAsText(f); }
 function confirmReset() { if (confirm('¿Seguro que deseas reiniciar el álbum?')) { state.stickers = {}; state.milestones = {}; saveState(); closeModal('modal-settings'); init(); } }
-function forceUpdateCache() { if ('caches' in window) { caches.keys().then(names => { for (let n of names) caches.delete(n); }).then(() => { alert("Caché borrada."); window.location.href = window.location.pathname + '?v=' + new Date().getTime(); }); } else { window.location.reload(true); } }
+function forceUpdateCache() { if ('caches' in window) { caches.keys().then(names => { for (let n of names) caches.delete(n); }).then(() => { alert("Caché borrada. Recargando..."); window.location.href = window.location.pathname + '?v=' + new Date().getTime(); }); } else { window.location.reload(true); } }
 function toggleTheme() { const root = document.documentElement; if (root.getAttribute('data-theme') === 'light') { root.removeAttribute('data-theme'); localStorage.setItem('album_theme_2026', 'dark'); } else { root.setAttribute('data-theme', 'light'); localStorage.setItem('album_theme_2026', 'light'); } }
 function loadTheme() { if (localStorage.getItem('album_theme_2026') === 'light') document.documentElement.setAttribute('data-theme', 'light'); }
 function showModal(id) { const m = document.getElementById(id); if(m) m.style.display = 'flex'; }
