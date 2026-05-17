@@ -138,13 +138,48 @@ function makeStickerCard(sticker) {
 }
 
 function openTeamDetail(team) {
-    currentOpenTeam = team; document.getElementById('modal-team-name').innerText = team.name; document.getElementById('modal-team-group').innerText = team.group;
-    const iconEl = document.getElementById('modal-team-icon'); 
-    if (team.flag) { iconEl.src = team.flag; iconEl.style.display = 'block'; iconEl.style.objectFit = 'cover'; iconEl.style.padding = '0'; } 
-    else if (team.icon && typeof team.icon === 'string' && team.icon.endsWith('.svg')) { iconEl.src = team.icon; iconEl.style.display = 'block'; iconEl.style.objectFit = 'contain'; iconEl.style.padding = '2px'; } 
-    else { iconEl.style.display = 'none'; }
-    renderStickersGrid(team); showModal('modal-team');
+function openTeamDetail(team) {
+    currentOpenTeam = team; 
+    document.getElementById('modal-team-name').innerText = team.name; 
+    document.getElementById('modal-team-group').innerText = team.group;
+    
+    const iconEl = document.getElementById('modal-team-icon');
+    
+    // Buscar si ya creamos el contenedor para el Emoji, si no, lo creamos
+    let emojiEl = document.getElementById('modal-team-emoji');
+    if (!emojiEl) {
+        emojiEl = document.createElement('div');
+        emojiEl.id = 'modal-team-emoji';
+        emojiEl.className = 'modal-icon emoji-icon';
+        emojiEl.style.fontSize = '2.5rem';
+        emojiEl.style.display = 'flex';
+        emojiEl.style.alignItems = 'center';
+        emojiEl.style.justifyContent = 'center';
+        iconEl.parentNode.insertBefore(emojiEl, iconEl);
+    }
+
+    // Lógica para mostrar Logo SVG o Emoji
+    if (team.icon && team.icon.endsWith('.svg')) {
+        // Es un logo de sección especial (FIFA o Coca-Cola)
+        iconEl.src = team.icon;
+        iconEl.style.display = 'block';
+        iconEl.style.objectFit = 'contain';
+        iconEl.style.padding = '2px';
+        emojiEl.style.display = 'none';
+    } else if (team.icon) {
+        // Es una bandera Emoji de selección nacional
+        iconEl.style.display = 'none';
+        emojiEl.innerText = team.icon;
+        emojiEl.style.display = 'flex';
+    } else {
+        iconEl.style.display = 'none';
+        emojiEl.style.display = 'none';
+    }
+    
+    renderStickersGrid(team); 
+    showModal('modal-team');
 }
+
 
 function renderStickersGrid(team) { const grid = document.getElementById('modal-stickers-grid'); grid.innerHTML = ''; team.stickers.forEach(s => { grid.appendChild(makeStickerCard(s)); }); updateTeamCount(team.code); }
 function updateTeamCount(teamCode) {
