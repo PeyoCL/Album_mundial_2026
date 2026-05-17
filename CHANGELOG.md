@@ -2,6 +2,8 @@
 
 Todas las actualizaciones y cambios notables de la aplicación "Álbum Mundial 2026" se documentarán en este archivo.
 
+
+
 ### v40 - Nombres Reales, Agrupación Oficial y Corrección de UI
 - **Base de Datos Dinámica:** El archivo `data.js` fue reconstruido con la información oficial de las 994 láminas de la "Standard Edition", asignando a cada lámina el nombre real de su jugador o equipo correspondiente (ej: "ARG 16 - Lionel Messi").
 - **Agrupación A-L:** Se aplicó un mapa relacional a las 48 selecciones para agruparlas de forma idéntica a los 12 grupos oficiales del torneo (Grupo A hasta Grupo L).
