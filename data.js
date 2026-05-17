@@ -67,15 +67,12 @@ const TEAMS = [];
 
 // Especiales
 TEAMS.push({
-    code: 'FWC', name: 'FIFA World Cup', flag: '', group: 'Especiales', icon: '🏆',
+    code: 'FWC', name: 'FIFA World Cup', flag: '', group: 'Especiales', icon: 'logo_fwc.svg',
     stickers: ['00', ...Array.from({length: 19}, (_, i) => `FWC${i+1}`)].map(c => ({ code: c, name: c, type: 'special' }))
 });
 
-// Ícono SVG de botella para Coca-Cola
-const bottleSVG = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--gold);"><path d="M10 2v3a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1V2H10z"/><path d="M10 6c-1 0-2 1-2 2v2a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2V8c0-1-1-2-2-2"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="16" y2="16"/></svg>`;
-
 TEAMS.push({
-    code: 'CC', name: 'Coca-Cola', flag: '', group: 'Coca-Cola', icon: bottleSVG,
+    code: 'CC', name: 'Coca-Cola', flag: '', group: 'Coca-Cola', icon: 'logo_coca_cola.svg',
     stickers: Array.from({length: 14}, (_, i) => `CC${i+1}`).map(c => ({ code: c, name: c, type: 'special' }))
 });
 
