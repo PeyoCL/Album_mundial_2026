@@ -195,10 +195,46 @@ function updateTradeExportButtons(hasRepeated) { const disabled = !hasRepeated; 
 function getTradeExportRows() { let rows = []; getRepeatedList().forEach(g => { let itemsStr = g.items.map(i => { let num = formatCode(i.name); return i.count > 1 ? `${num}(x${i.count})` : num; }).join(', '); rows.push({ section: g.team, text: itemsStr }); }); return rows; }
 function getMissingExportRows() { let rows = []; let map = {}; getMissingList().forEach(m => { if(!map[m.team]) map[m.team] = []; map[m.team].push(formatCode(m.name)); }); for(let team in map){ rows.push({ section: team, text: map[team].join(', ') }); } return rows; }
 function generateShareText() { const p = getTotalProgress(); let txt = `*${state.profile.name}*\nProgreso: ${p.have}/${p.total} (${p.percentage}%)\nRepetidas: ${getRepeatedTotal()}\n\n`; getTradeExportRows().forEach(r => { txt += `${r.section}: ${r.text}\n`; }); document.getElementById('share-textarea').value = txt; showModal('modal-share'); }
+// CORRECCIÓN V35 PARA EXCEL/GOOGLE SHEETS
 function removeAccents(str) { if (!str) return ''; return str.normalize("NFD").replace(/[\u0300-\u036f]/g, ""); }
-function exportTradesExcel() { let csv = 'Seccion,Laminas Repetidas\n'; getTradeExportRows().forEach(r => { csv += `"${removeAccents(r.section)}","${r.text}"\n`; }); const encoder = new TextEncoder(); const csvBytes = encoder.encode(csv); const bom = new Uint8Array([0xEF, 0xBB, 0xBF]); const finalBlobBytes = new Uint8Array(bom.byteLength + csvBytes.byteLength); finalBlobBytes.set(bom, 0); finalBlobBytes.set(csvBytes, bom.byteLength); downloadBlob(new Blob([finalBlobBytes], { type: 'text/csv;charset=utf-8' }), 'cambios_album_mundial_2026.csv'); }
-function exportMissingExcel() { let csv = 'Seccion,Laminas Faltantes\n'; getMissingExportRows().forEach(r => { csv += `"${removeAccents(r.section)}","${r.text}"\n`; }); const encoder = new TextEncoder(); const csvBytes = encoder.encode(csv); const bom = new Uint8Array([0xEF, 0xBB, 0xBF]); const finalBlobBytes = new Uint8Array(bom.byteLength + csvBytes.byteLength); finalBlobBytes.set(bom, 0); finalBlobBytes.set(csvBytes, bom.byteLength); downloadBlob(new Blob([finalBlobBytes], { type: 'text/csv;charset=utf-8' }), 'faltantes_album_mundial_2026.csv'); }
-function exportTradesPdf() { const p = getTotalProgress(); let html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Cambios Álbum 2026</title><style>body{font-family:sans-serif; padding: 20px;} table{width:100%;border-collapse:collapse; margin-top: 20px;} th,td{border:1px solid #ccc;padding:8px;text-align:left;}</style></head><body><h1>Cambios - ${state.profile.name}</h1><p>Progreso: ${p.have}/${p.total} (${p.percentage}%) | Total repetidas: ${getRepeatedTotal()}</p><table><tr><th style="width:150px">Sección</th><th>Láminas Repetidas</th></tr>`; getTradeExportRows().forEach(r => { html += `<tr><td>${r.section}</td><td>${r.text}</td></tr>`; }); html += `</table></body></html>`; const iframe = document.createElement('iframe'); iframe.style.position = 'absolute'; iframe.style.width = '0px'; iframe.style.height = '0px'; iframe.style.border = 'none'; document.body.appendChild(iframe); const doc = iframe.contentWindow || iframe.contentDocument.document || iframe.contentDocument; doc.document.open(); doc.document.write(html); doc.document.close(); iframe.contentWindow.focus(); setTimeout(() => { try { iframe.contentWindow.print(); } catch (err) { alert('Bloqueado por el dispositivo. Usa Exportar Excel.'); } setTimeout(() => document.body.removeChild(iframe), 1000); }, 500); }
+
+function exportTradesExcel() {
+    let csv = 'Seccion,Laminas Repetidas\n';
+    getTradeExportRows().forEach(r => { csv += `"${removeAccents(r.section)}","${r.text}"\n`; });
+    // Al quitar las tildes, eliminamos el BOM para que Google Sheets lo lea perfecto
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    downloadBlob(blob, 'cambios_album_mundial_2026.csv');
+}
+
+function exportMissingExcel() {
+    let csv = 'Seccion,Laminas Faltantes\n';
+    getMissingExportRows().forEach(r => { csv += `"${removeAccents(r.section)}","${r.text}"\n`; });
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    downloadBlob(blob, 'faltantes_album_mundial_2026.csv');
+}
+
+// CORRECCIÓN V35 PARA EL PDF
+function exportTradesPdf() {
+    const p = getTotalProgress();
+    let html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Cambios Álbum 2026</title><style>body{font-family:sans-serif; padding: 20px;} table{width:100%;border-collapse:collapse; margin-top: 20px;} th,td{border:1px solid #ccc;padding:8px;text-align:left;}</style></head><body><h1>Cambios - ${state.profile.name}</h1><p>Progreso: ${p.have}/${p.total} (${p.percentage}%) | Total repetidas: ${getRepeatedTotal()}</p><table><tr><th style="width:150px">Sección</th><th>Láminas Repetidas</th></tr>`;
+    getTradeExportRows().forEach(r => { html += `<tr><td>${r.section}</td><td>${r.text}</td></tr>`; });
+    html += `</table></body></html>`;
+    
+    const iframe = document.createElement('iframe');
+    iframe.style.position = 'fixed'; iframe.style.right = '0'; iframe.style.bottom = '0'; iframe.style.width = '0'; iframe.style.height = '0'; iframe.style.border = '0';
+    document.body.appendChild(iframe);
+    
+    const win = iframe.contentWindow;
+    win.document.open(); win.document.write(html); win.document.close();
+    
+    // Le damos al navegador el tiempo exacto para asimilar el iframe antes de imprimir
+    setTimeout(() => {
+        win.focus();
+        try { win.print(); } catch (err) { alert('Bloqueado por el dispositivo. Usa Exportar Excel.'); }
+        setTimeout(() => document.body.removeChild(iframe), 2000);
+    }, 800);
+}
+
 // ==== LÓGICA QR Y MATCH ====
 function getMinifiedTradeData() { const minified = { n: state.profile.name, s: {} }; for (const [code, sticker] of Object.entries(state.stickers)) { if (sticker.have && sticker.count > 1) { minified.s[code] = sticker.count; } } return JSON.stringify(minified); }
 
