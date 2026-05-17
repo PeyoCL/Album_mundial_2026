@@ -2,6 +2,10 @@
 
 Todas las actualizaciones y cambios notables de la aplicación "Álbum Mundial 2026" se documentarán en este archivo.
 
+### v38 - Consistencia Visual en Modales de Detalle
+- **Fix de Iconos en Detalle:** Se solucionó un punto ciego en la función `openTeamDetail` de `app.js` que provocaba que los logotipos oficiales de las secciones especiales ("FIFA World Cup" y "Coca-Cola") desaparecieran al abrir el desglose de láminas. El algoritmo ahora discrimina correctamente entre banderas de países (`team.flag`) y logotipos vectoriales de secciones (`team.icon`), garantizando que se renderice el archivo SVG correspondiente.
+- **Formato de Imagen Responsivo:** Se aplicó la propiedad `object-fit: contain` a los logos SVG renderizados dentro de la cabecera modal para evitar que se distorsionen o pierdan su relación de aspecto original al expandirse en pantallas de alta resolución.
+
 ### v37 - Logotipos Oficiales en Secciones Especiales
 - **Branding Premium:** Se reemplazaron los emojis genéricos en las cabeceras de las secciones "FIFA World Cup" (🏆) y "Coca-Cola" (🍼) por sus logotipos oficiales en formato SVG (`logo_fwc.svg` y `logo_coca_cola.svg`).
 - **Renderizado Anti-Deformación:** Se actualizó la lógica de creación de tarjetas en `app.js` para detectar archivos SVG e implementar la propiedad CSS `object-fit: contain`. Esto garantiza que los logotipos mantengan sus proporciones originales sin estirarse ni aplastarse, independientemente de si son verticales u horizontales, ajustándose elegantemente al espacio de la cabecera. Se añadió un ligero efecto de sombra (`drop-shadow`) al logo blanco de la FWC para mejorar su visibilidad.
