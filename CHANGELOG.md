@@ -2,6 +2,10 @@
 
 Todas las actualizaciones y cambios notables de la aplicación "Álbum Mundial 2026" se documentarán en este archivo.
 
+### v34 - Arquitectura "Lazy Load" y Prevención de Bloqueos (Anti-Crash)
+- **Carga Diferida de Librerías (Lazy Loading):** Se eliminaron por completo las llamadas a scripts externos desde la cabecera del `index.html`. Ahora la aplicación carga a la máxima velocidad y es 100% inmune a "pantallas blancas" o cuelgues iniciales. Las herramientas de generación y lectura de códigos QR solo se descargan y ejecutan en el milisegundo en el que el usuario interactúa con los botones correspondientes.
+- **Estabilidad Estructural:** Se optimizó el Service Worker y se consolidó el código fuente en bloques más seguros para evitar errores de sintaxis al actualizar los archivos, garantizando una experiencia de arranque fluida incluso en redes inestables o navegadores con fuertes bloqueadores de anuncios.
+
 ### v33 - Restauración de Escáner por Cámara
 - **Lector Dual:** Se reincorporó la funcionalidad de `html5-qrcode` para permitir abrir la cámara en vivo ("Escanear Cámara"). Ahora la aplicación soporta lectura Dual: la cámara en vivo para códigos QR rápidos/sencillos, y la decodificación por "Subida de Foto" con `jsQR` como respaldo para QRs de alta densidad o capturas de pantalla de WhatsApp.
 
