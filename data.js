@@ -1,4 +1,4 @@
-// data.js v43 - Motor de Lectura Dinámica CSV
+// data.js v44 - Fetch Dinámico de CSV
 if (!window.DATA) window.DATA = {};
 window.DATA.TOTAL_STICKERS = 994;
 
@@ -23,23 +23,24 @@ window.DATA.TEAMS = [];
 
 window.LOAD_DATA = async function() {
     try {
-        const response = await fetch('./album_names_2026_v1.csv?v=43');
-        if (!response.ok) throw new Error('Archivo CSV no encontrado');
+        const response = await fetch('./album_names_2026_v1.csv?v=44');
+        if (!response.ok) throw new Error('Archivo CSV no encontrado en el servidor');
         const text = await response.text();
         const lines = text.split('\n').map(l => l.trim()).filter(l => l);
         
         const teamsDict = {};
         const teamOrder = [];
         
-        // Empezamos en 1 para omitir el encabezado del CSV
-        for (let i = 1; i < lines.length; i++) {
+        // Detecta si la primera línea es el encabezado y la salta
+        let startIndex = lines[0].toLowerCase().includes('codigo') ? 1 : 0;
+
+        for (let i = startIndex; i < lines.length; i++) {
             const row = lines[i];
-            let code = ''; let name = '';
             const commaIdx = row.indexOf(',');
-            if (commaIdx !== -1) {
-                code = row.substring(0, commaIdx).trim();
-                name = row.substring(commaIdx + 1).trim();
-            }
+            if (commaIdx === -1) continue;
+            
+            const code = row.substring(0, commaIdx).trim().replace(/"/g, '');
+            const name = row.substring(commaIdx + 1).trim().replace(/"/g, '');
             if (!code) continue;
             
             let prefix = '00';
@@ -88,12 +89,12 @@ window.LOAD_DATA = async function() {
             
             return {
                 name: tName, code: isSp ? teamId.replace(/\s+/g, '') : t.prefix, group: tGroup, stickers: st, type: isSp ? "special" : "normal",
-                icon: isSp ? (teamId.includes("Coca") ? "logo_coca_cola.svg" : (teamId.includes("FIFA") || teamId.includes("We Are") || teamId.includes("Host") ? "logo_fwc.svg" : "⭐")) : (emojis[t.prefix] || "🏳️")
+                icon: isSp ? (teamId.includes("Coca") ? "logo_coca_cola.svg" : "logo_fwc.svg") : (emojis[t.prefix] || "🏳️")
             };
         });
         
     } catch (err) {
         console.error("Error cargando CSV:", err);
-        alert("Error al cargar la base de datos de láminas. Verifica que 'album_names_2026_v1.csv' esté subido correctamente a tu repositorio.");
+        alert("Error al cargar la base de datos de láminas. Verifica que 'album_names_2026_v1.csv' esté subido a tu repositorio.");
     }
 };
