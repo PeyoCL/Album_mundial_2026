@@ -2,6 +2,10 @@
 
 Todas las actualizaciones y cambios notables de la aplicación "Álbum Mundial 2026" se documentarán en este archivo.
 
+### v37 - Logotipos Oficiales en Secciones Especiales
+- **Branding Premium:** Se reemplazaron los emojis genéricos en las cabeceras de las secciones "FIFA World Cup" (🏆) y "Coca-Cola" (🍼) por sus logotipos oficiales en formato SVG (`logo_fwc.svg` y `logo_coca_cola.svg`).
+- **Renderizado Anti-Deformación:** Se actualizó la lógica de creación de tarjetas en `app.js` para detectar archivos SVG e implementar la propiedad CSS `object-fit: contain`. Esto garantiza que los logotipos mantengan sus proporciones originales sin estirarse ni aplastarse, independientemente de si son verticales u horizontales, ajustándose elegantemente al espacio de la cabecera. Se añadió un ligero efecto de sombra (`drop-shadow`) al logo blanco de la FWC para mejorar su visibilidad.
+
 ### v36 - Cruce de Datos Perfecto (Hex Bitmask)
 - **Corrección Lógica de Intercambios ("Te entrego"):** Se solucionó el falso positivo del algoritmo de Match. En versiones anteriores, al compartir solo las láminas repetidas, la app asumía erróneamente que a la otra persona le faltaban todas las demás láminas del álbum, inflando la lista de "Te puedo dar". 
 - **Compresión de Mapa de Bits (Bitmask):** Para no saturar el Código QR con miles de caracteres indicando las láminas faltantes, se implementó una función matemática que convierte los 994 espacios del álbum en un código binario (1=falta, 0=tiene) y lo comprime en una diminuta cadena Hexadecimal de 249 caracteres (atributo `"m"`). Esto permite reconstruir el álbum completo del amigo con 100% de precisión y calcular las láminas a entregar de forma exacta.
