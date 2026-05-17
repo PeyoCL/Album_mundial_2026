@@ -17,7 +17,7 @@ function formatCode(n) { return n === '00' ? '00' : n.replace(/^([A-Z]+)(\d+)$/,
 
 async function init() {
     try {
-        if (window.LOAD_DATA) await window.LOAD_DATA();
+        if (window.LOAD_DATA) await window.LOAD_DATA(); // ESPERA A QUE SE LEA EL CSV
         
         loadTheme(); loadState(); migrateStickerCodes(); updateProfileName(state.profile?.name);
         const title = document.getElementById('album-title'); if(title) { title.addEventListener('blur', () => updateProfileName(title.innerText)); title.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); title.blur(); } }); }
@@ -30,6 +30,7 @@ async function init() {
         populateTeamFilter(); populateGroupFilter(); bindEvents(); observeHeaderOffset(); renderHome(); updateTradeExportButtons(); checkIOSInstall();
     } catch (error) { alert("Error en init: " + error.message); }
 }
+
 
 function checkIOSInstall() {
     const isIos = () => /iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase()); const isStandalone = () => ('standalone' in window.navigator) && window.navigator.standalone;
