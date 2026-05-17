@@ -2,6 +2,10 @@
 
 Todas las actualizaciones y cambios notables de la aplicación "Álbum Mundial 2026" se documentarán en este archivo.
 
+### v35 - Corrección de Exportaciones (PDF y Google Sheets)
+- **Fix Google Sheets:** Se eliminó el "Byte Order Mark" (BOM) en las descargas CSV. Como la app ya sanitiza dinámicamente las tildes para evitar rupturas de codificación, el BOM era redundante y causaba que Google Sheets mostrara caracteres extraños (`ï»¿`) al inicio del archivo. Ahora los datos son interpretados de manera nativa y limpia.
+- **Fix de Iframe PDF:** Se solucionó un problema de asincronía en el navegador donde la primera exportación a PDF imprimía el Dashboard completo en lugar de la tabla. Se aumentó el `setTimeout` y se gestionó mejor el enfoque (`focus()`) del contexto de ventana para que la orden de impresión siempre apunte al documento invisible.
+
 ### v34 - Arquitectura "Lazy Load" y Prevención de Bloqueos (Anti-Crash)
 - **Carga Diferida de Librerías (Lazy Loading):** Se eliminaron por completo las llamadas a scripts externos desde la cabecera del `index.html`. Ahora la aplicación carga a la máxima velocidad y es 100% inmune a "pantallas blancas" o cuelgues iniciales. Las herramientas de generación y lectura de códigos QR solo se descargan y ejecutan en el milisegundo en el que el usuario interactúa con los botones correspondientes.
 - **Estabilidad Estructural:** Se optimizó el Service Worker y se consolidó el código fuente en bloques más seguros para evitar errores de sintaxis al actualizar los archivos, garantizando una experiencia de arranque fluida incluso en redes inestables o navegadores con fuertes bloqueadores de anuncios.
