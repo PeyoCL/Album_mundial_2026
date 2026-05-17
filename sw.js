@@ -1,12 +1,12 @@
-const CACHE_NAME = 'album-2026-v43'; 
+const CACHE_NAME = 'album-2026-v44'; 
 
 const urlsToCache = [
   './',
   './index.html',
-  './style.css?v=43',
-  './app.js?v=43',
-  './data.js?v=43',
-  './album_names_2026_v1.csv?v=43',
+  './style.css?v=44',
+  './app.js?v=44',
+  './data.js?v=44',
+  './album_names_2026_v1.csv?v=44',
   './manifest.json',
   './icon.svg',
   './logo_fwc.svg',
@@ -32,9 +32,7 @@ self.addEventListener('fetch', event => {
     caches.match(event.request).then(cachedResponse => {
       if (cachedResponse) return cachedResponse;
       return fetch(event.request).then(networkResponse => {
-        if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
-          return networkResponse;
-        }
+        if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') return networkResponse;
         const responseToCache = networkResponse.clone();
         caches.open(CACHE_NAME).then(cache => { cache.put(event.request, responseToCache); });
         return networkResponse;
