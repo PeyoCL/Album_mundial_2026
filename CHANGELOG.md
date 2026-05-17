@@ -2,6 +2,14 @@
 
 Todas las actualizaciones y cambios notables de la aplicación "Álbum Mundial 2026" se documentarán en este archivo.
 
+### v40 - Nombres Reales, Agrupación Oficial y Corrección de UI
+- **Base de Datos Dinámica:** El archivo `data.js` fue reconstruido con la información oficial de las 994 láminas de la "Standard Edition", asignando a cada lámina el nombre real de su jugador o equipo correspondiente (ej: "ARG 16 - Lionel Messi").
+- **Agrupación A-L:** Se aplicó un mapa relacional a las 48 selecciones para agruparlas de forma idéntica a los 12 grupos oficiales del torneo (Grupo A hasta Grupo L).
+- **Banderas Nativas:** Se optimizó el motor de imágenes reemplazando los archivos `.svg` de los países por Emojis Nativos (Unicode), agilizando drásticamente los tiempos de carga y evitando imágenes rotas por falta de archivos locales.
+- **Fix de Decoraciones:** Se programó un validador en `data.js` que detecta dinámicamente las láminas #1 (Escudos), #13 (Equipo) y las secciones 00/FWC/CC para aplicarles automáticamente el estilo CSS dorado (`special`/`shield`/`group`).
+- **Fix "Bug del Confeti":** Se solucionó un error lógico en la función `updateTeamCount` (app.js) que impedía que se registraran permanentemente los hitos (`milestones`) de las selecciones completadas, lo que causaba repeticiones indeseadas del efecto del confeti al abrir y cerrar modales de los equipos.
+- **Micro-Compresión:** Se implementó un algoritmo compresor (basado en delimitadores de arrays y JSON) dentro de `data.js` que redujo el tamaño de la base de datos de los 994 cromos para facilitar su copia en dispositivos móviles, ejecutando la rehidratación estructural al vuelo dentro del navegador de la PWA.
+
 ### v39 - Arquitectura de Nombres de Jugadores y Modos de Vista
 - **Selector de Visualización:** Se añadió un nuevo control en la ventana de "Configuración" que permite al usuario decidir cómo quiere ver las etiquetas de sus láminas en la cuadrícula. Las opciones son: 'Solo Código' (predeterminado), 'Solo Nombre del Jugador' y 'Ambos' (Código + Nombre). El cambio se refleja instantáneamente en la interfaz en tiempo real sin necesidad de recargar la app.
 - **Preparación de Estructura de Datos:** Se actualizó la función `makeStickerCard` en `app.js` para que sea capaz de leer la nueva propiedad opcional `playerName` desde `data.js`. Si una lámina cuenta con este atributo, el modo de vista dual lo inyectará de forma fluida con tipografía comprimida debajo del código. Si el atributo no existe, la app mantendrá automáticamente el formato de solo código, permitiendo una transición progresiva y segura mientras se cargan los nombres oficiales.
