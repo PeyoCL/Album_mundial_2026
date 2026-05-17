@@ -134,12 +134,33 @@ function renderTeamsGrid(teams) {
     toRender.forEach(team => { grid.appendChild(makeTeamCard(team)); });
 }
 
+// === app.js (makeTeamCard ACTUALIZADA V37) ===
 function makeTeamCard(team) {
     const prog = getTeamProgress(team.code); let pct = Math.round((prog.have / prog.total) * 100) || 0; if (pct === 100 && prog.have < prog.total) pct = 99;
+    
     const div = document.createElement('div'); div.className = `team-card ${prog.have === prog.total ? 'completed' : ''}`; div.id = `team-card-${team.code}`; div.onclick = () => openTeamDetail(team);
-    const iconHtml = team.flag ? `<img src="${team.flag}" class="team-icon">` : `<div class="team-icon" style="font-size:24px; display:flex; align-items:center; justify-content:center;">${team.icon}</div>`;
+    
+    // NUEVA LÓGICA DE ÍCONO V37: Evita deformaciones y soporta SVG
+    let iconHtml = '';
+    if (team.flag) {
+        // Es un país (Nación), usamos la bandera
+        iconHtml = `<img src="${team.flag}" class="team-icon" alt="${team.name}" style="object-fit: cover;">`;
+    } else if (team.icon) {
+        // Es una sección especial
+        if (team.icon.endsWith('.svg')) {
+            // Es un logo SVG (NUEVO V37): Usamos 'contain' para no deformar
+            iconHtml = `<img src="${team.icon}" class="team-icon section-logo" alt="${team.name}" style="object-fit: contain; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5)); padding: 2px;">`;
+        } else {
+            // Es un Emoji viejo (Legacy)
+            iconHtml = `<div class="team-icon emoji-icon" style="font-size:24px; display:flex; align-items:center; justify-content:center;">${team.icon}</div>`;
+        }
+    } else {
+        iconHtml = `<div class="team-icon placeholder">?</div>`;
+    }
+    
     div.innerHTML = `<div class="team-card-header">${iconHtml}<div class="team-info"><h3>${team.name}</h3><span>${team.group}</span></div></div><div class="team-stats"><span>Progreso</span><span id="card-count-${team.code}">${prog.have}/${prog.total} (${pct}%)</span></div><div class="linear-progress"><div class="linear-bar" id="card-bar-${team.code}" style="width: ${pct}%;"></div></div>`; return div;
 }
+
 
 function makeStickerCard(sticker) {
     const st = getStickerState(sticker.code); const div = document.createElement('div'); const isSpecial = sticker.type === 'special' || sticker.type === 'shield' || sticker.type === 'group'; div.className = `sticker ${st.have ? 'have animate-pop' : ''} ${isSpecial ? 'special' : ''}`; div.onclick = (e) => toggleSticker(sticker.code, e);
