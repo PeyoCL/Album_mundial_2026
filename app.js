@@ -168,11 +168,36 @@ function makeStickerCard(sticker) {
     div.innerHTML = `<span class="sticker-name" style="${isSpecial ? 'color: var(--gold)' : ''}">${formatCode(sticker.name)}</span>${badge}<button class="btn-minus" onclick="decrementSticker('${sticker.code}', event)">-</button>`; return div;
 }
 
+// === app.js (openTeamDetail ACTUALIZADA V38) ===
 function openTeamDetail(team) {
-    currentOpenTeam = team; document.getElementById('modal-team-name').innerText = team.name; document.getElementById('modal-team-group').innerText = team.group;
-    const iconEl = document.getElementById('modal-team-icon'); if (team.flag) { iconEl.src = team.flag; iconEl.style.display = 'block'; } else { iconEl.style.display = 'none'; }
-    renderStickersGrid(team); showModal('modal-team');
+    currentOpenTeam = team; 
+    document.getElementById('modal-team-name').innerText = team.name; 
+    document.getElementById('modal-team-group').innerText = team.group;
+    
+    const iconEl = document.getElementById('modal-team-icon');
+    
+    // CORRECCIÓN V38: Permitir que los logotipos SVG se muestren en el detalle de la sección
+    if (team.flag) {
+        // Si es una selección nacional, muestra la bandera de forma normal
+        iconEl.src = team.flag;
+        iconEl.style.display = 'block';
+        iconEl.style.objectFit = 'cover';
+        iconEl.style.padding = '0';
+    } else if (team.icon && team.icon.endsWith('.svg')) {
+        // Si es una sección especial con logo SVG (NUEVO V38), inyecta el logo sin deformarlo
+        iconEl.src = team.icon;
+        iconEl.style.display = 'block';
+        iconEl.style.objectFit = 'contain';
+        iconEl.style.padding = '2px'; // Pequeña separación estética
+    } else {
+        // Si no cuenta con ningún elemento visual, se oculta el contenedor de la imagen
+        iconEl.style.display = 'none';
+    }
+    
+    renderStickersGrid(team); 
+    showModal('modal-team');
 }
+
 
 function renderStickersGrid(team) { const grid = document.getElementById('modal-stickers-grid'); grid.innerHTML = ''; team.stickers.forEach(s => { grid.appendChild(makeStickerCard(s)); }); updateTeamCount(team.code); }
 
