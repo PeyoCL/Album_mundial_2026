@@ -2,6 +2,11 @@
 
 Todas las actualizaciones y cambios notables de la aplicación "Álbum Mundial 2026" se documentarán en este archivo.
 
+### v36 - Cruce de Datos Perfecto (Hex Bitmask)
+- **Corrección Lógica de Intercambios ("Te entrego"):** Se solucionó el falso positivo del algoritmo de Match. En versiones anteriores, al compartir solo las láminas repetidas, la app asumía erróneamente que a la otra persona le faltaban todas las demás láminas del álbum, inflando la lista de "Te puedo dar". 
+- **Compresión de Mapa de Bits (Bitmask):** Para no saturar el Código QR con miles de caracteres indicando las láminas faltantes, se implementó una función matemática que convierte los 994 espacios del álbum en un código binario (1=falta, 0=tiene) y lo comprime en una diminuta cadena Hexadecimal de 249 caracteres (atributo `"m"`). Esto permite reconstruir el álbum completo del amigo con 100% de precisión y calcular las láminas a entregar de forma exacta.
+- **Backwards Compatibility:** Se agregó compatibilidad hacia atrás. Si un usuario con la v36 lee un código QR generado por una app vieja (v35 o inferior que no incluye el mapa de bits), la app realizará el cálculo utilizando la lógica antigua y mostrará una advertencia roja en pantalla pidiéndole al amigo que actualice su app para mayor precisión.
+
 ### v35 - Corrección de Exportaciones (PDF y Google Sheets)
 - **Fix Google Sheets:** Se eliminó el "Byte Order Mark" (BOM) en las descargas CSV. Como la app ya sanitiza dinámicamente las tildes para evitar rupturas de codificación, el BOM era redundante y causaba que Google Sheets mostrara caracteres extraños (`ï»¿`) al inicio del archivo. Ahora los datos son interpretados de manera nativa y limpia.
 - **Fix de Iframe PDF:** Se solucionó un problema de asincronía en el navegador donde la primera exportación a PDF imprimía el Dashboard completo en lugar de la tabla. Se aumentó el `setTimeout` y se gestionó mejor el enfoque (`focus()`) del contexto de ventana para que la orden de impresión siempre apunte al documento invisible.
