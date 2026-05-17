@@ -28,13 +28,29 @@ function formatCode(name) { if(name === '00') return '00'; return name.replace(/
 function init() {
     try {
         loadTheme(); loadState(); migrateStickerCodes(); updateProfileName(state.profile?.name);
+        
         const title = document.getElementById('album-title');
         if(title) { title.addEventListener('blur', () => updateProfileName(title.innerText)); title.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); title.blur(); } }); }
+        
         const inputProfile = document.getElementById('input-profile-name');
         if(inputProfile) { inputProfile.addEventListener('input', (e) => updateProfileName(e.target.value, false)); }
+        
+        // V39: Lógica del selector de vista
+        const displaySelect = document.getElementById('setting-display-mode');
+        if (displaySelect) {
+            displaySelect.value = state.displayMode || 'code';
+            displaySelect.addEventListener('change', (e) => {
+                state.displayMode = e.target.value;
+                saveState();
+                applyCollectionSearch(); // Recargar vista principal
+                if(currentOpenTeam) renderStickersGrid(currentOpenTeam); // Recargar modal si está abierto
+            });
+        }
+
         populateTeamFilter(); populateGroupFilter(); bindEvents(); observeHeaderOffset(); renderHome(); updateTradeExportButtons(); checkIOSInstall();
     } catch (error) { console.error("Error en init:", error); bindEvents(); }
 }
+
 
 function checkIOSInstall() {
     const isIos = () => /iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase());
@@ -58,8 +74,18 @@ function updateProfileName(newName, updateInput = true) {
 
 function loadState() {
     const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) { try { const parsed = JSON.parse(saved); state = { ...state, ...parsed }; if (!state.profile) state.profile = { name: 'Mi Álbum' }; if (!state.stickers) state.stickers = {}; } catch(e) {} }
+    if (saved) { 
+        try { 
+            const parsed = JSON.parse(saved); 
+            state = { ...state, ...parsed }; 
+            if (!state.profile) state.profile = { name: 'Mi Álbum' }; 
+            if (!state.stickers) state.stickers = {}; 
+        } catch(e) {} 
+    }
+    // V39: Iniciar estado de visualización si no existe
+    if (!state.displayMode) state.displayMode = 'code'; 
 }
+
 
 function saveState() { state.lastUpdated = Date.now(); localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
 
@@ -163,10 +189,30 @@ function makeTeamCard(team) {
 
 
 function makeStickerCard(sticker) {
-    const st = getStickerState(sticker.code); const div = document.createElement('div'); const isSpecial = sticker.type === 'special' || sticker.type === 'shield' || sticker.type === 'group'; div.className = `sticker ${st.have ? 'have animate-pop' : ''} ${isSpecial ? 'special' : ''}`; div.onclick = (e) => toggleSticker(sticker.code, e);
+    const st = getStickerState(sticker.code); 
+    const div = document.createElement('div'); 
+    const isSpecial = sticker.type === 'special' || sticker.type === 'shield' || sticker.type === 'group'; 
+    div.className = `sticker ${st.have ? 'have animate-pop' : ''} ${isSpecial ? 'special' : ''}`; 
+    div.onclick = (e) => toggleSticker(sticker.code, e);
+    
     let badge = st.count > 1 ? `<span class="sticker-badge">+${st.count - 1}</span>` : '';
-    div.innerHTML = `<span class="sticker-name" style="${isSpecial ? 'color: var(--gold)' : ''}">${formatCode(sticker.name)}</span>${badge}<button class="btn-minus" onclick="decrementSticker('${sticker.code}', event)">-</button>`; return div;
+    
+    // V39: Lógica para mostrar Código, Nombre o Ambos
+    let codeText = formatCode(sticker.name);
+    let playerText = sticker.playerName || ''; // Lee el nombre si existe en data.js
+    let displayText = codeText; // Por defecto
+    
+    if (state.displayMode === 'name' && playerText !== '') {
+        displayText = `<span style="font-size: 0.85em; line-height: 1.1; text-align: center;">${playerText}</span>`;
+    } else if (state.displayMode === 'both' && playerText !== '') {
+        displayText = `<span style="font-size: 0.7em; opacity: 0.8; display: block; margin-bottom: 2px;">${codeText}</span>
+                       <span style="font-size: 0.8em; line-height: 1.1; display: block; text-align: center;">${playerText}</span>`;
+    }
+    
+    div.innerHTML = `<span class="sticker-name" style="${isSpecial ? 'color: var(--gold)' : ''}; display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100%; padding: 0 4px;">${displayText}</span>${badge}<button class="btn-minus" onclick="decrementSticker('${sticker.code}', event)">-</button>`; 
+    return div;
 }
+
 
 // === app.js (openTeamDetail ACTUALIZADA V38) ===
 function openTeamDetail(team) {
