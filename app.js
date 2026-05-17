@@ -4,7 +4,6 @@ let activeSearch = { text: '', team: 'all', group: 'all', sort: 'all' };
 let currentOpenTeam = null;
 let html5QrcodeScanner = null;
 
-// Carga segura y silenciosa de librerías
 function loadQRLibraries(callback) {
     const promises = [];
     const loadScript = (src) => new Promise((resolve, reject) => {
@@ -73,7 +72,6 @@ function migrateStickerCodes() {
     }
     if (migrated) { state.stickers = newStickers; saveState(); }
 }
-
 function getStickerState(code) { return state.stickers[code] || { have: false, count: 0 }; }
 
 function toggleSticker(code, ev) {
@@ -106,6 +104,7 @@ function checkMilestones() {
     if(!state.milestones) state.milestones = {};
     for (let t of targets) { if (p >= t && !state.milestones[`m${t}`]) { state.milestones[`m${t}`] = true; saveState(); shootBigConfetti(); setTimeout(() => alert(`¡Felicidades! Has completado el ${t}% del álbum.`), 500); } }
 }
+
 function getRepeatedList() {
     let repeated = []; if (!window.DATA || !window.DATA.TEAMS) return repeated;
     window.DATA.TEAMS.forEach(team => { let teamReps = []; team.stickers.forEach(s => { let st = getStickerState(s.code); if (st.have && st.count > 1) { teamReps.push({ name: s.name, count: st.count - 1 }); } }); if (teamReps.length > 0) repeated.push({ team: team.name, items: teamReps }); }); return repeated;
@@ -165,7 +164,6 @@ function updateTeamCount(teamCode) {
         if (p.have === p.total && p.total > 0) { card.classList.add('completed'); if(!state.milestones) state.milestones = {}; if(!state.milestones[`team_${teamCode}`]) { state.milestones[`team_${teamCode}`] = true; shootBigConfetti(); } } else { card.classList.remove('completed'); }
     }
 }
-
 function applyCollectionSearch() {
     if (!window.DATA || !window.DATA.TEAMS) return;
     let filtered = window.DATA.TEAMS.filter(t => {
@@ -195,48 +193,46 @@ function updateTradeExportButtons(hasRepeated) { const disabled = !hasRepeated; 
 function getTradeExportRows() { let rows = []; getRepeatedList().forEach(g => { let itemsStr = g.items.map(i => { let num = formatCode(i.name); return i.count > 1 ? `${num}(x${i.count})` : num; }).join(', '); rows.push({ section: g.team, text: itemsStr }); }); return rows; }
 function getMissingExportRows() { let rows = []; let map = {}; getMissingList().forEach(m => { if(!map[m.team]) map[m.team] = []; map[m.team].push(formatCode(m.name)); }); for(let team in map){ rows.push({ section: team, text: map[team].join(', ') }); } return rows; }
 function generateShareText() { const p = getTotalProgress(); let txt = `*${state.profile.name}*\nProgreso: ${p.have}/${p.total} (${p.percentage}%)\nRepetidas: ${getRepeatedTotal()}\n\n`; getTradeExportRows().forEach(r => { txt += `${r.section}: ${r.text}\n`; }); document.getElementById('share-textarea').value = txt; showModal('modal-share'); }
-// CORRECCIÓN V35 PARA EXCEL/GOOGLE SHEETS
 function removeAccents(str) { if (!str) return ''; return str.normalize("NFD").replace(/[\u0300-\u036f]/g, ""); }
 
-function exportTradesExcel() {
-    let csv = 'Seccion,Laminas Repetidas\n';
-    getTradeExportRows().forEach(r => { csv += `"${removeAccents(r.section)}","${r.text}"\n`; });
-    // Al quitar las tildes, eliminamos el BOM para que Google Sheets lo lea perfecto
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
-    downloadBlob(blob, 'cambios_album_mundial_2026.csv');
-}
+function exportTradesExcel() { let csv = 'Seccion,Laminas Repetidas\n'; getTradeExportRows().forEach(r => { csv += `"${removeAccents(r.section)}","${r.text}"\n`; }); downloadBlob(new Blob([csv], { type: 'text/csv;charset=utf-8' }), 'cambios_album_mundial_2026.csv'); }
+function exportMissingExcel() { let csv = 'Seccion,Laminas Faltantes\n'; getMissingExportRows().forEach(r => { csv += `"${removeAccents(r.section)}","${r.text}"\n`; }); downloadBlob(new Blob([csv], { type: 'text/csv;charset=utf-8' }), 'faltantes_album_mundial_2026.csv'); }
 
-function exportMissingExcel() {
-    let csv = 'Seccion,Laminas Faltantes\n';
-    getMissingExportRows().forEach(r => { csv += `"${removeAccents(r.section)}","${r.text}"\n`; });
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
-    downloadBlob(blob, 'faltantes_album_mundial_2026.csv');
-}
-
-// CORRECCIÓN V35 PARA EL PDF
 function exportTradesPdf() {
     const p = getTotalProgress();
     let html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Cambios Álbum 2026</title><style>body{font-family:sans-serif; padding: 20px;} table{width:100%;border-collapse:collapse; margin-top: 20px;} th,td{border:1px solid #ccc;padding:8px;text-align:left;}</style></head><body><h1>Cambios - ${state.profile.name}</h1><p>Progreso: ${p.have}/${p.total} (${p.percentage}%) | Total repetidas: ${getRepeatedTotal()}</p><table><tr><th style="width:150px">Sección</th><th>Láminas Repetidas</th></tr>`;
     getTradeExportRows().forEach(r => { html += `<tr><td>${r.section}</td><td>${r.text}</td></tr>`; });
     html += `</table></body></html>`;
-    
-    const iframe = document.createElement('iframe');
-    iframe.style.position = 'fixed'; iframe.style.right = '0'; iframe.style.bottom = '0'; iframe.style.width = '0'; iframe.style.height = '0'; iframe.style.border = '0';
+    const iframe = document.createElement('iframe'); iframe.style.position = 'fixed'; iframe.style.right = '0'; iframe.style.bottom = '0'; iframe.style.width = '0'; iframe.style.height = '0'; iframe.style.border = '0';
     document.body.appendChild(iframe);
-    
-    const win = iframe.contentWindow;
-    win.document.open(); win.document.write(html); win.document.close();
-    
-    // Le damos al navegador el tiempo exacto para asimilar el iframe antes de imprimir
-    setTimeout(() => {
-        win.focus();
-        try { win.print(); } catch (err) { alert('Bloqueado por el dispositivo. Usa Exportar Excel.'); }
-        setTimeout(() => document.body.removeChild(iframe), 2000);
-    }, 800);
+    const win = iframe.contentWindow; win.document.open(); win.document.write(html); win.document.close();
+    setTimeout(() => { win.focus(); try { win.print(); } catch (err) { alert('Bloqueado por el dispositivo. Usa Exportar Excel.'); } setTimeout(() => document.body.removeChild(iframe), 2000); }, 800);
 }
+// ==== LÓGICA QR Y MATCH V36 (PERFECCIÓN MATEMÁTICA Y BITMASK) ====
 
-// ==== LÓGICA QR Y MATCH ====
-function getMinifiedTradeData() { const minified = { n: state.profile.name, s: {} }; for (const [code, sticker] of Object.entries(state.stickers)) { if (sticker.have && sticker.count > 1) { minified.s[code] = sticker.count; } } return JSON.stringify(minified); }
+function getMinifiedTradeData() {
+    const minified = { n: state.profile.name, s: {} };
+    // 1. Exportar Repetidas
+    for (const [code, sticker] of Object.entries(state.stickers)) {
+        if (sticker.have && sticker.count > 1) { minified.s[code] = sticker.count; }
+    }
+    // 2. Comprimir faltantes en un mapa de bits Hexadecimal ultra-ligero
+    let bitString = "";
+    if (window.DATA && window.DATA.TEAMS) {
+        window.DATA.TEAMS.forEach(team => {
+            team.stickers.forEach(s => {
+                bitString += getStickerState(s.code).have ? "0" : "1";
+            });
+        });
+        while(bitString.length % 4 !== 0) bitString += "0";
+        let hexString = "";
+        for(let i=0; i<bitString.length; i+=4) {
+            hexString += parseInt(bitString.substring(i, i+4), 2).toString(16);
+        }
+        minified.m = hexString;
+    }
+    return JSON.stringify(minified);
+}
 
 function showMyQR() { loadQRLibraries(() => {
     if (state.profile.name === 'Mi Álbum') { const userName = prompt('Antes de generar el QR, ¿Cómo te llamas?'); if (userName) updateProfileName(userName); }
@@ -270,19 +266,55 @@ function uploadQRImage(event) { const file = event.target.files[0]; if (!file) r
 
 let lastMatchResult = null;
 function clearMatchInput() { document.getElementById('match-input').value = ''; document.getElementById('match-results-container').style.display = 'none'; lastMatchResult = null; }
-
 function compareTradesFromText() {
     const input = document.getElementById('match-input').value.trim(); if (!input) return;
     try {
-        const parsed = JSON.parse(input); let friendState = { profile: { name: 'Tu contacto' }, stickers: {} };
-        if (parsed.s) { friendState.profile.name = parsed.n || 'Tu contacto'; for (const [code, count] of Object.entries(parsed.s)) { friendState.stickers[code] = { have: true, count: count }; } } else { throw new Error(); }
+        const parsed = JSON.parse(input);
+        
+        // Reconstrucción del álbum del amigo con precisión absoluta
+        let friendState = { profile: { name: parsed.n || 'Tu contacto' }, stickers: {}, legacy: !parsed.m };
+        let bitString = "";
+        if (parsed.m) {
+            for(let i=0; i<parsed.m.length; i++) {
+                bitString += parseInt(parsed.m[i], 16).toString(2).padStart(4, '0');
+            }
+        }
+        
+        if (!window.DATA || !window.DATA.TEAMS) return;
+        
+        let index = 0;
+        window.DATA.TEAMS.forEach(team => {
+            team.stickers.forEach(s => {
+                const code = s.code;
+                // Si es versión vieja, asume falsamente que le faltan las no repetidas. Si es nueva, decodifica el Bitmask.
+                let isMissing = friendState.legacy ? !(parsed.s && parsed.s[code]) : (bitString[index] === "1");
+                let count = (parsed.s && parsed.s[code]) ? parsed.s[code] : (isMissing ? 0 : 1);
+                friendState.stickers[code] = { have: !isMissing, count: count };
+                index++;
+            });
+        });
+
         let iReceive = {}; let iGive = {};    
-        window.DATA.TEAMS.forEach(team => { team.stickers.forEach(s => {
-                const mySticker = getStickerState(s.code); const friendSticker = friendState.stickers[s.code] || { have: false, count: 0 }; const myName = formatCode(s.name);
-                if (!mySticker.have && friendSticker.have && friendSticker.count > 1) { if(!iReceive[team.name]) iReceive[team.name] = []; iReceive[team.name].push(myName); }
-                if (!friendSticker.have && mySticker.have && mySticker.count > 1) { if(!iGive[team.name]) iGive[team.name] = []; iGive[team.name].push(myName); }
-            }); });
-        lastMatchResult = { iReceive, iGive, friendName: friendState.profile?.name || 'Tu contacto' }; renderMatchResults();
+        window.DATA.TEAMS.forEach(team => {
+            team.stickers.forEach(s => {
+                const code = s.code; 
+                const mySticker = getStickerState(code); 
+                const friendSticker = friendState.stickers[code] || { have: false, count: 0 }; 
+                const myName = formatCode(s.name);
+                
+                // Yo recibo: Él tiene >1 y a mí me falta
+                if (!mySticker.have && friendSticker.have && friendSticker.count > 1) { 
+                    if(!iReceive[team.name]) iReceive[team.name] = []; iReceive[team.name].push(myName); 
+                }
+                // Yo doy: Yo tengo >1 y a él le falta (ahora es 100% real)
+                if (!friendSticker.have && mySticker.have && mySticker.count > 1) { 
+                    if(!iGive[team.name]) iGive[team.name] = []; iGive[team.name].push(myName); 
+                }
+            }); 
+        });
+        
+        lastMatchResult = { iReceive, iGive, friendName: friendState.profile?.name || 'Tu contacto', legacy: friendState.legacy }; 
+        renderMatchResults();
     } catch(e) { alert('Los datos leídos no son válidos.'); }
 }
 
@@ -291,14 +323,22 @@ function renderMatchResults() {
     let totalRec = 0; for(let team in lastMatchResult.iReceive) totalRec += lastMatchResult.iReceive[team].length;
     let totalGive = 0; for(let team in lastMatchResult.iGive) totalGive += lastMatchResult.iGive[team].length;
     let optimal = Math.min(totalRec, totalGive); let bottleneck = totalRec < totalGive ? `(Menos repetidas: ${lastMatchResult.friendName})` : totalGive < totalRec ? `(Menos repetidas: Tú)` : `(Ambos ofrecen igual)`;
-    let html = `<p style="text-align:center; color:var(--text-secondary); margin-bottom:1rem;">Comparación con: <strong style="color:var(--text-primary); font-size:1.1rem;">${lastMatchResult.friendName}</strong></p>
-    <div style="background: rgba(59,130,246,0.1); border: 1px dashed var(--blue-accent); padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; text-align: center;">
+    
+    let html = `<p style="text-align:center; color:var(--text-secondary); margin-bottom:1rem;">Comparación con: <strong style="color:var(--text-primary); font-size:1.1rem;">${lastMatchResult.friendName}</strong></p>`;
+    
+    if (lastMatchResult.legacy) {
+        html += `<div style="background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; padding: 0.8rem; border-radius: 8px; margin-bottom: 1rem; color: #ef4444; font-size: 0.85rem; text-align: center;">⚠️ Tu contacto generó este código con una versión antigua. Las láminas que le puedes entregar no serán exactas. Pídele que actualice su app.</div>`;
+    }
+
+    html += `<div style="background: rgba(59,130,246,0.1); border: 1px dashed var(--blue-accent); padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; text-align: center;">
         <p style="margin-bottom: 0.5rem; color: var(--text-primary);"><strong>📊 Resumen del Match</strong></p><p style="font-size: 0.9rem; margin-bottom: 0.2rem; color: var(--text-secondary);">Recibes: <strong style="color:var(--green-complete)">${totalRec}</strong> láminas</p><p style="font-size: 0.9rem; margin-bottom: 0.8rem; color: var(--text-secondary);">Entregas: <strong style="color:var(--gold)">${totalGive}</strong> láminas</p><div style="background: var(--blue-accent); color: white; padding: 0.4rem 0.8rem; border-radius: 6px; display: inline-block;"><strong>Máx. cambios: ${optimal}</strong> <span style="font-size: 0.8rem; opacity: 0.9;">${bottleneck}</span></div>
     </div><div class="match-columns"><div class="match-col"><h3>⬇️ Me puede dar</h3>`;
+    
     let recCount = 0; for(let team in lastMatchResult.iReceive) { html += `<strong>${team}</strong><span>${lastMatchResult.iReceive[team].join(', ')}</span>`; recCount++; }
     if(recCount === 0) html += '<p class="text-muted">Ninguna :(</p>'; html += '</div><div class="match-col"><h3>⬆️ Le puedo dar</h3>';
     let giveCount = 0; for(let team in lastMatchResult.iGive) { html += `<strong>${team}</strong><span>${lastMatchResult.iGive[team].join(', ')}</span>`; giveCount++; }
     if(giveCount === 0) html += '<p class="text-muted">Ninguna :(</p>'; html += '</div></div>';
+    
     document.getElementById('match-results').innerHTML = html; document.getElementById('match-results-container').style.display = 'block';
 }
 
@@ -313,6 +353,7 @@ function shareMatchWhatsApp() {
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
 }
 
+// UTILIDADES Y EVENTOS
 function downloadBlob(b, f) { const u = URL.createObjectURL(b); const a = document.createElement('a'); a.href = u; a.download = f; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(u); }
 function exportData() { downloadBlob(new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' }), 'album_mundial_2026.json'); }
 function importData(e) { const f = e.target.files[0]; if (!f) return; const r = new FileReader(); r.onload = (ev) => { try { const d = JSON.parse(ev.target.result); if (d.stickers) { state = d; saveState(); init(); closeModal('modal-settings'); alert('Álbum restaurado.'); } } catch (err) { alert('Archivo JSON inválido.'); } }; r.readAsText(f); }
