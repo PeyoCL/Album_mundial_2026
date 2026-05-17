@@ -149,14 +149,38 @@ function openTeamDetail(team) {
 function renderStickersGrid(team) { const grid = document.getElementById('modal-stickers-grid'); grid.innerHTML = ''; team.stickers.forEach(s => { grid.appendChild(makeStickerCard(s)); }); updateTeamCount(team.code); }
 
 function updateTeamCount(teamCode) {
-    const p = getTeamProgress(teamCode); const countEl = document.getElementById('modal-team-count'); if(countEl) countEl.innerText = `${p.have}/${p.total}`;
-    const cardCount = document.getElementById(`card-count-${teamCode}`); const cardBar = document.getElementById(`card-bar-${teamCode}`); const card = document.getElementById(`team-card-${teamCode}`);
+    const p = getTeamProgress(teamCode); 
+    const countEl = document.getElementById('modal-team-count'); 
+    if(countEl) countEl.innerText = `${p.have}/${p.total}`;
+    
+    let pct = Math.round((p.have / p.total) * 100) || 0; 
+    if (pct === 100 && p.have < p.total) pct = 99;
+
+    const cardCount = document.getElementById(`card-count-${teamCode}`); 
+    const cardBar = document.getElementById(`card-bar-${teamCode}`); 
+    const card = document.getElementById(`team-card-${teamCode}`);
+    
     if (cardCount) {
-        let pct = Math.round((p.have / p.total) * 100) || 0; if (pct === 100 && p.have < p.total) pct = 99;
-        cardCount.innerText = `${p.have}/${p.total} (${pct}%)`; cardBar.style.width = `${pct}%`;
-        if (p.have === p.total && p.total > 0) { card.classList.add('completed'); if(!state.milestones) state.milestones = {}; if(!state.milestones[`team_${teamCode}`]) { state.milestones[`team_${teamCode}`] = true; shootBigConfetti(); } } else { card.classList.remove('completed'); }
+        cardCount.innerText = `${p.have}/${p.total} (${pct}%)`; 
+        cardBar.style.width = `${pct}%`;
+        if (p.have === p.total && p.total > 0) { 
+            card.classList.add('completed'); 
+        } else { 
+            card.classList.remove('completed'); 
+        }
+    }
+    
+    // CORRECCIÓN BUG CONFETI: Comprobación sacada fuera del if(cardCount) y añadido el saveState()
+    if (p.have === p.total && p.total > 0) {
+        if(!state.milestones) state.milestones = {}; 
+        if(!state.milestones[`team_${teamCode}`]) { 
+            state.milestones[`team_${teamCode}`] = true; 
+            saveState(); // <-- ESTA ERA LA LÍNEA MÁGICA QUE FALTABA
+            shootBigConfetti(); 
+        }
     }
 }
+
 
 function applyCollectionSearch() {
     if (!window.DATA || !window.DATA.TEAMS) return;
