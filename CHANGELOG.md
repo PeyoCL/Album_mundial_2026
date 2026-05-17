@@ -2,6 +2,10 @@
 
 Todas las actualizaciones y cambios notables de la aplicación "Álbum Mundial 2026" se documentarán en este archivo.
 
+### v45 - Sincronización de Códigos de Láminas Faltantes
+- **Alineación Matricial "EGV / EGY":** Se corrigió un error en el mapeo dinámico de láminas en el cual las tarjetas de Egipto eran procesadas con su código original del CSV (`EGY`), causando un desajuste con la base de datos de los respaldos guardados por los usuarios (`EGV`). El motor ahora reescribe automáticamente los strings de código al vuelo (`stk.c.replace('EGY', 'EGV')`) solucionando el bug de visualización de progreso en la sección.
+- **Redespliegue v45:** Se incrementaron las firmas de caché para limpiar registros asíncronos residuales en navegadores de escritorio y celulares.
+
 ### v44 - Fetch Dinámico de CSV y Sincronización de Matrices
 - **Explicación de Matrices JSON (Hotfix):** El desfase de "láminas erróneas" al importar un código viejo se debía a la discrepancia estructural en el algoritmo del mapa de bits comprimido (`m`). Al ordenar los países por Grupos Oficiales (A-L), el índice matricial cambió. Con esta versión estable, los usuarios solo necesitan generar códigos nuevos para garantizar un intercambio sincronizado.
 - **Motor CSV en `data.js`:** Se integró la función asíncrona `window.LOAD_DATA` que intercepta y lee `album_names_2026_v1.csv` vía Fetch API en tiempo real. Esto elimina los datos en crudo (hardcoded) del archivo `.js` garantizando un 100% de precisión y facilidad de mantenimiento.
