@@ -254,13 +254,13 @@ function exportTradesPdf() {
     }); 
     html += `</tbody></table>`;
 
-    // 1. Crear contenedor exclusivo de impresión en el DOM principal
+    // 1. Inyectar contenedor
     const printContainer = document.createElement('div');
     printContainer.className = 'print-only-section';
     printContainer.innerHTML = html;
     document.body.appendChild(printContainer);
 
-    // 2. Inyectar regla CSS que fulmina la UI completa de la app al imprimir
+    // 2. Inyectar CSS
     const printStyle = document.createElement('style');
     printStyle.id = 'dynamic-print-style';
     printStyle.innerHTML = `
@@ -278,15 +278,24 @@ function exportTradesPdf() {
     `;
     document.head.appendChild(printStyle);
 
-    // 3. Lanzar la impresión nativa directo desde la ventana madre
+    // 3. Crear función de limpieza
+    const cleanup = () => {
+        if (document.body.contains(printContainer)) document.body.removeChild(printContainer);
+        if (document.head.contains(printStyle)) document.head.removeChild(printStyle);
+        window.removeEventListener('afterprint', cleanup);
+    };
+
+    // Escuchar cuando el móvil avisa que ya generó el PDF para recién ahí limpiar la pantalla
+    window.addEventListener('afterprint', cleanup);
+
+    // 4. Retraso estratégico: Darle 300ms al celular para pintar el CSS antes de llamar a imprimir
     setTimeout(() => {
         window.print();
-        // Limpieza inmediata del DOM tras abrir el cuadro de diálogo
-        document.body.removeChild(printContainer);
-        document.head.removeChild(printStyle);
-    }, 50);
+        
+        // Fallback de seguridad: Si es un navegador móvil raro que no avisa cuando termina, limpiamos a los 3 segundos
+        setTimeout(cleanup, 3000);
+    }, 300);
 }
-
 
 function getMinifiedTradeData() {
     const minified = { n: state.profile.name, s: {} };

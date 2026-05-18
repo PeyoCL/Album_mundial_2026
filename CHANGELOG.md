@@ -2,6 +2,11 @@
 
 Todas las actualizaciones y cambios notables de la aplicación "Álbum Mundial 2026" se documentarán en este archivo.
 
+### v48 - Hotfix de Impresión PDF en Entornos Móviles
+- **Resolución Condición de Carrera (Race Condition):** Se abordó un fallo crítico exclusivo de dispositivos móviles (iOS/Android) donde el comando de impresión (`window.print()`) actuaba de forma no bloqueante, lo que provocaba que el script eliminara la plantilla de impresión del DOM *antes* de que el motor de exportación PDF capturara la pantalla.
+- **Soporte de Eventos Nativos:** Se implementó el listener `window.onafterprint` combinado con un *timeout* de retraso (300ms) para garantizar que los navegadores móviles procesen la inyección CSS (`@media print`) completamente antes de invocar la impresora, retrasando la limpieza del DOM hasta que el usuario cierre el cuadro de diálogo del PDF.
+- **Forzado PWA:** Se incrementó la firma del Service Worker a `v48` para superar la caché agresiva de Safari iOS y asegurar el parche en terreno.
+
 ### v47 - Rediseño del Motor de Impresión Aislada
 - **Corrección Definitiva de Exportación PDF:** Se eliminó la arquitectura basada en `iframe` y URLs `Blob` debido a las restricciones de aislamiento de origen (*sandbox restrictions*) impuestas por los navegadores de escritorio (Chrome/Edge/Safari). 
 - **Inyección CSS Dinámica:** Se implementó un sistema de ocultamiento nativo mediante manipulación directa del DOM y reglas `@media print`. Al presionar el botón, la aplicación inyecta temporalmente un contenedor semántico y destruye visualmente el resto de la interfaz (menús, barras de búsqueda, botones) exclusivamente para el controlador de impresión, garantizando un PDF limpio y tabular en el primer intento.
