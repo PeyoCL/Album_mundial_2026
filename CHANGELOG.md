@@ -2,6 +2,11 @@
 
 Todas las actualizaciones y cambios notables de la aplicación "Álbum Mundial 2026" se documentarán en este archivo.
 
+### v47 - Rediseño del Motor de Impresión Aislada
+- **Corrección Definitiva de Exportación PDF:** Se eliminó la arquitectura basada en `iframe` y URLs `Blob` debido a las restricciones de aislamiento de origen (*sandbox restrictions*) impuestas por los navegadores de escritorio (Chrome/Edge/Safari). 
+- **Inyección CSS Dinámica:** Se implementó un sistema de ocultamiento nativo mediante manipulación directa del DOM y reglas `@media print`. Al presionar el botón, la aplicación inyecta temporalmente un contenedor semántico y destruye visualmente el resto de la interfaz (menús, barras de búsqueda, botones) exclusivamente para el controlador de impresión, garantizando un PDF limpio y tabular en el primer intento.
+- **Liberación v47:** Actualización de firmas estáticas para el despliegue automático en servidores de producción.
+
 ### v46 - Parche de Impresión Aislada e Infraestructura Avanzada
 - **Solución Definitiva al Bug de Impresión PDF:** Se corrigió un error asíncrono en la función `exportTradesPdf()` que causaba que la ventana de diálogo imprimiera la interfaz principal del sistema en lugar de la tabla de cambios. Se implementó una arquitectura de renderizado aislado mediante un objeto `Blob` y enlace dinámico binario protegido bajo el disparador controlado `iframe.onload`.
 - **Mejora 1 - Almacenamiento en IndexedDB:** Se desarrolló un sistema de caché estructurado en el navegador para la base de datos de láminas. La aplicación parsea el archivo maestro `.csv` únicamente en el primer inicio o al detectar cambios de versión, reduciendo el tiempo de carga posterior a 0.1 segundos.

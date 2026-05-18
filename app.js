@@ -233,44 +233,58 @@ function removeAccents(str) { if (!str) return ''; return str.normalize("NFD").r
 
 function exportTradesExcel() { let csv = 'Seccion,Laminas Repetidas\n'; getTradeExportRows().forEach(r => { csv += `"${removeAccents(r.section)}","${r.text}"\n`; }); downloadBlob(new Blob([csv], { type: 'text/csv;charset=utf-8' }), 'cambios_album_mundial_2026.csv'); }
 function exportMissingExcel() { let csv = 'Seccion,Laminas Faltantes\n'; getMissingExportRows().forEach(r => { csv += `"${removeAccents(r.section)}","${r.text}"\n`; }); downloadBlob(new Blob([csv], { type: 'text/csv;charset=utf-8' }), 'faltantes_album_mundial_2026.csv'); }
+
 function exportTradesPdf() {
     const p = getTotalProgress(); 
-    let html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Repetidas - ${state.profile.name}</title><style>body{font-family:sans-serif; padding: 20px; color:#111;} table{width:100%; border-collapse:collapse; margin-top: 15px;} th,td{border:1px solid #bbb; padding:10px; text-align:left;} th{background-color:#f5f5f5;} h1{margin-bottom:4px; font-size:22px;} p{margin-top:0; color:#555; font-size:14px;}</style></head><body><h1>Láminas Repetidas - ${state.profile.name}</h1><p>Progreso del Álbum: ${p.have}/${p.total} (${p.percentage}%) | Total de cambios listos: ${getRepeatedTotal()}</p><table><tr><th style="width:180px">Sección / Equipo</th><th>Láminas Disponibles para Cambio</th></tr>`;
+    let html = `
+        <h1>Láminas Repetidas - ${state.profile.name}</h1>
+        <p>Progreso del Álbum: ${p.have}/${p.total} (${p.percentage}%) | Total de cambios listos: ${getRepeatedTotal()}</p>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width:180px; background-color:#f5f5f5;">Sección / Equipo</th>
+                    <th style="background-color:#f5f5f5;">Láminas Disponibles para Cambio</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
     
     getTradeExportRows().forEach(r => { 
         html += `<tr><td><strong>${r.section}</strong></td><td>${r.text}</td></tr>`; 
     }); 
-    html += `</table></body></html>`;
+    html += `</tbody></table>`;
 
-    // Parche Asíncrono: Creación de Iframe oculto con Scope Aislado vía Blob URL
-    const iframe = document.createElement('iframe');
-    iframe.style.position = 'fixed';
-    iframe.style.bottom = '0';
-    iframe.style.right = '0';
-    iframe.style.width = '0';
-    iframe.style.height = '0';
-    iframe.style.border = '0';
-    document.body.appendChild(iframe);
+    // 1. Crear contenedor exclusivo de impresión en el DOM principal
+    const printContainer = document.createElement('div');
+    printContainer.className = 'print-only-section';
+    printContainer.innerHTML = html;
+    document.body.appendChild(printContainer);
 
-    const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
-    iframe.src = URL.createObjectURL(blob);
+    // 2. Inyectar regla CSS que fulmina la UI completa de la app al imprimir
+    const printStyle = document.createElement('style');
+    printStyle.id = 'dynamic-print-style';
+    printStyle.innerHTML = `
+        @media print {
+            body > *:not(.print-only-section) { display: none !important; }
+            .print-only-section { display: block !important; position: absolute; left: 0; top: 0; width: 100%; font-family: sans-serif; color: #000; }
+            table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+            th, td { border: 1px solid #111; padding: 10px; text-align: left; font-size: 14px; }
+            h1 { font-size: 22px; margin-bottom: 4px; font-family: sans-serif; }
+            p { color: #444; font-size: 13px; margin-top: 0; font-family: sans-serif; }
+        }
+        @media screen {
+            .print-only-section { display: none !important; }
+        }
+    `;
+    document.head.appendChild(printStyle);
 
-    // Esperar a que el hilo de renderizado del documento termine al 100%
-    iframe.onload = function() {
-        setTimeout(() => {
-            iframe.contentWindow.focus();
-            try {
-                iframe.contentWindow.print();
-            } catch (err) {
-                alert('La impresión automática fue bloqueada. Por favor, usa Exportar a Excel.');
-            }
-            // Limpieza de memoria e inyección del DOM
-            setTimeout(() => {
-                document.body.removeChild(iframe);
-                URL.revokeObjectURL(iframe.src);
-            }, 2000);
-        }, 250);
-    };
+    // 3. Lanzar la impresión nativa directo desde la ventana madre
+    setTimeout(() => {
+        window.print();
+        // Limpieza inmediata del DOM tras abrir el cuadro de diálogo
+        document.body.removeChild(printContainer);
+        document.head.removeChild(printStyle);
+    }, 50);
 }
 
 
