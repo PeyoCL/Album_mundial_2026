@@ -234,12 +234,45 @@ function removeAccents(str) { if (!str) return ''; return str.normalize("NFD").r
 function exportTradesExcel() { let csv = 'Seccion,Laminas Repetidas\n'; getTradeExportRows().forEach(r => { csv += `"${removeAccents(r.section)}","${r.text}"\n`; }); downloadBlob(new Blob([csv], { type: 'text/csv;charset=utf-8' }), 'cambios_album_mundial_2026.csv'); }
 function exportMissingExcel() { let csv = 'Seccion,Laminas Faltantes\n'; getMissingExportRows().forEach(r => { csv += `"${removeAccents(r.section)}","${r.text}"\n`; }); downloadBlob(new Blob([csv], { type: 'text/csv;charset=utf-8' }), 'faltantes_album_mundial_2026.csv'); }
 function exportTradesPdf() {
-    const p = getTotalProgress(); let html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Cambios Álbum 2026</title><style>body{font-family:sans-serif; padding: 20px;} table{width:100%;border-collapse:collapse; margin-top: 20px;} th,td{border:1px solid #ccc;padding:8px;text-align:left;}</style></head><body><h1>Cambios - ${state.profile.name}</h1><p>Progreso: ${p.have}/${p.total} (${p.percentage}%) | Total repetidas: ${getRepeatedTotal()}</p><table><tr><th style="width:150px">Sección</th><th>Láminas Repetidas</th></tr>`;
-    getTradeExportRows().forEach(r => { html += `<tr><td>${r.section}</td><td>${r.text}</td></tr>`; }); html += `</table></body></html>`;
-    const iframe = document.createElement('iframe'); iframe.style.position = 'fixed'; iframe.style.right = '0'; iframe.style.bottom = '0'; iframe.style.width = '0'; iframe.style.height = '0'; iframe.style.border = '0'; document.body.appendChild(iframe);
-    const win = iframe.contentWindow; win.document.open(); win.document.write(html); win.document.close();
-    setTimeout(() => { win.focus(); try { win.print(); } catch (err) { alert('Bloqueado por el dispositivo. Usa Exportar Excel.'); } setTimeout(() => document.body.removeChild(iframe), 2000); }, 800);
+    const p = getTotalProgress(); 
+    let html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Repetidas - ${state.profile.name}</title><style>body{font-family:sans-serif; padding: 20px; color:#111;} table{width:100%; border-collapse:collapse; margin-top: 15px;} th,td{border:1px solid #bbb; padding:10px; text-align:left;} th{background-color:#f5f5f5;} h1{margin-bottom:4px; font-size:22px;} p{margin-top:0; color:#555; font-size:14px;}</style></head><body><h1>Láminas Repetidas - ${state.profile.name}</h1><p>Progreso del Álbum: ${p.have}/${p.total} (${p.percentage}%) | Total de cambios listos: ${getRepeatedTotal()}</p><table><tr><th style="width:180px">Sección / Equipo</th><th>Láminas Disponibles para Cambio</th></tr>`;
+    
+    getTradeExportRows().forEach(r => { 
+        html += `<tr><td><strong>${r.section}</strong></td><td>${r.text}</td></tr>`; 
+    }); 
+    html += `</table></body></html>`;
+
+    // Parche Asíncrono: Creación de Iframe oculto con Scope Aislado vía Blob URL
+    const iframe = document.createElement('iframe');
+    iframe.style.position = 'fixed';
+    iframe.style.bottom = '0';
+    iframe.style.right = '0';
+    iframe.style.width = '0';
+    iframe.style.height = '0';
+    iframe.style.border = '0';
+    document.body.appendChild(iframe);
+
+    const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+    iframe.src = URL.createObjectURL(blob);
+
+    // Esperar a que el hilo de renderizado del documento termine al 100%
+    iframe.onload = function() {
+        setTimeout(() => {
+            iframe.contentWindow.focus();
+            try {
+                iframe.contentWindow.print();
+            } catch (err) {
+                alert('La impresión automática fue bloqueada. Por favor, usa Exportar a Excel.');
+            }
+            // Limpieza de memoria e inyección del DOM
+            setTimeout(() => {
+                document.body.removeChild(iframe);
+                URL.revokeObjectURL(iframe.src);
+            }, 2000);
+        }, 250);
+    };
 }
+
 
 function getMinifiedTradeData() {
     const minified = { n: state.profile.name, s: {} };
@@ -303,15 +336,20 @@ function renderMatchResults() {
     let totalRec = 0; for(let team in lastMatchResult.iReceive) totalRec += lastMatchResult.iReceive[team].length;
     let totalGive = 0; for(let team in lastMatchResult.iGive) totalGive += lastMatchResult.iGive[team].length;
     let optimal = Math.min(totalRec, totalGive); let bottleneck = totalRec < totalGive ? `(Menos repetidas: ${lastMatchResult.friendName})` : totalGive < totalRec ? `(Menos repetidas: Tú)` : `(Ambos ofrecen igual)`;
+    
     let html = `<p style="text-align:center; color:var(--text-secondary); margin-bottom:1rem;">Comparación con: <strong style="color:var(--text-primary); font-size:1.1rem;">${lastMatchResult.friendName}</strong></p>`;
     if (lastMatchResult.legacy) { html += `<div style="background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; padding: 0.8rem; border-radius: 8px; margin-bottom: 1rem; color: #ef4444; font-size: 0.85rem; text-align: center;">⚠️ Tu contacto generó este código con una versión antigua. Pídele que actualice su app.</div>`; }
-    html += `<div style="background: rgba(59,130,246,0.1); border: 1px dashed var(--blue-accent); padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; text-align: center;"><p style="margin-bottom: 0.5rem; color: var(--text-primary);"><strong>📊 Resumen del Match</strong></p><p style="font-size: 0.9rem; margin-bottom: 0.2rem; color: var(--text-secondary);">Recibes: <strong style="color:var(--green-complete)">${totalRec}</strong> láminas</p><p style="font-size: 0.9rem; margin-bottom: 0.8rem; color: var(--text-secondary);">Entregas: <strong style="color:var(--gold)">${totalGive}</strong> láminas</p><div style="background: var(--blue-accent); color: white; padding: 0.4rem 0.8rem; border-radius: 6px; display: inline-block;"><strong>Máx. cambios: ${optimal}</strong> <span style="font-size: 0.8rem; opacity: 0.9;">${bottleneck}</span></div></div><div class="match-columns"><div class="match-col"><h3>⬇️ Me puede dar</h3>`;
+    
+    // Inyección de la Mejora 3: Botón ejecutor de transacciones
+    html += `<div style="background: rgba(59,130,246,0.1); border: 1px dashed var(--blue-accent); padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; text-align: center;"><p style="margin-bottom: 0.5rem; color: var(--text-primary);"><strong>📊 Resumen del Match</strong></p><p style="font-size: 0.9rem; margin-bottom: 0.2rem; color: var(--text-secondary);">Recibes: <strong style="color:var(--green-complete)">${totalRec}</strong> láminas</p><p style="font-size: 0.9rem; margin-bottom: 0.8rem; color: var(--text-secondary);">Entregas: <strong style="color:var(--gold)">${totalGive}</strong> láminas</p><div style="background: var(--blue-accent); color: white; padding: 0.4rem 0.8rem; border-radius: 6px; display: inline-block; margin-bottom:1rem;"><strong>Máx. cambios: ${optimal}</strong> <span style="font-size: 0.8rem; opacity: 0.9;">${bottleneck}</span></div><button class="btn" style="background:var(--green-complete); width:100%; max-width:280px; margin:5px auto 0; display:block; font-size:0.85rem;" onclick="applyInterchangeAutomatic()">⚡ Aplicar Intercambio en 1-Clic</button></div><div class="match-columns"><div class="match-col"><h3>⬇️ Me puede dar</h3>`;
+    
     let recCount = 0; for(let team in lastMatchResult.iReceive) { html += `<strong>${team}</strong><span>${lastMatchResult.iReceive[team].join(', ')}</span>`; recCount++; }
     if(recCount === 0) html += '<p class="text-muted">Ninguna :(</p>'; html += '</div><div class="match-col"><h3>⬆️ Le puedo dar</h3>';
     let giveCount = 0; for(let team in lastMatchResult.iGive) { html += `<strong>${team}</strong><span>${lastMatchResult.iGive[team].join(', ')}</span>`; giveCount++; }
     if(giveCount === 0) html += '<p class="text-muted">Ninguna :(</p>'; html += '</div></div>';
     document.getElementById('match-results').innerHTML = html; document.getElementById('match-results-container').style.display = 'block';
 }
+
 
 function shareMatchWhatsApp() {
     if(!lastMatchResult) return;
@@ -350,4 +388,40 @@ function triggerConfetti(x, y) {
     function animate() { ctx.clearRect(0,0,canvas.width,canvas.height); let active = false; particles.forEach(p => { p.x += p.dx; p.y += p.dy; p.dy += 0.2; ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fillStyle = p.color; ctx.fill(); if(p.y < canvas.height) active = true; }); if(active) requestAnimationFrame(animate); else ctx.clearRect(0,0,canvas.width,canvas.height); } animate();
 }
 function shootBigConfetti() { triggerConfetti(window.innerWidth/2, window.innerHeight/2); setTimeout(() => triggerConfetti(window.innerWidth/3, window.innerHeight/2), 200); setTimeout(() => triggerConfetti((window.innerWidth/3)*2, window.innerHeight/2), 400); }
+function applyInterchangeAutomatic() {
+    if (!lastMatchResult) return;
+    let tRec = 0; for(let t in lastMatchResult.iReceive) tRec += lastMatchResult.iReceive[t].length;
+    let tGive = 0; for(let t in lastMatchResult.iGive) tGive += lastMatchResult.iGive[t].length;
+    let totalCambios = Math.min(tRec, tGive);
+    
+    if (totalCambios === 0) { alert("No hay láminas en común para realizar una transacción equitativa."); return; }
+    if (!confirm(`¿Deseas ejecutar el intercambio automático de las ${totalCambios} láminas?\n\n- Se sumarán a tu Álbum las que te sirven.\n- Se restarán de tus Repetidas las que entregas.`)) return;
+    
+    let sumadas = 0; let restadas = 0;
+    
+    // Procesar las que RECIBO (sumar al Álbum)
+    for (let team in lastMatchResult.iReceive) {
+        lastMatchResult.iReceive[team].forEach(fName => {
+            let code = fName.replace(/\s+/g, '').toUpperCase();
+            let s = getStickerState(code);
+            if (!s.have) { s.have = true; s.count = 1; } else { s.count++; }
+            state.stickers[code] = s; sumadas++;
+        });
+    }
+    // Procesar las que ENTREGO (restar de mis repetidas)
+    for (let team in lastMatchResult.iGive) {
+        lastMatchResult.iGive[team].forEach(fName => {
+            let code = fName.replace(/\s+/g, '').toUpperCase();
+            let s = getStickerState(code);
+            if (s.have && s.count > 1) { s.count--; restadas++; }
+            state.stickers[code] = s;
+        });
+    }
+    
+    saveState(); checkMilestones(); renderHome();
+    alert(`¡Intercambio procesado con éxito!\n\nSe ingresaron ${sumadas} láminas nuevas y se descontaron ${restadas} repetidas de tu inventario.`);
+    clearMatchInput();
+}
+
+
 document.addEventListener('DOMContentLoaded', init);
