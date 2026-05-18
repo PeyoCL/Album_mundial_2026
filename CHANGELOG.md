@@ -2,6 +2,12 @@
 
 Todas las actualizaciones y cambios notables de la aplicación "Álbum Mundial 2026" se documentarán en este archivo.
 
+### v46 - Parche de Impresión Aislada e Infraestructura Avanzada
+- **Solución Definitiva al Bug de Impresión PDF:** Se corrigió un error asíncrono en la función `exportTradesPdf()` que causaba que la ventana de diálogo imprimiera la interfaz principal del sistema en lugar de la tabla de cambios. Se implementó una arquitectura de renderizado aislado mediante un objeto `Blob` y enlace dinámico binario protegido bajo el disparador controlado `iframe.onload`.
+- **Mejora 1 - Almacenamiento en IndexedDB:** Se desarrolló un sistema de caché estructurado en el navegador para la base de datos de láminas. La aplicación parsea el archivo maestro `.csv` únicamente en el primer inicio o al detectar cambios de versión, reduciendo el tiempo de carga posterior a 0.1 segundos.
+- **Mejora 2 - Middleware Sanitizador del CSV:** El bucle de lectura de `data.js` cuenta ahora con un validador que descarta de manera inteligente filas incompletas, limpia comillas inyectadas por editores como Excel y recorta espacios en blanco residuales para evitar corrupción de índices.
+- **Mejora 3 - Transacciones en 1-Clic (Auto-Match):** Se inyectó el módulo de gestión activa `applyInterchangeAutomatic()`. Al realizar un "Match" QR exitoso con otro coleccionista, el usuario puede presionar un solo botón para añadir las láminas ganadas y descontar las repetidas entregadas de manera automatizada.
+
 ### v45 - Sincronización de Códigos de Láminas Faltantes
 - **Alineación Matricial "EGV / EGY":** Se corrigió un error en el mapeo dinámico de láminas en el cual las tarjetas de Egipto eran procesadas con su código original del CSV (`EGY`), causando un desajuste con la base de datos de los respaldos guardados por los usuarios (`EGV`). El motor ahora reescribe automáticamente los strings de código al vuelo (`stk.c.replace('EGY', 'EGV')`) solucionando el bug de visualización de progreso en la sección.
 - **Redespliegue v45:** Se incrementaron las firmas de caché para limpiar registros asíncronos residuales en navegadores de escritorio y celulares.
