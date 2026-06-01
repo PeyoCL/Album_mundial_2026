@@ -1,4 +1,4 @@
-// app.js v49.2 - UI Controller (Safe Bindings)
+// app.js v50 - UI Controller
 import { globalState, loadStore, saveStore, getActiveAlbum, createNewAlbum, deleteActiveAlbum } from './store.js';
 import { getGlobalMinifiedData, compareGlobalTrades, executeGlobalTrade, lastMatchResult } from './match.js';
 
@@ -41,7 +41,11 @@ async function init() {
         renderAlbumSelector();
         updateUIForActiveAlbum();
         
-        populateTeamFilter(); populateGroupFilter(); bindEvents(); observeHeaderOffset(); checkIOSInstall();
+        populateTeamFilter(); 
+        populateGroupFilter(); 
+        bindEvents(); 
+        observeHeaderOffset(); 
+        checkIOSInstall();
     } catch (error) { alert("Error en init: " + error.message); }
 }
 
@@ -169,7 +173,7 @@ function openTeamDetail(team) {
 
     if (team.icon && team.icon.endsWith('.svg')) { iconEl.src = team.icon; iconEl.style.display = 'block'; iconEl.style.objectFit = 'contain'; iconEl.style.padding = '2px'; emojiEl.style.display = 'none'; } else if (team.icon) { iconEl.style.display = 'none'; emojiEl.innerText = team.icon; emojiEl.style.display = 'flex'; } else { iconEl.style.display = 'none'; emojiEl.style.display = 'none'; }
     
-    renderStickersGrid(team); showModal('modal-team');
+    renderStickersGrid(team); window.showModal('modal-team');
 }
 
 function renderStickersGrid(team) { const grid = document.getElementById('modal-stickers-grid'); grid.innerHTML = ''; team.stickers.forEach(s => { grid.appendChild(makeStickerCard(s)); }); updateTeamCount(team.code); }
@@ -198,7 +202,7 @@ function applyCollectionSearch() {
     filtered.forEach(team => { grid.appendChild(makeTeamCard(team)); });
 }
 
-// --- FILTROS ---
+// --- FILTROS (¡Funciones restauradas!) ---
 function clearFilters() { const searchEl = document.getElementById('search-input'); if(searchEl) searchEl.value = ''; const filterTeam = document.getElementById('filter-team'); if(filterTeam) filterTeam.value = 'all'; const filterGroup = document.getElementById('filter-group'); if(filterGroup) filterGroup.value = 'all'; activeSearch = { ...activeSearch, text: '', team: 'all', group: 'all' }; applyCollectionSearch(); }
 function populateTeamFilter() { const sel = document.getElementById('filter-team'); if(!sel || !window.DATA || !window.DATA.TEAMS) return; sel.innerHTML = '<option value="all">Todos los Equipos</option>'; window.DATA.TEAMS.forEach(t => { const opt = document.createElement('option'); opt.value = t.code; opt.innerText = t.name; sel.appendChild(opt); }); }
 function populateGroupFilter() { const sel = document.getElementById('filter-group'); if(!sel || !window.DATA || !window.DATA.TEAMS) return; sel.innerHTML = '<option value="all">Todos los Grupos</option>'; const groups = new Set(window.DATA.TEAMS.map(t => t.group)); groups.forEach(g => { const opt = document.createElement('option'); opt.value = g; opt.innerText = g; sel.appendChild(opt); }); }
