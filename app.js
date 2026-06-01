@@ -1,4 +1,4 @@
-// app.js v49.1 - Controlador de UI (Completo y Refactorizado)
+// app.js v49.2 - UI Controller (Safe Bindings)
 import { globalState, loadStore, saveStore, getActiveAlbum, createNewAlbum, deleteActiveAlbum } from './store.js';
 import { getGlobalMinifiedData, compareGlobalTrades, executeGlobalTrade, lastMatchResult } from './match.js';
 
@@ -80,7 +80,7 @@ function updateProfileName(newName, updateInput = true) {
 
 function updateUIForActiveAlbum() {
     const album = getActiveAlbum();
-    document.getElementById('album-title').innerText = album.profile.name;
+    const titleEl = document.getElementById('album-title'); if (titleEl) titleEl.innerText = album.profile.name;
     const inputProfile = document.getElementById('input-profile-name'); if(inputProfile) inputProfile.value = album.profile.name;
     
     applyCollectionSearch();
@@ -89,7 +89,7 @@ function updateUIForActiveAlbum() {
     if(currentOpenTeam) openTeamDetail(currentOpenTeam);
 }
 
-// --- LOGICA STICKERS ---
+// --- LÓGICA DE STICKERS ---
 function getStickerState(code) { return getActiveAlbum().stickers[code] || { have: false, count: 0 }; }
 
 window.toggleSticker = function(code, ev) {
@@ -199,7 +199,7 @@ function applyCollectionSearch() {
 }
 
 // --- FILTROS ---
-function clearFilters() { document.getElementById('search-input').value = ''; document.getElementById('filter-team').value = 'all'; document.getElementById('filter-group').value = 'all'; activeSearch = { ...activeSearch, text: '', team: 'all', group: 'all' }; applyCollectionSearch(); }
+function clearFilters() { const searchEl = document.getElementById('search-input'); if(searchEl) searchEl.value = ''; const filterTeam = document.getElementById('filter-team'); if(filterTeam) filterTeam.value = 'all'; const filterGroup = document.getElementById('filter-group'); if(filterGroup) filterGroup.value = 'all'; activeSearch = { ...activeSearch, text: '', team: 'all', group: 'all' }; applyCollectionSearch(); }
 function populateTeamFilter() { const sel = document.getElementById('filter-team'); if(!sel || !window.DATA || !window.DATA.TEAMS) return; sel.innerHTML = '<option value="all">Todos los Equipos</option>'; window.DATA.TEAMS.forEach(t => { const opt = document.createElement('option'); opt.value = t.code; opt.innerText = t.name; sel.appendChild(opt); }); }
 function populateGroupFilter() { const sel = document.getElementById('filter-group'); if(!sel || !window.DATA || !window.DATA.TEAMS) return; sel.innerHTML = '<option value="all">Todos los Grupos</option>'; const groups = new Set(window.DATA.TEAMS.map(t => t.group)); groups.forEach(g => { const opt = document.createElement('option'); opt.value = g; opt.innerText = g; sel.appendChild(opt); }); }
 
@@ -213,7 +213,14 @@ function renderTrades() {
     updateTradeExportButtons(total > 0);
 }
 
-function updateTradeExportButtons(hasRepeated) { const disabled = !hasRepeated; document.getElementById('btn-share-list').disabled = disabled; document.getElementById('btn-export-pdf').disabled = disabled; document.getElementById('btn-export-excel').disabled = disabled; document.getElementById('btn-download-missing').disabled = (getTotalProgress().percentage === 100); }
+function updateTradeExportButtons(hasRepeated) { 
+    const disabled = !hasRepeated; 
+    const btnShare = document.getElementById('btn-share-list'); if(btnShare) btnShare.disabled = disabled; 
+    const btnPdf = document.getElementById('btn-export-pdf'); if(btnPdf) btnPdf.disabled = disabled; 
+    const btnExcel = document.getElementById('btn-export-excel'); if(btnExcel) btnExcel.disabled = disabled; 
+    const btnMissing = document.getElementById('btn-download-missing'); if(btnMissing) btnMissing.disabled = (getTotalProgress().percentage === 100); 
+}
+
 function getTradeExportRows() { let rows = []; getRepeatedList().forEach(g => { let itemsStr = g.items.map(i => { let num = formatCode(i.name); return i.count > 1 ? `${num}(x${i.count})` : num; }).join(', '); rows.push({ section: g.team, text: itemsStr }); }); return rows; }
 function getMissingExportRows() { let rows = []; let map = {}; getMissingList().forEach(m => { if(!map[m.team]) map[m.team] = []; map[m.team].push(formatCode(m.name)); }); for(let team in map){ rows.push({ section: team, text: map[team].join(', ') }); } return rows; }
 function removeAccents(str) { if (!str) return ''; return str.normalize("NFD").replace(/[\u0300-\u036f]/g, ""); }
@@ -234,18 +241,18 @@ window.exportTradesPdf = function() {
     setTimeout(() => { window.print(); setTimeout(cleanup, 3000); }, 300);
 };
 
-window.generateShareText = function() { const p = getTotalProgress(); let txt = `*${getActiveAlbum().profile.name}*\nProgreso: ${p.have}/${p.total} (${p.percentage}%)\nRepetidas: ${getRepeatedTotal()}\n\n`; getTradeExportRows().forEach(r => { txt += `${r.section}: ${r.text}\n`; }); document.getElementById('share-textarea').value = txt; showModal('modal-share'); }
+window.generateShareText = function() { const p = getTotalProgress(); let txt = `*${getActiveAlbum().profile.name}*\nProgreso: ${p.have}/${p.total} (${p.percentage}%)\nRepetidas: ${getRepeatedTotal()}\n\n`; getTradeExportRows().forEach(r => { txt += `${r.section}: ${r.text}\n`; }); const shareEl = document.getElementById('share-textarea'); if(shareEl) shareEl.value = txt; window.showModal('modal-share'); }
 function downloadBlob(b, f) { const u = URL.createObjectURL(b); const a = document.createElement('a'); a.href = u; a.download = f; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(u); }
 
 // --- MATCH GLOBAL Y QR ---
 window.showMyQR = function() { loadQRLibraries(() => {
     const jsonStr = getGlobalMinifiedData(); if (jsonStr.length > 2500) { alert("⚠️ Tienes demasiadas láminas repetidas. Usa el botón 'Copiar Texto'."); return; }
     const imgEl = document.getElementById('qr-image');
-    try { QRCode.toDataURL(jsonStr, { width: 800, margin: 2, errorCorrectionLevel: 'L', color: { dark: '#000', light: '#fff' } }, function (error, url) { if (error) { alert("Error interno."); } else { imgEl.src = url; showModal('modal-my-qr'); } }); } catch (e) { alert("Error al generar QR."); }
+    try { QRCode.toDataURL(jsonStr, { width: 800, margin: 2, errorCorrectionLevel: 'L', color: { dark: '#000', light: '#fff' } }, function (error, url) { if (error) { alert("Error interno."); } else { imgEl.src = url; window.showModal('modal-my-qr'); } }); } catch (e) { alert("Error al generar QR."); }
 }); };
 
-window.openCameraScanner = function() { loadQRLibraries(() => { showModal('modal-scanner'); html5QrcodeScanner = new Html5Qrcode("qr-reader"); html5QrcodeScanner.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 250 } }, (decodedText) => { closeScannerModal(); document.getElementById('match-input').value = decodedText; processQRText(); }, (errorMessage) => {} ).catch(err => { alert("No se pudo iniciar la cámara."); closeScannerModal(); }); }); }
-window.closeScannerModal = function() { if (html5QrcodeScanner) { html5QrcodeScanner.stop().then(() => { html5QrcodeScanner.clear(); closeModal('modal-scanner'); }).catch(e => closeModal('modal-scanner')); } else { closeModal('modal-scanner'); } }
+window.openCameraScanner = function() { loadQRLibraries(() => { window.showModal('modal-scanner'); html5QrcodeScanner = new Html5Qrcode("qr-reader"); html5QrcodeScanner.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 250 } }, (decodedText) => { window.closeScannerModal(); const matchInput = document.getElementById('match-input'); if(matchInput) { matchInput.value = decodedText; processQRText(); } }, (errorMessage) => {} ).catch(err => { alert("No se pudo iniciar la cámara."); window.closeScannerModal(); }); }); }
+window.closeScannerModal = function() { if (html5QrcodeScanner) { html5QrcodeScanner.stop().then(() => { html5QrcodeScanner.clear(); window.closeModal('modal-scanner'); }).catch(e => window.closeModal('modal-scanner')); } else { window.closeModal('modal-scanner'); } }
 
 window.uploadQRImage = function(event) { const file = event.target.files[0]; if (!file) return; loadQRLibraries(() => {
     const reader = new FileReader();
@@ -254,17 +261,19 @@ window.uploadQRImage = function(event) { const file = event.target.files[0]; if 
             if (w > maxSize || h > maxSize) { const r = Math.min(maxSize / w, maxSize / h); w *= r; h *= r; }
             canvas.width = w; canvas.height = h; context.fillStyle = '#FFFFFF'; context.fillRect(0, 0, w, h); context.drawImage(img, 0, 0, w, h);
             const data = context.getImageData(0, 0, w, h); const code = jsQR(data.data, data.width, data.height, { inversionAttempts: "attemptBoth" });
-            if (code) { document.getElementById('match-input').value = code.data; processQRText(); } else { alert('No se pudo leer el código QR.'); }
+            if (code) { const matchInput = document.getElementById('match-input'); if(matchInput) { matchInput.value = code.data; processQRText(); } } else { alert('No se pudo leer el código QR.'); }
         }; img.src = e.target.result; }; reader.readAsDataURL(file); event.target.value = ''; 
 }); };
 
 function processQRText() {
-    const input = document.getElementById('match-input').value.trim();
+    const matchInput = document.getElementById('match-input');
+    if(!matchInput) return;
+    const input = matchInput.value.trim();
     if(!input) { clearMatchInput(); return; }
     if(compareGlobalTrades(input)) renderMatchResultsUI();
 }
 
-function clearMatchInput() { document.getElementById('match-input').value = ''; document.getElementById('match-results-container').style.display = 'none'; }
+function clearMatchInput() { const matchInput = document.getElementById('match-input'); if(matchInput) matchInput.value = ''; const container = document.getElementById('match-results-container'); if(container) container.style.display = 'none'; }
 
 function renderMatchResultsUI() {
     if(!lastMatchResult) return;
@@ -279,7 +288,9 @@ function renderMatchResultsUI() {
     if(recCount === 0) html += '<p class="text-muted">Ninguna :(</p>'; html += '</div><div class="match-col"><h3>⬆️ Familia Entrega</h3>';
     let giveCount = 0; for(let team in lastMatchResult.iGive) { html += `<strong>${team}</strong><span>${lastMatchResult.iGive[team].join(', ')}</span>`; giveCount++; }
     if(giveCount === 0) html += '<p class="text-muted">Ninguna :(</p>'; html += '</div></div>';
-    document.getElementById('match-results').innerHTML = html; document.getElementById('match-results-container').style.display = 'block';
+    
+    const resultsDiv = document.getElementById('match-results'); if(resultsDiv) resultsDiv.innerHTML = html; 
+    const container = document.getElementById('match-results-container'); if(container) container.style.display = 'block';
 }
 
 window.applyInterchangeAutomatic = function() {
@@ -310,12 +321,12 @@ function checkIOSInstall() {
 
 window.exportData = function() { downloadBlob(new Blob([JSON.stringify(globalState, null, 2)], { type: 'application/json' }), 'album_mundial_2026_backup.json'); }
 window.importData = function(e) { const f = e.target.files[0]; if (!f) return; const r = new FileReader(); r.onload = (ev) => { try { const d = JSON.parse(ev.target.result); if (d.albums || d.stickers) { localStorage.setItem('album_mundial_2026_data', ev.target.result); alert('Álbum restaurado.'); window.location.reload(); } } catch (err) { alert('Archivo JSON inválido.'); } }; r.readAsText(f); }
-window.confirmReset = function() { if (confirm('¿Seguro que deseas borrar el progreso del álbum actual?')) { getActiveAlbum().stickers = {}; getActiveAlbum().milestones = {}; saveStore(); closeModal('modal-settings'); updateUIForActiveAlbum(); } }
+window.confirmReset = function() { if (confirm('¿Seguro que deseas borrar el progreso del álbum actual?')) { getActiveAlbum().stickers = {}; getActiveAlbum().milestones = {}; saveStore(); window.closeModal('modal-settings'); updateUIForActiveAlbum(); } }
 window.forceUpdateCache = function() { if ('caches' in window) { caches.keys().then(names => { for (let n of names) caches.delete(n); }).then(() => { alert("Caché borrada."); window.location.href = window.location.pathname + '?v=' + new Date().getTime(); }); } else { window.location.reload(true); } }
 window.toggleTheme = function() { const root = document.documentElement; if (root.getAttribute('data-theme') === 'light') { root.removeAttribute('data-theme'); localStorage.setItem('album_theme_2026', 'dark'); } else { root.setAttribute('data-theme', 'light'); localStorage.setItem('album_theme_2026', 'light'); } }
 function loadTheme() { if (localStorage.getItem('album_theme_2026') === 'light') document.documentElement.setAttribute('data-theme', 'light'); }
 window.showModal = function(id) { const m = document.getElementById(id); if(m) m.style.display = 'flex'; }
-window.closeModal = function(id) { const m = document.getElementById(id); if(m) m.style.display = 'none'; currentOpenTeam = null; }
+window.closeModal = function(id) { const m = document.getElementById(id); if(m) { m.style.display = 'none'; } currentOpenTeam = null; }
 function updateHeaderOffset() { const h = document.querySelector('.app-header'); if(h) document.documentElement.style.setProperty('--header-offset', `${h.offsetHeight + 18}px`); }
 function observeHeaderOffset() { updateHeaderOffset(); window.addEventListener('resize', updateHeaderOffset); window.addEventListener('orientationchange', () => setTimeout(updateHeaderOffset, 150)); if(document.fonts) document.fonts.ready.then(updateHeaderOffset); }
 
@@ -326,32 +337,47 @@ function triggerConfetti(x, y) {
 }
 function shootBigConfetti() { triggerConfetti(window.innerWidth/2, window.innerHeight/2); setTimeout(() => triggerConfetti(window.innerWidth/3, window.innerHeight/2), 200); setTimeout(() => triggerConfetti((window.innerWidth/3)*2, window.innerHeight/2), 400); }
 
+// --- VINCULACIÓN SEGURA DE EVENTOS ---
 function bindEvents() {
-    document.getElementById('btn-theme').onclick = window.toggleTheme;
-    document.getElementById('btn-settings').onclick = () => window.showModal('modal-settings');
-    document.getElementById('btn-clear-filters').onclick = clearFilters;
-    document.getElementById('btn-share-list').onclick = window.generateShareText;
-    document.getElementById('btn-export-excel').onclick = window.exportTradesExcel;
-    document.getElementById('btn-export-pdf').onclick = window.exportTradesPdf;
-    document.getElementById('btn-download-missing').onclick = window.exportMissingExcel;
+    const click = (id, fn) => { const el = document.getElementById(id); if(el) el.onclick = fn; };
+    const input = (id, fn) => { const el = document.getElementById(id); if(el) el.oninput = fn; };
+    const change = (id, fn) => { const el = document.getElementById(id); if(el) el.onchange = fn; };
+
+    click('btn-theme', window.toggleTheme);
+    click('btn-settings', () => window.showModal('modal-settings'));
+    click('btn-clear-filters', clearFilters);
+    click('btn-share-list', window.generateShareText);
+    click('btn-export-excel', window.exportTradesExcel);
+    click('btn-export-pdf', window.exportTradesPdf);
+    click('btn-download-missing', window.exportMissingExcel);
     
-    document.getElementById('search-input').oninput = (e) => { activeSearch.text = e.target.value; applyCollectionSearch(); }; 
-    document.getElementById('filter-team').onchange = (e) => { activeSearch.team = e.target.value; applyCollectionSearch(); }; 
-    document.getElementById('filter-group').onchange = (e) => { activeSearch.group = e.target.value; applyCollectionSearch(); }; 
-    document.getElementById('sort-select').onchange = (e) => { activeSearch.sort = e.target.value; applyCollectionSearch(); };
+    input('search-input', (e) => { activeSearch.text = e.target.value; applyCollectionSearch(); }); 
+    change('filter-team', (e) => { activeSearch.team = e.target.value; applyCollectionSearch(); }); 
+    change('filter-group', (e) => { activeSearch.group = e.target.value; applyCollectionSearch(); }); 
+    change('sort-select', (e) => { activeSearch.sort = e.target.value; applyCollectionSearch(); });
     
+    input('match-input', processQRText);
+    
+    document.querySelectorAll('.close-modal').forEach(btn => { 
+        btn.onclick = () => { 
+            const modal = btn.closest('.modal');
+            if(modal) modal.style.display = 'none'; 
+            currentOpenTeam = null; 
+        }; 
+    });
+
     document.querySelectorAll('.nav-btn').forEach(btn => { 
         btn.onclick = () => { 
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active')); 
             document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active')); 
             btn.classList.add('active'); 
-            const t = btn.getAttribute('data-target'); document.getElementById(t).classList.add('active'); 
+            const t = btn.getAttribute('data-target'); 
+            const targetPane = document.getElementById(t);
+            if(targetPane) targetPane.classList.add('active'); 
             if (t === 'tab-trades') renderTrades(); 
             window.scrollTo(0, 0); 
         }; 
     });
-    document.getElementById('match-input').oninput = processQRText;
-    document.querySelector('.close-modal').onclick = () => { document.getElementById('modal-team').style.display = 'none'; currentOpenTeam = null; };
 }
 
 document.addEventListener('DOMContentLoaded', init);
