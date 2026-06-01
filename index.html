@@ -19,19 +19,17 @@
         <canvas id="confetti-canvas"></canvas>
 
         <header class="app-header">
-            <div class="header-top">
-                <div style="display: flex; align-items: center; gap: 12px;">
-                    <img src="icon.svg" alt="Logo Mundial 2026" style="height: 42px; width: auto; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));">
-                    <div class="header-titles">
-                        <h1 id="album-title" contenteditable="true" spellcheck="false" title="Toca para editar tu nombre">Mi Álbum</h1>
-                        <span class="subtitle">Mundial 2026 · 48 selecciones · 994 láminas <span class="app-version">v48</span></span>
-                    </div>
-                </div>
-                <div class="header-actions">
-                    <button id="btn-theme" title="Cambiar Tema">🌙</button>
-                    <button id="btn-settings" title="Configuración">⚙️</button>
-                </div>
-            </div>
+    <div class="header-top">
+        <div class="header-left">
+            <h1 id="album-title" contenteditable="true" spellcheck="false">Mi Álbum</h1>
+            <span class="subtitle">Mundial 2026 · 48 selecciones · 994 láminas <span class="app-version">v49</span></span>
+        </div>
+        <!-- NUEVO SELECTOR MULTI-ÁLBUM -->
+        <div class="album-switcher">
+            <select id="select-album-global" style="background: rgba(255,255,255,0.2); color: white; border: none; padding: 4px; border-radius: 4px; font-size: 0.8rem;"></select>
+            <button id="btn-manage-albums" style="background: none; border: none; color: white; font-size: 1.2rem; cursor: pointer;">⚙️</button>
+        </div>
+    </div>
             
             <div class="header-controls">
                 <div class="search-bar">
@@ -241,8 +239,9 @@
         </div>
     </div>
 
-    <script src="data.js?v=48"></script>
-    <script src="app.js?v=48"></script>
+<link rel="stylesheet" href="style.css?v=49">
+<script src="data.js?v=49"></script>
+<script type="module" src="app.js?v=49"></script>
     
     <script>
       if ('serviceWorker' in navigator) {

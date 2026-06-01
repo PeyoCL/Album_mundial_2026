@@ -1,16 +1,9 @@
-const CACHE_NAME = 'album-2026-v48'; 
+const CACHE_NAME = 'album-2026-v49'; 
 
 const urlsToCache = [
-  './',
-  './index.html',
-  './style.css?v=48',
-  './app.js?v=48',
-  './data.js?v=48',
-  './album_names_2026_v1.csv?v=48',
-  './manifest.json',
-  './icon.svg',
-  './logo_fwc.svg',
-  './logo_coca_cola.svg'
+  './', './index.html', './style.css?v=49', './data.js?v=49', './album_names_2026_v1.csv?v=49',
+  './store.js?v=49', './match.js?v=49', './app.js?v=49',
+  './manifest.json', './icon.svg', './logo_fwc.svg', './logo_coca_cola.svg'
 ];
 
 self.addEventListener('install', event => {

@@ -13,6 +13,7 @@ Los datos se guardan de forma local en tu dispositivo, y la aplicación puede se
 - **Exportaciones Robustas:** Descarga tus listas de faltantes y repetidas en formato CSV (Excel) o PDF, o compártelas directamente por WhatsApp.
 - **PWA (Offline-First):** Instalable en Android, iOS y Desktop. Funciona sin conexión a internet gracias a su Service Worker.
 - **Privacidad Total:** Todo el progreso vive en el `localStorage` de tu navegador. Incluye opciones para exportar (backup) e importar tus datos manualmente.
+- **Gestión Familiar Multi-Cuenta:** Lleva tu álbum y el de tus hijos en el mismo dispositivo. Usa la función Súper Match Global para cruzar los datos de toda la familia con un solo código QR y maximizar los intercambios. La app asignará automáticamente las láminas a quien más las necesite.
 
 ## 🚀 Uso e Instalación
 
@@ -20,16 +21,25 @@ Los datos se guardan de forma local en tu dispositivo, y la aplicación puede se
 2. **Instalación:** Abre la URL generada en el navegador de tu celular (Chrome o Safari). El navegador te mostrará un aviso de **"Instalar aplicación"** o **"Añadir a la pantalla de inicio"**.
 3. **Uso:** Ábrela desde tu menú de aplicaciones, entra a la Configuración (⚙️) para poner tu nombre o alias, ¡y comienza a registrar tus láminas!
 
-## 📂 Archivos del Proyecto
+## 📂 Estructura del Proyecto (Módulos ES6)
 
-- `index.html`: Estructura principal y plantillas de la interfaz.
-- `style.css`: Sistema de diseño, variables CSS y diseño responsivo.
-- `app.js`: Lógica de negocio, manejo del DOM, cálculo de Match y exportaciones.
-- `data.js`: Base de datos estática con los grupos, selecciones y las 994 láminas.
-- `sw.js`: Service worker que gestiona la caché y permite el funcionamiento offline.
-- `manifest.json`: Archivo de configuración PWA (nombre, colores, comportamiento).
-- `icon.svg`: Ícono vectorial adaptable para la aplicación instalada.
-- `CHANGELOG.md`: Historial de versiones y registro detallado de cambios.
+El código fuente (a partir de la v49) fue refactorizado y dividido en módulos independientes para garantizar su escalabilidad y fácil mantenimiento:
+
+```text
+/
+├── index.html                   # Interfaz principal (UI)
+├── style.css                    # Estilos, variables CSS y animaciones
+├── manifest.json                # Metadatos para instalación PWA
+├── sw.js                        # Service Worker (Caché offline)
+├── album_names_2026_v1.csv      # 🗄️ Base de datos maestra (¡Actualiza este archivo para cambiar nombres!)
+├── data.js                      # Motor de Fetch, parseo de CSV y saneamiento de datos
+├── store.js                     # Gestor de Estado (Local Storage, Multi-Álbum y Migraciones)
+├── match.js                     # Algoritmo matemático del Match Global Colaborativo
+├── app.js                       # Controlador principal (Manejo del DOM, QR y Exportación)
+└── assets/                      # (Opcional)
+    ├── icon.svg                 # Ícono de la aplicación
+    ├── logo_fwc.svg             # Logo oficial FIFA
+    └── logo_coca_cola.svg       # Logo Coca-Cola
 
 ---
 

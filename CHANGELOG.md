@@ -2,6 +2,12 @@
 
 Todas las actualizaciones y cambios notables de la aplicación "Álbum Mundial 2026" se documentarán en este archivo.
 
+### v49 - Arquitectura Modular y "Global Family Match"
+- **Gestión Multi-Álbum:** Se rediseñó el núcleo de estado (ahora `store.js`) permitiendo crear y gestionar múltiples álbumes desde un mismo dispositivo. Incluye un migrador silencioso que encapsula el progreso antiguo en la nueva estructura `albums['default']` sin pérdida de datos.
+- **Match Global Colaborativo:** Nuevo algoritmo matemático en `match.js`. Al escanear el QR de un amigo, la app une las fuerzas de todos tus álbumes: calcula la suma de láminas faltantes de la familia vs. la suma de repetidas disponibles. El botón "Aplicar en 1-clic" enruta inteligentemente las láminas obtenidas al álbum específico que la necesite.
+- **Refactoring ES6 Modules:** Se destruyó el "God Object" (`app.js`). El proyecto ahora se divide en módulos lógicos independientes (`store.js`, `match.js`, `app.js`), aumentando la mantenibilidad y estabilidad a largo plazo.
+- **Parche PDF Móvil:** Ajuste definitivo a la exportación nativa `@media print` utilizando el evento asíncrono `window.onafterprint` para evitar la colisión de renderizado en iOS/Android.
+
 ### v48 - Hotfix de Impresión PDF en Entornos Móviles
 - **Resolución Condición de Carrera (Race Condition):** Se abordó un fallo crítico exclusivo de dispositivos móviles (iOS/Android) donde el comando de impresión (`window.print()`) actuaba de forma no bloqueante, lo que provocaba que el script eliminara la plantilla de impresión del DOM *antes* de que el motor de exportación PDF capturara la pantalla.
 - **Soporte de Eventos Nativos:** Se implementó el listener `window.onafterprint` combinado con un *timeout* de retraso (300ms) para garantizar que los navegadores móviles procesen la inyección CSS (`@media print`) completamente antes de invocar la impresora, retrasando la limpieza del DOM hasta que el usuario cierre el cuadro de diálogo del PDF.
