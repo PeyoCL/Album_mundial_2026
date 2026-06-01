@@ -339,15 +339,44 @@ window.importData = function(e) {
     r.onload = (ev) => { 
         try { 
             const d = JSON.parse(ev.target.result); 
+            
+            // CASO 1: Es un respaldo moderno Multi-Álbum (v49/v50)
             if (d.albums) { 
-                if(confirm("Este archivo contiene múltiples álbumes.\n¿Deseas REEMPLAZAR toda tu base de datos actual con este archivo?")) {
+                let action = prompt("Este archivo contiene un gestor Multi-Álbum.\n\nEscribe 'REEMPLAZAR' para borrar tu app y restaurar esta copia exacta, o 'FUSIONAR' para añadir los álbumes de este archivo a los que ya tienes.");
+                
+                if (action && action.toUpperCase() === 'REEMPLAZAR') {
                     localStorage.setItem('album_mundial_2026_data', ev.target.result); 
-                    alert('Base de datos restaurada.'); 
+                    alert('Base de datos reemplazada al 100%.'); 
                     window.location.reload(); 
+                } else if (action && action.toUpperCase() === 'FUSIONAR') {
+                    let added = 0;
+                    for (let id in d.albums) {
+                        let newId = 'album_imported_' + Date.now() + Math.floor(Math.random() * 1000);
+                        globalState.albums[newId] = d.albums[id];
+                        added++;
+                    }
+                    saveStore();
+                    alert(`Se han fusionado ${added} álbumes nuevos a tu cuenta.`);
+                    window.location.reload();
                 }
-            } else if (d.stickers) { 
+            } 
+            // CASO 2: Es un respaldo antiguo o de un solo álbum (v48 o inferior)
+            else if (d.stickers) { 
                 let importedName = d.profile?.name || 'Álbum Importado';
-                if(confirm(`Se detectó un álbum antiguo a nombre de "${importedName}".\n\n¿Deseas AGREGARLO como una cuenta nueva sin borrar tus álbumes actuales?`)) {
+                let currentName = getActiveAlbum().profile.name;
+                
+                let action = prompt(`Se detectó el álbum: "${importedName}".\n\nEscribe 'REEMPLAZAR' para sobrescribir tu álbum actual ("${currentName}"), o 'AGREGAR' para sumarlo como una cuenta extra.`);
+                
+                if (action && action.toUpperCase() === 'REEMPLAZAR') {
+                    globalState.albums[globalState.activeAlbumId] = {
+                        profile: d.profile || { name: importedName },
+                        stickers: d.stickers || {},
+                        milestones: d.milestones || {}
+                    };
+                    saveStore();
+                    alert(`Álbum "${currentName}" reemplazado con éxito por "${importedName}".`);
+                    window.location.reload();
+                } else if (action && action.toUpperCase() === 'AGREGAR') {
                     const newId = 'album_' + Date.now();
                     globalState.albums[newId] = {
                         profile: d.profile || { name: importedName },
@@ -356,13 +385,18 @@ window.importData = function(e) {
                     };
                     globalState.activeAlbumId = newId;
                     saveStore();
-                    alert(`¡Álbum de ${importedName} importado exitosamente a tu gestor!`);
+                    alert(`¡Álbum de ${importedName} importado exitosamente como cuenta nueva!`);
                     window.location.reload();
                 }
-            } else { alert('Archivo JSON no reconocido.'); }
-        } catch (err) { alert('Archivo JSON inválido.'); } 
+            } else { 
+                alert('Archivo JSON no reconocido.'); 
+            }
+        } catch (err) { 
+            alert('Archivo JSON inválido.'); 
+        } 
     }; 
     r.readAsText(f); 
+    e.target.value = ''; // Limpia el input para permitir subir el mismo archivo dos veces seguidas si se equivoca
 }
 
 window.confirmReset = function() { if (confirm('¿Seguro que deseas borrar el progreso del álbum actual?')) { getActiveAlbum().stickers = {}; getActiveAlbum().milestones = {}; saveStore(); window.closeModal('modal-settings'); updateUIForActiveAlbum(); } }
