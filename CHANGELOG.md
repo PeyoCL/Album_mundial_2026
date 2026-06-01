@@ -2,6 +2,12 @@
 
 Todas las actualizaciones y cambios notables de la aplicación "Álbum Mundial 2026" se documentarán en este archivo.
 
+### v50 - Estabilización Modular, Safe Bindings y UI Multi-Cuenta
+- **Refactorización Definitiva (ES6):** Finalización de la transición arquitectónica. La lógica de la aplicación opera 100% sobre módulos independientes (`store.js`, `match.js`, `app.js`), garantizando un entorno escalable, lectura dinámica de `album_names_2026_v1.csv` e inyección segura al DOM.
+- **Safe Bindings (Prevención de Colapsos):** Implementación de escudos de verificación en la inyección de eventos (`click`, `change`, `input`) dentro de `app.js`. La aplicación ya no colapsa en la inicialización si la interfaz (HTML) carece de un botón específico, permitiendo un renderizado asíncrono infalible en navegadores móviles, escritorio y modo incógnito.
+- **Restauración de Interfaz de Usuario:** Reintegración y separación semántica en el `header`. El Gestor Multi-Álbum (📂) y los Ajustes Globales de la App (⚙️) ahora conviven en un contenedor `flex` dedicado, evitando colisiones de eventos y mejorando la experiencia de usuario.
+- **Forzado de Invalidación (Cache Buster):** Salto mayor de versión y re-registro forzoso del Service Worker para limpiar registros corruptos de memoria interna (*Deadlocks* de caché) generados en iteraciones previas de desarrollo.
+
 ### v49 - Arquitectura Modular y "Global Family Match"
 - **Gestión Multi-Álbum:** Se rediseñó el núcleo de estado (ahora `store.js`) permitiendo crear y gestionar múltiples álbumes desde un mismo dispositivo. Incluye un migrador silencioso que encapsula el progreso antiguo en la nueva estructura `albums['default']` sin pérdida de datos.
 - **Match Global Colaborativo:** Nuevo algoritmo matemático en `match.js`. Al escanear el QR de un amigo, la app une las fuerzas de todos tus álbumes: calcula la suma de láminas faltantes de la familia vs. la suma de repetidas disponibles. El botón "Aplicar en 1-clic" enruta inteligentemente las láminas obtenidas al álbum específico que la necesite.
