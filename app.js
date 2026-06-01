@@ -277,11 +277,16 @@ window.uploadQRImage = function (event) {
 
 function processQRText() {
     const matchInput = document.getElementById('match-input');
-    if (!matchInput) return;
+    if(!matchInput) return;
     const input = matchInput.value.trim();
-    if (!input) { clearMatchInput(); return; }
-    if (compareGlobalTrades(input)) renderMatchResultsUI();
+    if(!input) { clearMatchInput(); return; }
+    if(compareGlobalTrades(input)) renderMatchResultsUI();
 }
+
+// PUENTES DE RETROCOMPATIBILIDAD CON EL HTML ANTIGUO:
+window.processQRText = processQRText;
+window.compareTradesFromText = processQRText;
+window.clearMatchInput = clearMatchInput;
 
 function clearMatchInput() { const matchInput = document.getElementById('match-input'); if (matchInput) matchInput.value = ''; const container = document.getElementById('match-results-container'); if (container) container.style.display = 'none'; }
 
