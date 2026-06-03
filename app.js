@@ -517,28 +517,26 @@ function triggerConfetti(x, y) {
 }
 function shootBigConfetti() { triggerConfetti(window.innerWidth/2, window.innerHeight/2); setTimeout(() => triggerConfetti(window.innerWidth/3, window.innerHeight/2), 200); setTimeout(() => triggerConfetti((window.innerWidth/3)*2, window.innerHeight/2), 400); }
 
+// --- COPIAR JSON AL PORTAPAPELES (Sin compresión) ---
 window.copyMyJsonForTrade = function() {
-    loadQRLibraries(() => {
-        const jsonStr = getGlobalMinifiedData(); 
-        if (!jsonStr) { alert("No hay datos para copiar."); return; }
+    // Obtenemos los datos minificados del Match Global en texto plano
+    const jsonStr = getGlobalMinifiedData(); 
+    if (!jsonStr) { alert("No hay datos para copiar."); return; }
 
-        // Comprimimos antes de llevarlo al portapapeles
-        const finalData = LZString.compressToEncodedURIComponent(jsonStr);
-
-        if (navigator.clipboard && window.isSecureContext) {
-            navigator.clipboard.writeText(finalData).then(() => {
-                alert("¡Código comprimido copiado al portapapeles con éxito! Envíalo por WhatsApp o correo.");
-            }).catch(err => { alert("Error al copiar al portapapeles: " + err); });
-        } else {
-            let textArea = document.createElement("textarea");
-            textArea.value = finalData;
-            textArea.style.position = "fixed"; textArea.style.left = "-999999px"; textArea.style.top = "-999999px";
-            document.body.appendChild(textArea); textArea.focus(); textArea.select();
-            try { document.execCommand('copy'); alert("¡Código comprimido copiado al portapapeles con éxito!"); } 
-            catch (err) { alert("Hubo un problema copiando el código."); }
-            textArea.remove();
-        }
-    });
+    // Usamos el JSON crudo directamente, sin LZString
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(jsonStr).then(() => {
+            alert("¡Texto JSON copiado al portapapeles con éxito! Envíalo por WhatsApp o correo.");
+        }).catch(err => { alert("Error al copiar al portapapeles: " + err); });
+    } else {
+        let textArea = document.createElement("textarea");
+        textArea.value = jsonStr;
+        textArea.style.position = "fixed"; textArea.style.left = "-999999px"; textArea.style.top = "-999999px";
+        document.body.appendChild(textArea); textArea.focus(); textArea.select();
+        try { document.execCommand('copy'); alert("¡Texto JSON copiado al portapapeles con éxito!"); } 
+        catch (err) { alert("Hubo un problema copiando el código."); }
+        textArea.remove();
+    }
 };
 
 // --- VINCULACIÓN SEGURA DE EVENTOS ---
