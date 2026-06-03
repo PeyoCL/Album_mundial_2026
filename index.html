@@ -191,20 +191,31 @@
             </div>
         </div>
 
-        <div id="modal-settings" class="modal">
-            <div class="modal-content settings-modal">
-                <div class="modal-header">
-                    <h2>Configuración</h2>
+        <div id="modal-settings" class="modal" style="display: none;">
+            <div class="modal-content"
+                style="max-width: 350px; padding: 0; border-radius: 8px; overflow: hidden; background-color: var(--bg-surface, #1e2233);">
+
+                <div
+                    style="display: flex; justify-content: space-between; align-items: center; padding: 20px 20px 15px 20px; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                    <h2
+                        style="margin: 0; font-size: 1.4rem; text-transform: uppercase; font-family: 'Bebas Neue', Impact, sans-serif; letter-spacing: 0.5px; color: var(--text-primary, #fff);">
+                        ⚙️ CONFIGURACIÓN</h2>
+                    <span class="close-modal"
+                        style="font-size: 1.5rem; cursor: pointer; color: var(--text-secondary, #ccc); line-height: 1;">&times;</span>
+                </div>
+
+                <div style="padding: 20px; display: flex; flex-direction: column; gap: 20px;">
+
                     <div id="cloud-auth-container"
-                        style="background: rgba(59,130,246,0.1); border: 1px solid var(--blue-accent, #3b82f6); padding: 15px; border-radius: 8px; text-align: center; margin-bottom: 20px;">
-                        <h3 style="margin-top:0; color: var(--blue-accent, #3b82f6); margin-bottom: 5px;">☁️ Respaldo en
+                        style="background-color: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); padding: 15px; border-radius: 8px; text-align: center;">
+                        <h3 style="margin-top:0; color: #5a81ed; margin-bottom: 5px; font-size: 1.1rem;">☁️ Respaldo en
                             la Nube</h3>
                         <p id="auth-status-text"
-                            style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 12px;">Inicia sesión
-                            para sincronizar tus álbumes automáticamente en todos tus dispositivos.</p>
+                            style="font-size: 0.85rem; color: var(--text-secondary, #a0aabf); margin-bottom: 12px; line-height: 1.3;">
+                            Inicia sesión para sincronizar tus álbumes automáticamente en todos tus dispositivos.</p>
 
                         <button id="btn-login-google" class="btn"
-                            style="background: white; color: #444; width: 100%; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 10px; border: 1px solid #ccc;"
+                            style="background: white; color: #444; width: 100%; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 10px; border: none; padding: 10px; border-radius: 6px; cursor: pointer;"
                             onclick="window.loginGoogle()">
                             <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
                                 style="width: 18px;" alt="Google"> Iniciar sesión
@@ -212,46 +223,58 @@
 
                         <div id="auth-user-info"
                             style="display: none; flex-direction: column; align-items: center; gap: 10px;">
-                            <span id="auth-user-email" style="font-weight: bold; color: var(--text-primary);"></span>
+                            <span id="auth-user-email"
+                                style="font-weight: bold; color: var(--text-primary, #fff); font-size: 0.9rem;"></span>
                             <button id="btn-logout-google" class="btn"
-                                style="background: transparent; border: 1px solid #d55855; color: #d55855; width: 100%; font-weight: bold;"
+                                style="background: transparent; border: 1px solid #d55855; color: #d55855; width: 100%; font-weight: bold; padding: 10px; border-radius: 6px; cursor: pointer;"
                                 onclick="window.logoutGoogle()">Cerrar Sesión</button>
                         </div>
                     </div>
-                    <button class="close-modal" onclick="closeModal('modal-settings')">✕</button>
-                </div>
-                <div class="modal-body">
-                    <div style="margin-bottom: 1.5rem;">
+
+                    <div>
                         <label
-                            style="display:block; margin-bottom: 0.5rem; font-size:0.9rem; color: var(--text-secondary);">Tu
+                            style="display: block; color: var(--text-secondary, #a0aabf); font-size: 0.95rem; margin-bottom: 8px;">Tu
                             Nombre o Alias (Para intercambios):</label>
-                        <input type="text" id="input-profile-name" placeholder="Ej. Juan Pérez" style="width: 100%;">
+                        <input type="text" id="input-profile-name"
+                            style="width: 100%; padding: 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background-color: rgba(0,0,0,0.2); color: var(--text-primary, #fff); box-sizing: border-box; font-family: inherit; font-size: 1rem; outline: none;">
                     </div>
 
-                    <div style="margin-bottom: 2rem;">
+                    <div>
                         <label
-                            style="display:block; margin-bottom: 0.5rem; font-size:0.9rem; color: var(--text-secondary);">Visualización
+                            style="display: block; color: var(--text-secondary, #a0aabf); font-size: 0.95rem; margin-bottom: 8px;">Visualización
                             de las Láminas:</label>
                         <select id="setting-display-mode"
-                            style="width: 100%; padding: 0.8rem; border-radius: 8px; background: var(--bg-surface); color: var(--text-primary); border: 1px solid var(--border-subtle); font-family: 'Inter', sans-serif;">
-                            <option value="code">Solo Código (Ej: MEX 3)</option>
-                            <option value="name">Solo Nombre del Jugador</option>
+                            style="width: 100%; padding: 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background-color: rgba(0,0,0,0.2); color: var(--text-primary, #fff); box-sizing: border-box; font-family: inherit; font-size: 1rem; outline: none;">
+                            <option value="code">Solo Código (Ej: QAT 1)</option>
+                            <option value="name">Solo Nombre</option>
                             <option value="both">Ambos (Código + Nombre)</option>
                         </select>
                     </div>
 
-                    <button onclick="exportData()" class="btn-block">Exportar datos JSON (Backup)</button>
-                    <button onclick="document.getElementById('import-file').click()" class="btn-block">Importar datos
-                        JSON (Restaurar)</button>
-                    <input type="file" id="import-file" style="display:none" accept=".json"
-                        onchange="importData(event)">
+                    <hr style="border: none; border-top: 1px solid rgba(255,255,255,0.05); margin: 5px 0;">
 
-                    <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border-subtle);">
-                        <button onclick="forceUpdateCache()" class="btn-block"
-                            style="background: #eab308; color: #000;">Forzar Actualización (Limpiar Caché)</button>
-                        <button onclick="confirmReset()" class="btn-block btn-danger"
-                            style="margin-top: 0.5rem;">Reiniciar álbum completo</button>
+                    <div style="display: flex; flex-direction: column; gap: 10px;">
+                        <button class="btn"
+                            style="background-color: #5a81ed; color: white; border: none; padding: 12px; border-radius: 6px; font-weight: bold; cursor: pointer;"
+                            onclick="window.exportData()">Exportar datos JSON (Backup)</button>
+
+                        <label class="btn"
+                            style="background-color: #5a81ed; color: white; border: none; padding: 12px; border-radius: 6px; font-weight: bold; cursor: pointer; text-align: center; display: block;">
+                            Importar datos JSON (Restaurar)
+                            <input type="file" id="import-file" accept=".json" onchange="window.importData(event)"
+                                style="display: none;">
+                        </label>
                     </div>
+
+                    <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 10px;">
+                        <button class="btn"
+                            style="background-color: #eab308; color: #000; border: none; padding: 12px; border-radius: 6px; font-weight: bold; cursor: pointer;"
+                            onclick="window.forceUpdateCache()">Forzar Actualización (Limpiar Caché)</button>
+                        <button class="btn"
+                            style="background-color: #d55855; color: white; border: none; padding: 12px; border-radius: 6px; font-weight: bold; cursor: pointer;"
+                            onclick="window.confirmReset()">Reiniciar álbum completo</button>
+                    </div>
+
                 </div>
             </div>
         </div>
