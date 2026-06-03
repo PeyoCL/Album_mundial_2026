@@ -289,34 +289,42 @@
         </div>
     </div>
 
-    <!-- MODAL GESTIONAR ÁLBUMES (Estilo Configuración) -->
     <div id="modal-manage-albums" class="modal" style="display: none;">
-        <div class="modal-content" style="max-width: 380px;">
-            <span class="close-modal">&times;</span>
-            <h2>📂 Gestionar Cuentas</h2>
+        <div class="modal-content"
+            style="max-width: 350px; padding: 0; border-radius: 8px; overflow: hidden; background-color: var(--bg-surface, #1e2233);">
 
-            <div style="margin-top: 1.5rem; display: flex; flex-direction: column; gap: 1.5rem;">
+            <div
+                style="display: flex; justify-content: space-between; align-items: center; padding: 20px 20px 15px 20px; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                <h2
+                    style="margin: 0; font-size: 1.4rem; text-transform: uppercase; font-family: 'Bebas Neue', Impact, sans-serif; letter-spacing: 0.5px; color: var(--text-primary, #fff);">
+                    📁 GESTIONAR CUENTAS</h2>
+                <span class="close-modal"
+                    style="font-size: 1.5rem; cursor: pointer; color: var(--text-secondary, #ccc); line-height: 1;">&times;</span>
+            </div>
 
-                <!-- Bloque: Crear Álbum -->
-                <div class="setting-item"
-                    style="display: flex; flex-direction: column; gap: 8px; padding-bottom: 1.5rem; border-bottom: 1px solid rgba(150, 150, 150, 0.2);">
-                    <span style="font-weight: 600; color: var(--text-primary);">Crear Nuevo Perfil</span>
-                    <span style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.3;">Añade un álbum
-                        adicional para llevar el progreso de un familiar o amigo en este mismo dispositivo.</span>
+            <div style="padding: 20px; display: flex; flex-direction: column; gap: 20px;">
+
+                <div>
+                    <label
+                        style="display: block; color: var(--text-secondary, #a0aabf); font-size: 0.95rem; margin-bottom: 8px;">Crear
+                        Nuevo Perfil (Familiar o Amigo):</label>
                     <input type="text" id="new-album-input" placeholder="Ej: Álbum de mi hijo..."
-                        style="width: 100%; padding: 10px; border-radius: 6px; border: 1px solid var(--text-muted, #ccc); background: var(--bg-surface); color: var(--text-primary); margin-top: 5px; box-sizing: border-box; font-family: inherit;">
-                    <button id="btn-modal-create-album" class="btn" style="width: 100%; margin-top: 5px;">Añadir
+                        style="width: 100%; padding: 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background-color: rgba(0,0,0,0.2); color: var(--text-primary, #fff); margin-bottom: 15px; box-sizing: border-box; font-family: inherit; font-size: 1rem; outline: none;">
+
+                    <button id="btn-modal-create-album" class="btn"
+                        style="width: 100%; padding: 12px; border-radius: 6px; background-color: #5a81ed; color: white; border: none; font-weight: bold; cursor: pointer; font-size: 1rem;">Añadir
                         Álbum</button>
                 </div>
 
-                <!-- Bloque: Borrar Álbum -->
-                <div class="setting-item" style="display: flex; flex-direction: column; gap: 8px;">
-                    <span style="font-weight: 600; color: var(--text-primary);">Eliminar Álbum Actual</span>
-                    <span style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.3;">Se borrará
-                        permanentemente el álbum que tienes seleccionado en este momento. Esta acción no se puede
-                        deshacer.</span>
+                <hr style="border: none; border-top: 1px solid rgba(255,255,255,0.05); margin: 5px 0;">
+
+                <div>
+                    <label
+                        style="display: block; color: var(--text-secondary, #a0aabf); font-size: 0.95rem; margin-bottom: 8px;">Eliminar
+                        Álbum Actual:</label>
+
                     <button id="btn-modal-delete-album" class="btn"
-                        style="width: 100%; margin-top: 5px; background-color: transparent; border: 1px solid #ff3b30; color: #ff3b30;">Eliminar
+                        style="width: 100%; padding: 12px; border-radius: 6px; background-color: #d55855; color: white; border: none; font-weight: bold; cursor: pointer; font-size: 1rem;">Eliminar
                         Definitivamente</button>
                 </div>
 
