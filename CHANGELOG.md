@@ -2,6 +2,12 @@
 
 Todas las actualizaciones y cambios notables de la aplicación "Álbum Mundial 2026" se documentarán en este archivo.
 
+### v53 - La Evolución a la Nube (Cloud Sync & Cuentas de Usuario)
+- **Autenticación con Google:** Se integró un panel en "Configuración" que permite iniciar sesión de forma segura utilizando Firebase Auth.
+- **Sincronización en la Nube (Firestore):** ¡Adiós al miedo de perder el progreso! Al iniciar sesión, todos los álbumes se respaldan automáticamente en la nube. El progreso se mantiene sincronizado en tiempo real entre el celular, la tablet y el computador.
+- **Arquitectura Offline-First:** El rendimiento ultrarrápido se mantiene intacto. La aplicación sigue guardando los cambios de forma local y silenciosa. Si el usuario marca láminas sin conexión a internet, el sistema las almacenará en caché y las enviará a la nube en cuanto recupere la señal.
+- **Retrocompatibilidad Absoluta:** Los usuarios que decidan no iniciar sesión (o que usen versiones antiguas sin cuenta) no verán interrumpida su experiencia y podrán seguir usando la app 100% offline mediante el almacenamiento local habitual.
+
 ### v52 - Compresión LZW y Armonización Visual (UI/UX)
 - **Compresión de Datos (LZ-String):** Integración del algoritmo de compresión LZW (`lz-string`) en el pipeline de exportación. Los JSON generados por el Súper Match Global ahora se comprimen a formato alfanumérico seguro (URI Encoded) antes de convertirse en Código QR o copiarse al portapapeles. Esto reduce el tamaño del payload hasta en un 80%, generando QR mucho más limpios (menos densos) y fáciles de escanear por cualquier cámara móvil.
 - **Retrocompatibilidad Inteligente:** El motor de lectura de códigos (escáner y texto) ahora detecta automáticamente si el payload entrante está comprimido. Si la descompresión falla, asume de forma segura que es un código "Legacy" (v51 o inferior) y lo procesa en crudo, garantizando que los respaldos o códigos antiguos sigan funcionando sin interrupciones.
