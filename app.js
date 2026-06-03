@@ -1,5 +1,6 @@
 // app.js v50.2 - UI Controller (Estabilizado y Retrocompatible)
-import { globalState, loadStore, saveStore, getActiveAlbum, createNewAlbum, deleteActiveAlbum, getFamilyNameString } from './store.js';
+import { globalState, loadStore, saveStore, getActiveAlbum, createNewAlbum, deleteActiveAlbum, getFamilyNameString, syncWithCloud } from './store.js';
+import { auth, provider, signInWithPopup, signOut, onAuthStateChanged } from './firebase-config.js';
 import { getGlobalMinifiedData, compareGlobalTrades, executeGlobalTrade, lastMatchResult } from './match.js';
 
 window.onerror = function(msg, url, line) { alert("🚨 ERROR EN LA APP:\n" + msg + "\nLínea: " + line); return false; };
@@ -49,6 +50,19 @@ async function init() {
         bindEvents(); 
         observeHeaderOffset(); 
         checkIOSInstall();
+        onAuthStateChanged(auth, async (user) => {
+            updateAuthUI(user);
+            if (user) {
+                // Sincronizamos. Si bajó datos nuevos de la nube, refrescamos la pantalla.
+                const wasUpdatedFromCloud = await syncWithCloud(user);
+                if (wasUpdatedFromCloud) {
+                    renderAlbumSelector();
+                    updateUIForActiveAlbum();
+                }
+            } else {
+                syncWithCloud(null);
+            }
+        });
     } catch (error) { alert("Error en init: " + error.message); }
 }
 
@@ -597,6 +611,36 @@ function bindEvents() {
         window.closeModal('modal-manage-albums');
         deleteActiveAlbum(); 
     });
+}
+
+// --- AUTENTICACIÓN FIREBASE ---
+window.loginGoogle = function() {
+    signInWithPopup(auth, provider).catch(err => alert("Error al iniciar sesión: " + err.message));
+};
+
+window.logoutGoogle = function() {
+    signOut(auth).then(() => {
+        alert("Sesión cerrada. Los datos actuales se mantienen guardados en este dispositivo.");
+    }).catch(err => alert("Error al cerrar sesión: " + err));
+};
+
+function updateAuthUI(user) {
+    const btnLogin = document.getElementById('btn-login-google');
+    const authInfo = document.getElementById('auth-user-info');
+    const authText = document.getElementById('auth-status-text');
+    const emailText = document.getElementById('auth-user-email');
+
+    if (user) {
+        if(btnLogin) btnLogin.style.display = 'none';
+        if(authInfo) authInfo.style.display = 'flex';
+        if(authText) authText.innerText = "Tus álbumes se están guardando automáticamente en la nube.";
+        if(emailText) emailText.innerText = `👋 Hola, ${user.displayName || user.email}`;
+    } else {
+        if(btnLogin) btnLogin.style.display = 'flex';
+        if(authInfo) authInfo.style.display = 'none';
+        if(authText) authText.innerText = "Inicia sesión para sincronizar tus álbumes automáticamente en todos tus dispositivos.";
+        if(emailText) emailText.innerText = "";
+    }
 }
 
 document.addEventListener('DOMContentLoaded', init);

@@ -1,4 +1,4 @@
-// store.js - Gestor de Estado y Multi-Álbum
+import { db, doc, setDoc, getDoc } from './firebase-config.js';
 const STORAGE_KEY = 'album_mundial_2026_data';
 
 export let globalState = {
@@ -31,7 +31,15 @@ export function loadStore() {
 }
 
 export function saveStore() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(globalState));
+    // 1. Siempre guardamos localmente primero (Para que la app siga siendo ultrarrápida y offline)
+    localStorage.setItem('album_mundial_2026_data', JSON.stringify(globalState));
+    
+    // 2. Si está logueado, enviamos una copia silenciosa a la nube
+    if (currentUser) {
+        const userRef = doc(db, "usuarios", currentUser.uid);
+        // Usamos setDoc sin "await" para no congelar la pantalla mientras sube a internet
+        setDoc(userRef, globalState).catch(e => console.error("Error guardando en la nube", e));
+    }
 }
 
 export function getActiveAlbum() {
@@ -66,4 +74,33 @@ export function getFamilyNameString() {
     if (names.length === 2) return `Álbumes de "${names[0]}" y "${names[1]}"`;
     const last = names.pop();
     return `Álbumes de "${names.join('", "')}" y "${last}"`;
+}
+
+let currentUser = null;
+
+// Sincroniza la nube con el almacenamiento local
+export async function syncWithCloud(user) {
+    currentUser = user;
+    if (!user) return false;
+
+    const userRef = doc(db, "usuarios", user.uid);
+    try {
+        const docSnap = await getDoc(userRef);
+        if (docSnap.exists()) {
+            // Caso A: El usuario ya tiene datos en la nube. Los descargamos y sobrescribimos el teléfono.
+            const cloudData = docSnap.data();
+            if (cloudData.albums) {
+                Object.assign(globalState, cloudData);
+                // Guardamos la copia en el teléfono por si luego se queda sin internet
+                localStorage.setItem('album_mundial_2026_data', JSON.stringify(globalState));
+                return true; // Indica que hubo actualización desde la nube
+            }
+        } else {
+            // Caso B: Es su primera vez iniciando sesión. Subimos sus datos locales a la nube.
+            await setDoc(userRef, globalState);
+        }
+    } catch (e) {
+        console.error("Error conectando con la nube:", e);
+    }
+    return false;
 }

@@ -195,6 +195,29 @@
             <div class="modal-content settings-modal">
                 <div class="modal-header">
                     <h2>Configuración</h2>
+                    <div id="cloud-auth-container"
+                        style="background: rgba(59,130,246,0.1); border: 1px solid var(--blue-accent, #3b82f6); padding: 15px; border-radius: 8px; text-align: center; margin-bottom: 20px;">
+                        <h3 style="margin-top:0; color: var(--blue-accent, #3b82f6); margin-bottom: 5px;">☁️ Respaldo en
+                            la Nube</h3>
+                        <p id="auth-status-text"
+                            style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 12px;">Inicia sesión
+                            para sincronizar tus álbumes automáticamente en todos tus dispositivos.</p>
+
+                        <button id="btn-login-google" class="btn"
+                            style="background: white; color: #444; width: 100%; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 10px; border: 1px solid #ccc;"
+                            onclick="window.loginGoogle()">
+                            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+                                style="width: 18px;" alt="Google"> Iniciar sesión
+                        </button>
+
+                        <div id="auth-user-info"
+                            style="display: none; flex-direction: column; align-items: center; gap: 10px;">
+                            <span id="auth-user-email" style="font-weight: bold; color: var(--text-primary);"></span>
+                            <button id="btn-logout-google" class="btn"
+                                style="background: transparent; border: 1px solid #d55855; color: #d55855; width: 100%; font-weight: bold;"
+                                onclick="window.logoutGoogle()">Cerrar Sesión</button>
+                        </div>
+                    </div>
                     <button class="close-modal" onclick="closeModal('modal-settings')">✕</button>
                 </div>
                 <div class="modal-body">
