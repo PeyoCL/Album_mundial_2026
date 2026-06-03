@@ -1,11 +1,11 @@
 // match.js - Motor de Match Global
-import { globalState, saveStore } from './store.js';
+import { globalState, saveStore, getFamilyNameString } from './store.js';
 
 export let lastMatchResult = null;
 
 export function getGlobalMinifiedData() {
     // Calculadora del Hub Familiar
-    const minified = { n: "Familia", s: {} };
+    const minified = { n: getFamilyNameString(), s: {} };
     let bitString = "";
 
     if (!window.DATA || !window.DATA.TEAMS) return "";

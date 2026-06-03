@@ -1,5 +1,5 @@
 // app.js v50.2 - UI Controller (Estabilizado y Retrocompatible)
-import { globalState, loadStore, saveStore, getActiveAlbum, createNewAlbum, deleteActiveAlbum } from './store.js';
+import { globalState, loadStore, saveStore, getActiveAlbum, createNewAlbum, deleteActiveAlbum, getFamilyNameString } from './store.js';
 import { getGlobalMinifiedData, compareGlobalTrades, executeGlobalTrade, lastMatchResult } from './match.js';
 
 window.onerror = function(msg, url, line) { alert("🚨 ERROR EN LA APP:\n" + msg + "\nLínea: " + line); return false; };
@@ -66,11 +66,7 @@ function renderAlbumSelector() {
     
     const btnManage = document.getElementById('btn-manage-albums');
     if (btnManage) {
-        btnManage.onclick = () => {
-            let action = prompt("Escribe 'NUEVO' para crear un álbum, o 'BORRAR' para eliminar el actual.");
-            if(action && action.toUpperCase() === 'NUEVO') { let n = prompt("Nombre del nuevo álbum:"); if(n) { createNewAlbum(n); renderAlbumSelector(); updateUIForActiveAlbum(); } }
-            else if (action && action.toUpperCase() === 'BORRAR') { deleteActiveAlbum(); }
-        };
+        btnManage.onclick = () => window.showModal('modal-manage-albums');
     }
 }
 
@@ -234,15 +230,72 @@ window.exportMissingExcel = function() { let csv = 'Seccion,Laminas Faltantes\n'
 
 window.exportTradesPdf = function() {
     const p = getTotalProgress(); 
-    let html = `<h1>Láminas Repetidas - ${getActiveAlbum().profile.name}</h1><p>Progreso del Álbum: ${p.have}/${p.total} (${p.percentage}%) | Total de cambios listos: ${getRepeatedTotal()}</p><table><thead><tr><th style="width:180px; background-color:#f5f5f5;">Sección / Equipo</th><th style="background-color:#f5f5f5;">Láminas Disponibles para Cambio</th></tr></thead><tbody>`;
-    getTradeExportRows().forEach(r => { html += `<tr><td><strong>${r.section}</strong></td><td>${r.text}</td></tr>`; }); html += `</tbody></table>`;
+    
+    // Construimos un documento HTML completamente limpio y nativo
+    let html = `
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <title>Láminas Repetidas - ${getActiveAlbum().profile.name}</title>
+        <style>
+            body { font-family: sans-serif; color: #000; padding: 20px; background: #fff; }
+            table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+            th, td { border: 1px solid #111; padding: 10px; text-align: left; font-size: 14px; }
+            th { background-color: #f5f5f5; }
+            h1 { font-size: 22px; margin-bottom: 4px; }
+            p { color: #444; font-size: 13px; margin-top: 0; }
+            @media print {
+                @page { margin: 1.5cm; }
+            }
+        </style>
+    </head>
+    <body>
+        <h1>Láminas Repetidas - ${getActiveAlbum().profile.name}</h1>
+        <p>Progreso del Álbum: ${p.have}/${p.total} (${p.percentage}%) | Total de cambios listos: ${getRepeatedTotal()}</p>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width:180px;">Sección / Equipo</th>
+                    <th>Láminas Disponibles para Cambio</th>
+                </tr>
+            </thead>
+            <tbody>`;
+            
+    getTradeExportRows().forEach(r => { 
+        html += `<tr><td><strong>${r.section}</strong></td><td>${r.text}</td></tr>`; 
+    }); 
+    
+    html += `</tbody></table></body></html>`;
 
-    const printContainer = document.createElement('div'); printContainer.className = 'print-only-section'; printContainer.innerHTML = html; document.body.appendChild(printContainer);
-    const printStyle = document.createElement('style'); printStyle.id = 'dynamic-print-style'; printStyle.innerHTML = `@media print { body > *:not(.print-only-section) { display: none !important; } .print-only-section { display: block !important; position: absolute; left: 0; top: 0; width: 100%; font-family: sans-serif; color: #000; } table { width: 100%; border-collapse: collapse; margin-top: 15px; } th, td { border: 1px solid #111; padding: 10px; text-align: left; font-size: 14px; } h1 { font-size: 22px; margin-bottom: 4px; font-family: sans-serif; } p { color: #444; font-size: 13px; margin-top: 0; font-family: sans-serif; } } @media screen { .print-only-section { display: none !important; } }`; document.head.appendChild(printStyle);
+    // Creamos un Iframe invisible
+    const iframe = document.createElement('iframe');
+    iframe.style.position = 'fixed';
+    iframe.style.right = '0';
+    iframe.style.bottom = '0';
+    iframe.style.width = '0';
+    iframe.style.height = '0';
+    iframe.style.border = 'none';
+    document.body.appendChild(iframe);
 
-    const cleanup = () => { if (document.body.contains(printContainer)) document.body.removeChild(printContainer); if (document.head.contains(printStyle)) document.head.removeChild(printStyle); window.removeEventListener('afterprint', cleanup); };
-    window.addEventListener('afterprint', cleanup);
-    setTimeout(() => { window.print(); setTimeout(cleanup, 3000); }, 300);
+    // Escribimos el documento en el iframe
+    const doc = iframe.contentWindow.document;
+    doc.open();
+    doc.write(html);
+    doc.close();
+
+    // Damos tiempo a que el navegador dibuje el iframe antes de llamar a print()
+    setTimeout(() => {
+        iframe.contentWindow.focus();
+        iframe.contentWindow.print();
+        
+        // Destruimos el iframe después de mucho tiempo para no interferir con la UI del celular
+        setTimeout(() => { 
+            if (document.body.contains(iframe)) {
+                document.body.removeChild(iframe); 
+            }
+        }, 15000); 
+    }, 500);
 };
 
 window.generateShareText = function() { const p = getTotalProgress(); let txt = `*${getActiveAlbum().profile.name}*\nProgreso: ${p.have}/${p.total} (${p.percentage}%)\nRepetidas: ${getRepeatedTotal()}\n\n`; getTradeExportRows().forEach(r => { txt += `${r.section}: ${r.text}\n`; }); const shareEl = document.getElementById('share-textarea'); if(shareEl) shareEl.value = txt; window.showModal('modal-share'); }
@@ -290,15 +343,33 @@ function renderMatchResultsUI() {
     if(!lastMatchResult) return;
     let totalRec = 0; for(let team in lastMatchResult.iReceive) totalRec += lastMatchResult.iReceive[team].length;
     let totalGive = 0; for(let team in lastMatchResult.iGive) totalGive += lastMatchResult.iGive[team].length;
-    let optimal = Math.min(totalRec, totalGive); let bottleneck = totalRec < totalGive ? `(Menos repetidas: ${lastMatchResult.friendName})` : totalGive < totalRec ? `(Menos repetidas: Familia)` : `(Ambos ofrecen igual)`;
+    
+    // Obtenemos el nombre dinámico calculado
+    let myNameStr = getFamilyNameString();
+    
+    let optimal = Math.min(totalRec, totalGive); 
+    let bottleneck = totalRec < totalGive ? `(Menos repetidas: ${lastMatchResult.friendName})` : totalGive < totalRec ? `(Menos repetidas: ${myNameStr})` : `(Ambos ofrecen igual)`;
     
     let html = `<p style="text-align:center; color:var(--text-secondary); margin-bottom:1rem;">Comparación Global con: <strong style="color:var(--text-primary); font-size:1.1rem;">${lastMatchResult.friendName}</strong></p>`;
-    html += `<div style="background: rgba(59,130,246,0.1); border: 1px dashed var(--blue-accent); padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; text-align: center;"><p style="margin-bottom: 0.5rem; color: var(--text-primary);"><strong>📊 Resumen Familiar</strong></p><p style="font-size: 0.9rem; margin-bottom: 0.2rem; color: var(--text-secondary);">Familia Recibe: <strong style="color:var(--green-complete)">${totalRec}</strong> láminas</p><p style="font-size: 0.9rem; margin-bottom: 0.8rem; color: var(--text-secondary);">Familia Entrega: <strong style="color:var(--gold)">${totalGive}</strong> láminas</p><div style="background: var(--blue-accent); color: white; padding: 0.4rem 0.8rem; border-radius: 6px; display: inline-block; margin-bottom: 1rem;"><strong>Máx. cambios: ${optimal}</strong> <span style="font-size: 0.8rem; opacity: 0.9;">${bottleneck}</span></div><button class="btn" style="background:var(--green-complete); width:100%; max-width:280px; margin:5px auto 0; display:block; font-size:0.85rem;" onclick="window.applyInterchangeAutomatic()">⚡ Aplicar Intercambio en 1-Clic</button></div><div class="match-columns"><div class="match-col"><h3>⬇️ Familia Recibe</h3>`;
+    
+    html += `<div style="background: rgba(59,130,246,0.1); border: 1px dashed var(--blue-accent); padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; text-align: center;">
+                <p style="margin-bottom: 0.5rem; color: var(--text-primary);"><strong>📊 Resumen de Match</strong></p>
+                <p style="font-size: 0.9rem; margin-bottom: 0.2rem; color: var(--text-secondary);">${myNameStr} Recibe: <strong style="color:var(--green-complete)">${totalRec}</strong> láminas</p>
+                <p style="font-size: 0.9rem; margin-bottom: 0.8rem; color: var(--text-secondary);">${myNameStr} Entrega: <strong style="color:var(--gold)">${totalGive}</strong> láminas</p>
+                <div style="background: var(--blue-accent); color: white; padding: 0.4rem 0.8rem; border-radius: 6px; display: inline-block; margin-bottom: 1rem;"><strong>Máx. cambios: ${optimal}</strong> <span style="font-size: 0.8rem; opacity: 0.9;">${bottleneck}</span></div>
+                <button class="btn" style="background:var(--green-complete); width:100%; max-width:280px; margin:5px auto 0; display:block; font-size:0.85rem;" onclick="window.applyInterchangeAutomatic()">⚡ Aplicar Intercambio en 1-Clic</button>
+            </div>
+            <div class="match-columns">
+                <div class="match-col"><h3>⬇️ ${myNameStr} Recibe</h3>`;
     
     let recCount = 0; for(let team in lastMatchResult.iReceive) { html += `<strong>${team}</strong><span>${lastMatchResult.iReceive[team].join(', ')}</span>`; recCount++; }
-    if(recCount === 0) html += '<p class="text-muted">Ninguna :(</p>'; html += '</div><div class="match-col"><h3>⬆️ Familia Entrega</h3>';
+    if(recCount === 0) html += '<p class="text-muted">Ninguna :(</p>'; 
+    
+    html += `</div><div class="match-col"><h3>⬆️ ${myNameStr} Entrega</h3>`;
+    
     let giveCount = 0; for(let team in lastMatchResult.iGive) { html += `<strong>${team}</strong><span>${lastMatchResult.iGive[team].join(', ')}</span>`; giveCount++; }
-    if(giveCount === 0) html += '<p class="text-muted">Ninguna :(</p>'; html += '</div></div>';
+    if(giveCount === 0) html += '<p class="text-muted">Ninguna :(</p>'; 
+    html += '</div></div>';
     
     const resultsDiv = document.getElementById('match-results'); if(resultsDiv) resultsDiv.innerHTML = html; 
     const container = document.getElementById('match-results-container'); if(container) container.style.display = 'block';
@@ -415,6 +486,43 @@ function triggerConfetti(x, y) {
 }
 function shootBigConfetti() { triggerConfetti(window.innerWidth/2, window.innerHeight/2); setTimeout(() => triggerConfetti(window.innerWidth/3, window.innerHeight/2), 200); setTimeout(() => triggerConfetti((window.innerWidth/3)*2, window.innerHeight/2), 400); }
 
+// --- COPIAR JSON AL PORTAPAPELES ---
+window.copyMyJsonForTrade = function() {
+    // Obtenemos los datos minificados del Match Global
+    const jsonStr = getGlobalMinifiedData(); 
+    
+    if (!jsonStr) {
+        alert("No hay datos para copiar.");
+        return;
+    }
+
+    // Intentamos usar la API moderna del portapapeles
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(jsonStr).then(() => {
+            alert("¡Código copiado al portapapeles con éxito! Envíalo por WhatsApp o correo.");
+        }).catch(err => {
+            alert("Error al copiar al portapapeles: " + err);
+        });
+    } else {
+        // Fallback seguro para navegadores más antiguos o sin HTTPS
+        let textArea = document.createElement("textarea");
+        textArea.value = jsonStr;
+        textArea.style.position = "fixed";
+        textArea.style.left = "-999999px";
+        textArea.style.top = "-999999px";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        try {
+            document.execCommand('copy');
+            alert("¡Código copiado al portapapeles con éxito! Envíalo por WhatsApp o correo.");
+        } catch (err) {
+            alert("Hubo un problema copiando el código. Por favor, selecciona y copia manualmente.");
+        }
+        textArea.remove();
+    }
+};
+
 // --- VINCULACIÓN SEGURA DE EVENTOS ---
 function bindEvents() {
     const click = (id, fn) => { const el = document.getElementById(id); if(el) el.onclick = fn; };
@@ -455,6 +563,23 @@ function bindEvents() {
             if (t === 'tab-trades') renderTrades(); 
             window.scrollTo(0, 0); 
         }; 
+    });
+    click('btn-modal-create-album', () => {
+        const input = document.getElementById('new-album-input');
+        if (input && input.value.trim() !== '') {
+            createNewAlbum(input.value.trim());
+            input.value = ''; // Limpiamos el cuadro
+            renderAlbumSelector();
+            updateUIForActiveAlbum();
+            window.closeModal('modal-manage-albums');
+        } else {
+            alert("Por favor, escribe un nombre válido.");
+        }
+    });
+
+    click('btn-modal-delete-album', () => {
+        window.closeModal('modal-manage-albums');
+        deleteActiveAlbum(); 
     });
 }
 

@@ -27,7 +27,7 @@
                 <div class="header-left">
                     <h1 id="album-title" contenteditable="true" spellcheck="false">Mi Álbum</h1>
                     <span class="subtitle">Mundial 2026 · 48 selecciones · 994 láminas <span
-                            class="app-version">v50</span></span>
+                            class="app-version">v51</span></span>
                 </div>
 
                 <div class="header-actions" style="display: flex; align-items: center; gap: 12px;">
@@ -289,9 +289,39 @@
         </div>
     </div>
 
-    <link rel="stylesheet" href="style.css?v=50">
-    <script src="data.js?v=50"></script>
-    <script type="module" src="app.js?v=50"></script>
+    <div id="modal-manage-albums" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 350px;">
+            <span class="close-modal">&times;</span>
+            <h2 style="margin-top: 0; color: var(--text-primary);">📂 Gestionar Cuentas</h2>
+
+            <div style="margin-top: 1.5rem; text-align: left;">
+                <div
+                    style="background: rgba(59,130,246,0.1); border: 1px solid var(--blue-accent, #3b82f6); padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                    <h3
+                        style="margin-top: 0; margin-bottom: 10px; font-size: 1rem; color: var(--blue-accent, #3b82f6);">
+                        ➕ Crear Nuevo Álbum</h3>
+                    <input type="text" id="new-album-input" placeholder="Ej: Álbum de mi hijo..."
+                        style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ccc; margin-bottom: 10px; box-sizing: border-box;">
+                    <button id="btn-modal-create-album" class="btn"
+                        style="width: 100%; background: var(--blue-accent, #3b82f6); color: white;">Crear Álbum</button>
+                </div>
+
+                <div
+                    style="background: rgba(255,59,48,0.1); border: 1px dashed #ff3b30; padding: 15px; border-radius: 8px;">
+                    <h3 style="margin-top: 0; margin-bottom: 10px; font-size: 1rem; color: #ff3b30;">🗑️ Eliminar Actual
+                    </h3>
+                    <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 10px;">Se eliminará el
+                        álbum que tienes seleccionado en el menú.</p>
+                    <button id="btn-modal-delete-album" class="btn"
+                        style="width: 100%; background: #ff3b30; color: white;">Eliminar Definitivamente</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <link rel="stylesheet" href="style.css?v=51">
+    <script src="data.js?v=51"></script>
+    <script type="module" src="app.js?v=51"></script>
 
     <script>
         if ('serviceWorker' in navigator) {

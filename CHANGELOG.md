@@ -2,6 +2,12 @@
 
 Todas las actualizaciones y cambios notables de la aplicación "Álbum Mundial 2026" se documentarán en este archivo.
 
+### v51 - Refinamiento UX, Match Dinámico y Estabilización de Exportaciones
+- **Nomenclatura Dinámica en Match Global:** El algoritmo de intercambio ahora es consciente del contexto. Se eliminó el término genérico "Familia". Ahora, la aplicación detecta matemáticamente el número de perfiles involucrados e inyecta los nombres reales (Ej: "Álbumes de Juan y María reciben...") en la interfaz gráfica.
+- **Gestión de Álbumes mediante Modales (UX):** Se reemplazaron las anticuadas alertas del navegador (`prompt` / `alert`) por un modal interactivo (`modal-manage-albums`) con botones dedicados, mejorando drásticamente la experiencia de usuario al crear o eliminar perfiles en dispositivos móviles.
+- **Motor de PDF Aislado (Iframe Print):** Solución definitiva a la exportación nativa de PDF en PWA de Android. Se reescribió la lógica para generar un documento HTML independiente dentro de un Iframe invisible, evitando que el visor de impresión colisione con el ciclo de vida o la limpieza del DOM de la aplicación principal.
+- **Restauración de API Clipboard:** Se reintrodujo y actualizó la función `copyMyJsonForTrade()`. Ahora utiliza la API moderna `navigator.clipboard` con un método *fallback* tradicional, garantizando que las cadenas JSON largas se puedan copiar sin errores independientemente del entorno (HTTP/HTTPS o navegador antiguo).
+
 ### v50 - Estabilización Modular, Safe Bindings y UI Multi-Cuenta
 - **Refactorización Definitiva (ES6):** Finalización de la transición arquitectónica. La lógica de la aplicación opera 100% sobre módulos independientes (`store.js`, `match.js`, `app.js`), garantizando un entorno escalable, lectura dinámica de `album_names_2026_v1.csv` e inyección segura al DOM.
 - **Safe Bindings (Prevención de Colapsos):** Implementación de escudos de verificación en la inyección de eventos (`click`, `change`, `input`) dentro de `app.js`. La aplicación ya no colapsa en la inicialización si la interfaz (HTML) carece de un botón específico, permitiendo un renderizado asíncrono infalible en navegadores móviles, escritorio y modo incógnito.

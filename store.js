@@ -58,3 +58,12 @@ export function deleteActiveAlbum() {
         window.location.reload();
     }
 }
+
+export function getFamilyNameString() {
+    const names = Object.values(globalState.albums).map(a => a.profile.name);
+    if (names.length === 0) return "Mi Álbum";
+    if (names.length === 1) return names[0];
+    if (names.length === 2) return `Álbumes de "${names[0]}" y "${names[1]}"`;
+    const last = names.pop();
+    return `Álbumes de "${names.join('", "')}" y "${last}"`;
+}
