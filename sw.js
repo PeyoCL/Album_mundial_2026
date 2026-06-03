@@ -1,8 +1,8 @@
-const CACHE_NAME = 'album-2026-v51'; 
+const CACHE_NAME = 'album-2026-v52'; 
 
 const urlsToCache = [
-  './', './index.html', './style.css?v=51', './data.js?v=51', './album_names_2026_v1.csv?v=51',
-  './store.js?v=51', './match.js?v=51', './app.js?v=51',
+  './', './index.html', './style.css?v=52', './data.js?v=52', './album_names_2026_v1.csv?v=52',
+  './store.js?v=52', './match.js?v=52', './app.js?v=52',
   './manifest.json', './icon.svg', './logo_fwc.svg', './logo_coca_cola.svg'
 ];
 

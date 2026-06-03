@@ -13,6 +13,9 @@ function loadQRLibraries(cb) {
     if (typeof QRCode === 'undefined') p.push(ls('https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.1/qrcode.min.js'));
     if (typeof jsQR === 'undefined') p.push(ls('https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js'));
     if (typeof Html5Qrcode === 'undefined') p.push(ls('https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js'));
+    /* NUEVO: Librería de compresión LZ-String */
+    if (typeof LZString === 'undefined') p.push(ls('https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js'));
+    
     if (p.length > 0) Promise.all(p).then(cb).catch(()=>alert("Error cargando librerías QR")); else if(cb) cb();
 }
 
@@ -301,11 +304,20 @@ window.exportTradesPdf = function() {
 window.generateShareText = function() { const p = getTotalProgress(); let txt = `*${getActiveAlbum().profile.name}*\nProgreso: ${p.have}/${p.total} (${p.percentage}%)\nRepetidas: ${getRepeatedTotal()}\n\n`; getTradeExportRows().forEach(r => { txt += `${r.section}: ${r.text}\n`; }); const shareEl = document.getElementById('share-textarea'); if(shareEl) shareEl.value = txt; window.showModal('modal-share'); }
 function downloadBlob(b, f) { const u = URL.createObjectURL(b); const a = document.createElement('a'); a.href = u; a.download = f; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(u); }
 
-// --- MATCH GLOBAL Y QR ---
 window.showMyQR = function() { loadQRLibraries(() => {
-    const jsonStr = getGlobalMinifiedData(); if (jsonStr.length > 2500) { alert("⚠️ Tienes demasiadas láminas repetidas. Usa el botón 'Copiar Texto'."); return; }
+    const jsonStr = getGlobalMinifiedData(); 
+    
+    // COMPRESIÓN: Reducimos el JSON a una cadena de caracteres alfanuméricos segura
+    const compressedData = LZString.compressToEncodedURIComponent(jsonStr);
+    
+    if (compressedData.length > 2500) { alert("⚠️ Tienes demasiadas láminas repetidas. Usa el botón 'Copiar Texto'."); return; }
+    
     const imgEl = document.getElementById('qr-image');
-    try { QRCode.toDataURL(jsonStr, { width: 800, margin: 2, errorCorrectionLevel: 'L', color: { dark: '#000', light: '#fff' } }, function (error, url) { if (error) { alert("Error interno."); } else { imgEl.src = url; window.showModal('modal-my-qr'); } }); } catch (e) { alert("Error al generar QR."); }
+    try { 
+        QRCode.toDataURL(compressedData, { width: 800, margin: 2, errorCorrectionLevel: 'L', color: { dark: '#000', light: '#fff' } }, function (error, url) { 
+            if (error) { alert("Error interno."); } else { imgEl.src = url; window.showModal('modal-my-qr'); } 
+        }); 
+    } catch (e) { alert("Error al generar QR."); }
 }); };
 
 window.openCameraScanner = function() { loadQRLibraries(() => { window.showModal('modal-scanner'); html5QrcodeScanner = new Html5Qrcode("qr-reader"); html5QrcodeScanner.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 250 } }, (decodedText) => { window.closeScannerModal(); const matchInput = document.getElementById('match-input'); if(matchInput) { matchInput.value = decodedText; processQRText(); } }, (errorMessage) => {} ).catch(err => { alert("No se pudo iniciar la cámara."); window.closeScannerModal(); }); }); }
@@ -327,7 +339,26 @@ function processQRText() {
     if(!matchInput) return;
     const input = matchInput.value.trim();
     if(!input) { clearMatchInput(); return; }
-    if(compareGlobalTrades(input)) renderMatchResultsUI();
+
+    // Envolvemos todo en loadQRLibraries para garantizar que LZString exista si pegaron texto directamente
+    loadQRLibraries(() => {
+        let finalDataToProcess = input;
+        
+        // INTENTO DE DESCOMPRESIÓN:
+        // Si el texto pegado/escaneado está comprimido, esto lo devolverá a formato JSON normal.
+        const decompressed = LZString.decompressFromEncodedURIComponent(input);
+        
+        // Si decompressed no es nulo, significa que era un código nuevo comprimido. Lo usamos.
+        // Si es nulo, significa que era un JSON crudo antiguo (v51). Conservamos el input original.
+        if (decompressed) {
+            finalDataToProcess = decompressed;
+        }
+
+        // Enviamos los datos (descomprimidos o antiguos) al Súper Match
+        if(compareGlobalTrades(finalDataToProcess)) {
+            renderMatchResultsUI();
+        }
+    });
 }
 // PUENTE DE RETROCOMPATIBILIDAD
 window.processQRText = processQRText;
@@ -486,41 +517,28 @@ function triggerConfetti(x, y) {
 }
 function shootBigConfetti() { triggerConfetti(window.innerWidth/2, window.innerHeight/2); setTimeout(() => triggerConfetti(window.innerWidth/3, window.innerHeight/2), 200); setTimeout(() => triggerConfetti((window.innerWidth/3)*2, window.innerHeight/2), 400); }
 
-// --- COPIAR JSON AL PORTAPAPELES ---
 window.copyMyJsonForTrade = function() {
-    // Obtenemos los datos minificados del Match Global
-    const jsonStr = getGlobalMinifiedData(); 
-    
-    if (!jsonStr) {
-        alert("No hay datos para copiar.");
-        return;
-    }
+    loadQRLibraries(() => {
+        const jsonStr = getGlobalMinifiedData(); 
+        if (!jsonStr) { alert("No hay datos para copiar."); return; }
 
-    // Intentamos usar la API moderna del portapapeles
-    if (navigator.clipboard && window.isSecureContext) {
-        navigator.clipboard.writeText(jsonStr).then(() => {
-            alert("¡Código copiado al portapapeles con éxito! Envíalo por WhatsApp o correo.");
-        }).catch(err => {
-            alert("Error al copiar al portapapeles: " + err);
-        });
-    } else {
-        // Fallback seguro para navegadores más antiguos o sin HTTPS
-        let textArea = document.createElement("textarea");
-        textArea.value = jsonStr;
-        textArea.style.position = "fixed";
-        textArea.style.left = "-999999px";
-        textArea.style.top = "-999999px";
-        document.body.appendChild(textArea);
-        textArea.focus();
-        textArea.select();
-        try {
-            document.execCommand('copy');
-            alert("¡Código copiado al portapapeles con éxito! Envíalo por WhatsApp o correo.");
-        } catch (err) {
-            alert("Hubo un problema copiando el código. Por favor, selecciona y copia manualmente.");
+        // Comprimimos antes de llevarlo al portapapeles
+        const finalData = LZString.compressToEncodedURIComponent(jsonStr);
+
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(finalData).then(() => {
+                alert("¡Código comprimido copiado al portapapeles con éxito! Envíalo por WhatsApp o correo.");
+            }).catch(err => { alert("Error al copiar al portapapeles: " + err); });
+        } else {
+            let textArea = document.createElement("textarea");
+            textArea.value = finalData;
+            textArea.style.position = "fixed"; textArea.style.left = "-999999px"; textArea.style.top = "-999999px";
+            document.body.appendChild(textArea); textArea.focus(); textArea.select();
+            try { document.execCommand('copy'); alert("¡Código comprimido copiado al portapapeles con éxito!"); } 
+            catch (err) { alert("Hubo un problema copiando el código."); }
+            textArea.remove();
         }
-        textArea.remove();
-    }
+    });
 };
 
 // --- VINCULACIÓN SEGURA DE EVENTOS ---

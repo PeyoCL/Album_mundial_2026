@@ -2,6 +2,11 @@
 
 Todas las actualizaciones y cambios notables de la aplicación "Álbum Mundial 2026" se documentarán en este archivo.
 
+### v52 - Compresión LZW y Armonización Visual (UI/UX)
+- **Compresión de Datos (LZ-String):** Integración del algoritmo de compresión LZW (`lz-string`) en el pipeline de exportación. Los JSON generados por el Súper Match Global ahora se comprimen a formato alfanumérico seguro (URI Encoded) antes de convertirse en Código QR o copiarse al portapapeles. Esto reduce el tamaño del payload hasta en un 80%, generando QR mucho más limpios (menos densos) y fáciles de escanear por cualquier cámara móvil.
+- **Retrocompatibilidad Inteligente:** El motor de lectura de códigos (escáner y texto) ahora detecta automáticamente si el payload entrante está comprimido. Si la descompresión falla, asume de forma segura que es un código "Legacy" (v51 o inferior) y lo procesa en crudo, garantizando que los respaldos o códigos antiguos sigan funcionando sin interrupciones.
+- **Armonización de UI (Modales):** Rediseño total del modal "Gestionar Cuentas". Se reestructuró el CSS en línea para que coincida 1:1 con el estándar visual de la ventana de Configuración (cabeceras aisladas, tipografía gruesa/mayúsculas, inputs en modo oscuro real y botones sólidos semánticos).
+
 ### v51 - Refinamiento UX, Match Dinámico y Estabilización de Exportaciones
 - **Nomenclatura Dinámica en Match Global:** El algoritmo de intercambio ahora es consciente del contexto. Se eliminó el término genérico "Familia". Ahora, la aplicación detecta matemáticamente el número de perfiles involucrados e inyecta los nombres reales (Ej: "Álbumes de Juan y María reciben...") en la interfaz gráfica.
 - **Gestión de Álbumes mediante Modales (UX):** Se reemplazaron las anticuadas alertas del navegador (`prompt` / `alert`) por un modal interactivo (`modal-manage-albums`) con botones dedicados, mejorando drásticamente la experiencia de usuario al crear o eliminar perfiles en dispositivos móviles.
