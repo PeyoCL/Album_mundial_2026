@@ -1,5 +1,5 @@
-import { globalState, loadStore, saveStore, getActiveAlbum, createNewAlbum, deleteActiveAlbum, getFamilyNameString, syncWithCloud } from './store.js?v=55';
-import { auth, provider, signInWithPopup, signInWithRedirect, signOut, onAuthStateChanged } from './firebase-config.js?v=55';
+import { globalState, loadStore, saveStore, getActiveAlbum, createNewAlbum, deleteActiveAlbum, getFamilyNameString, syncWithCloud } from './store.js?v=56';
+import { auth, provider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged } from './firebase-config.js?v=56';
 import { getGlobalMinifiedData, compareGlobalTrades, executeGlobalTrade, lastMatchResult } from './match.js';
 
 window.onerror = function(msg, url, line) { alert("🚨 ERROR EN LA APP:\n" + msg + "\nLínea: " + line); return false; };
@@ -49,6 +49,13 @@ async function init() {
         bindEvents(); 
         observeHeaderOffset(); 
         checkIOSInstall();
+        getRedirectResult(auth).then((result) => {
+            if (result) {
+                console.log("¡Regreso exitoso desde Google!", result.user.email);
+            }
+        }).catch((error) => {
+            alert("Error al procesar el regreso de Google: " + error.message);
+        });
         onAuthStateChanged(auth, async (user) => {
             updateAuthUI(user);
             if (user) {
