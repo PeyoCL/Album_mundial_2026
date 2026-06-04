@@ -1,6 +1,6 @@
-import { globalState, loadStore, saveStore, getActiveAlbum, createNewAlbum, deleteActiveAlbum, getFamilyNameString, syncWithCloud, claimFriendCode, getFriendBox } from './store.js?v=68';
-import { auth, provider, signInWithPopup, signOut, onAuthStateChanged } from './firebase-config.js?v=68';
-import { getGlobalMinifiedData, compareGlobalTrades, executeGlobalTrade, lastMatchResult } from './match.js?v=68';
+import { globalState, loadStore, saveStore, getActiveAlbum, createNewAlbum, deleteActiveAlbum, getFamilyNameString, syncWithCloud, claimFriendCode, getFriendBox } from './store.js?v=69';
+import { auth, provider, signInWithPopup, signOut, onAuthStateChanged } from './firebase-config.js?v=69';
+import { getGlobalMinifiedData, compareGlobalTrades, executeGlobalTrade, lastMatchResult } from './match.js?v=69';
 
 window.onerror = function(msg, url, line) { console.error("🚨 ERROR EN LA APP:\n" + msg + "\nLínea: " + line); return false; };
 
@@ -14,15 +14,10 @@ function loadQRLibraries(cb) {
     if (typeof jsQR === 'undefined') p.push(ls('https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js'));
     if (typeof Html5Qrcode === 'undefined') p.push(ls('https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js'));
     if (typeof LZString === 'undefined') p.push(ls('https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js'));
-    
     if (p.length > 0) Promise.all(p).then(cb).catch(()=>alert("Error cargando librerías QR")); else if(cb) cb();
 }
 
-// BLINDAJE 1: Previene que nombres de láminas vacíos rompan la app
-function formatCode(n) { 
-    if (!n) return '??';
-    return String(n) === '00' ? '00' : String(n).replace(/^([A-Z]+)(\d+)$/, '$1 $2'); 
-}
+function formatCode(n) { if (!n) return '??'; return String(n) === '00' ? '00' : String(n).replace(/^([A-Z]+)(\d+)$/, '$1 $2'); }
 
 async function init() {
     try {
@@ -39,6 +34,10 @@ async function init() {
             if (!active.stickers) active.stickers = {};
             saveStore(); 
         }
+
+        loadTheme();
+        checkIOSInstall();
+        observeHeaderOffset();
 
         renderAlbumSelector();
         updateUIForActiveAlbum();
@@ -139,7 +138,7 @@ function checkMilestones() {
     for (let t of targets) { if (p >= t && !m[`m${t}`]) { m[`m${t}`] = true; saveStore(); shootBigConfetti(); setTimeout(() => alert(`¡Felicidades! Has completado el ${t}% de este álbum.`), 500); } }
 }
 
-// --- RENDER UI BLINDADO ---
+// --- RENDER UI ---
 function renderDashboardCards() {
     try {
         const p = getTotalProgress(); const rep = getRepeatedTotal();
@@ -150,26 +149,20 @@ function renderDashboardCards() {
         const advEl = document.getElementById('metric-advance'); if (advEl) advEl.innerText = `${p.percentage}%`;
         const uniEl = document.getElementById('metric-unique'); if (uniEl) uniEl.innerText = `${p.have} / ${p.total}`;
         const repEl = document.getElementById('metric-repeated'); if (repEl) repEl.innerText = `${rep} rep.`;
-    } catch (e) { console.error("Error en renderDashboardCards:", e); }
+    } catch (e) { console.error("Error visual stats:", e); }
 }
 
 function makeTeamCard(team) {
     try {
         const prog = getTeamProgress(team.code); let pct = Math.round((prog.have / prog.total) * 100) || 0; if (pct === 100 && prog.have < prog.total) pct = 99;
         const div = document.createElement('div'); div.className = `team-card ${prog.have === prog.total && prog.total > 0 ? 'completed' : ''}`; div.id = `team-card-${team.code}`; div.onclick = () => openTeamDetail(team);
-        
-        let iconHtml = '';
-        let iconStr = team.icon ? String(team.icon) : '';
+        let iconHtml = ''; let iconStr = team.icon ? String(team.icon) : '';
         if (iconStr.endsWith('.svg')) { iconHtml = `<img src="${iconStr}" class="team-icon section-logo" alt="${team.name}" style="object-fit: contain; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5)); padding: 2px;">`; } 
         else if (iconStr) { iconHtml = `<div class="team-icon emoji-icon" style="font-size:24px; display:flex; align-items:center; justify-content:center;">${iconStr}</div>`; } 
         else { iconHtml = `<div class="team-icon placeholder">?</div>`; }
-        
         div.innerHTML = `<div class="team-card-header">${iconHtml}<div class="team-info"><h3>${team.name || 'Equipo'}</h3><span>${team.group || ''}</span></div></div><div class="team-stats"><span>Progreso</span><span id="card-count-${team.code}">${prog.have}/${prog.total} (${pct}%)</span></div><div class="linear-progress"><div class="linear-bar" id="card-bar-${team.code}" style="width: ${pct}%;"></div></div>`; 
         return div;
-    } catch (e) {
-        console.error("Error en makeTeamCard:", e);
-        return document.createElement('div'); // Retorna div vacío para que no explote
-    }
+    } catch (e) { return document.createElement('div'); }
 }
 
 function applyCollectionSearch() {
@@ -187,7 +180,7 @@ function applyCollectionSearch() {
         const grid = document.getElementById('teams-grid'); if(!grid) return; grid.innerHTML = '';
         const counterEl = document.getElementById('results-counter'); if(counterEl) counterEl.innerText = `${filtered.length} resultados`;
         filtered.forEach(team => { grid.appendChild(makeTeamCard(team)); });
-    } catch (e) { console.error("Error en applyCollectionSearch:", e); alert("Error visual dibujando países. " + e.message); }
+    } catch (e) { console.error("Error dibujando países", e); }
 }
 
 function renderTrades() {
@@ -198,10 +191,9 @@ function renderTrades() {
         if (reps.length === 0) { list.innerHTML = '<p style="color: var(--text-muted); text-align:center; padding: 2rem;">No tienes láminas repetidas aún.</p>'; }
         else { reps.forEach(group => { const grpDiv = document.createElement('div'); grpDiv.className = 'trade-group'; let itemsHtml = group.items.map(i => `<span class="trade-item">${formatCode(i.name)} (x${i.count})</span>`).join(''); grpDiv.innerHTML = `<h3>${group.team}</h3><div class="trade-items">${itemsHtml}</div>`; list.appendChild(grpDiv); }); }
         updateTradeExportButtons(total > 0);
-    } catch (e) { console.error("Error en renderTrades:", e); }
+    } catch (e) { console.error("Error listando cambios:", e); }
 }
 
-// ... Resto de funciones modales
 function makeStickerCard(sticker) {
     const st = getStickerState(sticker.code); const div = document.createElement('div'); const isSpecial = sticker.type === 'special' || sticker.type === 'shield' || sticker.type === 'group'; div.className = `sticker ${st.have ? 'have animate-pop' : ''} ${isSpecial ? 'special' : ''}`; div.onclick = (e) => window.toggleSticker(sticker.code, e);
     let badge = st.count > 1 ? `<span class="sticker-badge">+${st.count - 1}</span>` : ''; let codeText = formatCode(sticker.name); let playerText = sticker.playerName || ''; let displayText = codeText; 
@@ -236,17 +228,49 @@ window.exportMissingExcel = function() { let csv = 'Seccion,Laminas Faltantes\n'
 window.generateShareText = function() { const p = getTotalProgress(); let txt = `*${getActiveAlbum().profile.name}*\nProgreso: ${p.have}/${p.total} (${p.percentage}%)\nRepetidas: ${getRepeatedTotal()}\n\n`; getTradeExportRows().forEach(r => { txt += `${r.section}: ${r.text}\n`; }); const shareEl = document.getElementById('share-textarea'); if(shareEl) shareEl.value = txt; window.showModal('modal-share'); }
 function downloadBlob(b, f) { const u = URL.createObjectURL(b); const a = document.createElement('a'); a.href = u; a.download = f; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(u); }
 
-window.copyMyJsonForTrade = function() {
-    const jsonStr = getGlobalMinifiedData(); if (!jsonStr) { alert("No hay datos."); return; }
-    if (navigator.clipboard && window.isSecureContext) { navigator.clipboard.writeText(jsonStr).then(() => { alert("¡Copiado al portapapeles!"); }); } 
-    else { let t = document.createElement("textarea"); t.value = jsonStr; t.style.position = "fixed"; document.body.appendChild(t); t.focus(); t.select(); try { document.execCommand('copy'); alert("¡Copiado!"); } catch (err) {} t.remove(); }
-};
+// --- UTILIDADES RECUPERADAS ---
+window.forceUpdateCache = function() { 
+    if ('caches' in window) { 
+        caches.keys().then(names => { for (let n of names) caches.delete(n); })
+        .then(() => { alert("Caché borrada."); window.location.href = window.location.pathname + '?v=' + new Date().getTime(); }); 
+    } else { 
+        window.location.reload(true); 
+    } 
+}
 
-window.exportData = function() { downloadBlob(new Blob([JSON.stringify(globalState, null, 2)], { type: 'application/json' }), 'album_mundial_2026_backup.json'); }
-window.confirmReset = function() { if (confirm('¿Borrar el progreso actual?')) { getActiveAlbum().stickers = {}; getActiveAlbum().milestones = {}; saveStore(); window.closeModal('modal-settings'); updateUIForActiveAlbum(); } }
+function checkIOSInstall() {
+    const isIos = () => /iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase()); const isStandalone = () => ('standalone' in window.navigator) && window.navigator.standalone;
+    if (isIos() && !isStandalone()) { const prompt = document.getElementById('ios-install-prompt'); if (prompt && !localStorage.getItem('ios_prompt_dismissed')) { prompt.style.display = 'block'; prompt.querySelector('.close-ios-prompt').onclick = () => { prompt.style.display = 'none'; localStorage.setItem('ios_prompt_dismissed', 'true'); }; } }
+}
+
+function loadTheme() { if (localStorage.getItem('album_theme_2026') === 'light') document.documentElement.setAttribute('data-theme', 'light'); }
+function updateHeaderOffset() { const h = document.querySelector('.app-header'); if(h) document.documentElement.style.setProperty('--header-offset', `${h.offsetHeight + 18}px`); }
+function observeHeaderOffset() { updateHeaderOffset(); window.addEventListener('resize', updateHeaderOffset); window.addEventListener('orientationchange', () => setTimeout(updateHeaderOffset, 150)); if(document.fonts) document.fonts.ready.then(updateHeaderOffset); }
+
 window.toggleTheme = function() { const root = document.documentElement; if (root.getAttribute('data-theme') === 'light') { root.removeAttribute('data-theme'); localStorage.setItem('album_theme_2026', 'dark'); } else { root.setAttribute('data-theme', 'light'); localStorage.setItem('album_theme_2026', 'light'); } }
 window.showModal = function(id) { const m = document.getElementById(id); if(m) m.style.display = 'flex'; }
 window.closeModal = function(id) { const m = document.getElementById(id); if(m) { m.style.display = 'none'; } currentOpenTeam = null; }
+window.exportData = function() { downloadBlob(new Blob([JSON.stringify(globalState, null, 2)], { type: 'application/json' }), 'album_mundial_2026_backup.json'); }
+window.confirmReset = function() { if (confirm('¿Borrar el progreso actual?')) { getActiveAlbum().stickers = {}; getActiveAlbum().milestones = {}; saveStore(); window.closeModal('modal-settings'); updateUIForActiveAlbum(); } }
+
+window.importData = function(e) { 
+    const f = e.target.files[0]; if (!f) return; const r = new FileReader(); 
+    r.onload = (ev) => { 
+        try { 
+            const d = JSON.parse(ev.target.result); 
+            if (d.albums) { 
+                let action = prompt("Este archivo contiene un gestor Multi-Álbum.\n\nEscribe 'REEMPLAZAR' o 'FUSIONAR'.");
+                if (action && action.toUpperCase() === 'REEMPLAZAR') { localStorage.setItem('albumStore', ev.target.result); alert('Base de datos reemplazada.'); window.location.reload(); } 
+                else if (action && action.toUpperCase() === 'FUSIONAR') { for (let id in d.albums) { globalState.albums['album_imported_' + Date.now() + Math.random()] = d.albums[id]; } saveStore(); alert(`Álbumes fusionados.`); window.location.reload(); }
+            } else if (d.stickers) { 
+                let importedName = d.profile?.name || 'Álbum Importado'; 
+                let action = prompt(`Se detectó el álbum: "${importedName}".\n\nEscribe 'REEMPLAZAR' o 'AGREGAR'.`);
+                if (action && action.toUpperCase() === 'REEMPLAZAR') { globalState.albums[globalState.activeAlbumId] = { profile: d.profile || { name: importedName }, stickers: d.stickers || {}, milestones: d.milestones || {} }; saveStore(); alert(`Álbum reemplazado.`); window.location.reload(); } 
+                else if (action && action.toUpperCase() === 'AGREGAR') { const newId = 'album_' + Date.now(); globalState.albums[newId] = { profile: d.profile || { name: importedName }, stickers: d.stickers || {}, milestones: d.milestones || {} }; globalState.activeAlbumId = newId; saveStore(); alert(`Álbum importado.`); window.location.reload(); }
+            } else { alert('Archivo JSON no reconocido.'); }
+        } catch (err) { alert('Archivo JSON inválido.'); } 
+    }; r.readAsText(f); e.target.value = ''; 
+}
 
 function triggerConfetti(x, y) { const canvas = document.getElementById('confetti-canvas'); if(!canvas) return; const ctx = canvas.getContext('2d'); canvas.width = window.innerWidth; canvas.height = window.innerHeight; let particles = []; for(let i=0; i<30; i++) particles.push({ x, y, r: Math.random()*4+2, dx: Math.random()*6-3, dy: Math.random()*-6-2, color: `hsl(${Math.random()*360}, 100%, 50%)` }); function animate() { ctx.clearRect(0,0,canvas.width,canvas.height); let active = false; particles.forEach(p => { p.x += p.dx; p.y += p.dy; p.dy += 0.2; ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fillStyle = p.color; ctx.fill(); if(p.y < canvas.height) active = true; }); if(active) requestAnimationFrame(animate); else ctx.clearRect(0,0,canvas.width,canvas.height); } animate(); }
 function shootBigConfetti() { triggerConfetti(window.innerWidth/2, window.innerHeight/2); setTimeout(() => triggerConfetti(window.innerWidth/3, window.innerHeight/2), 200); setTimeout(() => triggerConfetti((window.innerWidth/3)*2, window.innerHeight/2), 400); }
@@ -298,4 +322,9 @@ window.handleSearchFriend = async function() {
     } catch (error) { alert("Error: " + error.message); } finally { btn.innerText = "Buscar"; btn.disabled = false; }
 }
 
-document.addEventListener('DOMContentLoaded', init);
+// MOTOR DE ARRANQUE INFALIBLE
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+} else {
+    init(); // Si el HTML ya cargó, lo forzamos a arrancar de inmediato
+}
