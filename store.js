@@ -1,4 +1,4 @@
-import { db, doc, setDoc, getDoc } from './firebase-config.js';
+import { db, doc, setDoc, getDoc } from './firebase-config.js?v=55';
 const STORAGE_KEY = 'album_mundial_2026_data';
 
 export let globalState = {
