@@ -181,10 +181,7 @@ function makeTeamCard(team) {
 
 function applyCollectionSearch() {
     try {
-        if (!window.DATA || !window.DATA.TEAMS) { 
-            alert("🛑 Error: No hay datos de la FIFA"); 
-            return; 
-        }
+        if (!window.DATA || !window.DATA.TEAMS) return;
         
         let filtered = window.DATA.TEAMS.filter(t => {
             let matchText = true;
@@ -196,28 +193,23 @@ function applyCollectionSearch() {
             return matchText && (activeSearch.team === 'all' || t.code === activeSearch.team) && (activeSearch.group === 'all' || t.group === activeSearch.group);
         });
         
+        if (activeSearch.sort === 'most') { filtered.sort((a,b) => (getTeamProgress(b.code).have / b.stickers.length) - (getTeamProgress(a.code).have / a.stickers.length)); }
+        else if (activeSearch.sort === 'least') { filtered.sort((a,b) => (getTeamProgress(a.code).have / a.stickers.length) - (getTeamProgress(b.code).have / b.stickers.length)); }
+        else if (activeSearch.sort === 'az') { filtered.sort((a,b) => (a.name||'').localeCompare(b.name||'')); }
+        
         const grid = document.getElementById('teams-grid'); 
-        if(!grid) { 
-            alert("🛑 Error: No se encontró el contenedor de países en el HTML"); 
-            return; 
-        }
+        if(!grid) return; 
         
         grid.innerHTML = '';
-        let dibujados = 0;
+        const counterEl = document.getElementById('results-counter'); 
+        if(counterEl) counterEl.innerText = `${filtered.length} resultados`;
+        
         filtered.forEach(team => { 
             grid.appendChild(makeTeamCard(team)); 
-            dibujados++;
         });
         
-        // ¡LA ALERTA CLAVE!
-        alert("✅ Diagnóstico: Se lograron dibujar " + dibujados + " países en la memoria.");
-        
-        // Forzar a la pestaña a mostrarse por si está oculta por CSS
-        const tabCollection = document.getElementById('tab-collection');
-        if(tabCollection) tabCollection.classList.add('active');
-
     } catch (e) { 
-        alert("💥 Error CRÍTICO dibujando países: " + e.message); 
+        console.error("Error dibujando países", e); 
     }
 }
 
