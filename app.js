@@ -439,6 +439,8 @@ window.processQRText = function() {
     });
 }
 
+window.compareTradesFromText = window.processQRText;
+
 window.clearMatchInput = function() { 
     const matchInput = document.getElementById('match-input'); if(matchInput) matchInput.value = ''; 
     const container = document.getElementById('match-results-container'); if(container) container.style.display = 'none'; 
