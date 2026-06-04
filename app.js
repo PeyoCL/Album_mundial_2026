@@ -50,7 +50,7 @@ async function init() {
         loadTheme();
         checkIOSInstall();
         observeHeaderOffset();
-
+        populateFilters();
         renderAlbumSelector();
         updateUIForActiveAlbum();
         bindEvents(); 
@@ -560,6 +560,46 @@ window.applyInterchangeAutomatic = function() {
         updateUIForActiveAlbum(); 
     } 
 };
+
+// --- RELLENADOR DE FILTROS ---
+function populateFilters() {
+    if (!window.DATA || !window.DATA.TEAMS) return;
+
+    const teamSelect = document.getElementById('filter-team');
+    const groupSelect = document.getElementById('filter-group');
+
+    if (!teamSelect || !groupSelect) return;
+
+    // Limpiamos y dejamos solo la opción por defecto
+    teamSelect.innerHTML = '<option value="all">Todos los Equipos</option>';
+    groupSelect.innerHTML = '<option value="all">Todos los Grupos</option>';
+
+    const groups = new Set();
+    
+    // Recorremos la base de datos de la FIFA
+    window.DATA.TEAMS.forEach(team => {
+        // 1. Agregar el país al filtro de equipos
+        if (team.code && team.name) {
+            const opt = document.createElement('option');
+            opt.value = team.code;
+            opt.innerText = team.name;
+            teamSelect.appendChild(opt);
+        }
+        
+        // 2. Recolectar el grupo para no repetirlos
+        if (team.group) {
+            groups.add(team.group);
+        }
+    });
+
+    // 3. Agregar los grupos ordenados al filtro de grupos
+    Array.from(groups).sort().forEach(group => {
+        const opt = document.createElement('option');
+        opt.value = group;
+        opt.innerText = group;
+        groupSelect.appendChild(opt);
+    });
+}
 
 // MOTOR DE ARRANQUE INFALIBLE
 if (document.readyState === 'loading') {
