@@ -1,5 +1,5 @@
-// store.js - Manejo de datos locales y sincronización con Firebase (v66)
-import { db, doc, setDoc, getDoc, auth } from './firebase-config.js?v=66';
+// store.js - Manejo de datos locales y sincronización con Firebase (v67)
+import { db, doc, setDoc, getDoc, auth } from './firebase-config.js?v=67';
 
 // 1. ESTADO GLOBAL
 export const globalState = {

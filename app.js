@@ -1,8 +1,8 @@
-import { globalState, loadStore, saveStore, getActiveAlbum, createNewAlbum, deleteActiveAlbum, getFamilyNameString, syncWithCloud, claimFriendCode, getFriendBox } from './store.js?v=66';
-import { auth, provider, signInWithPopup, signOut, onAuthStateChanged } from './firebase-config.js?v=66';
-import { getGlobalMinifiedData, compareGlobalTrades, executeGlobalTrade, lastMatchResult } from './match.js?v=66';
+import { globalState, loadStore, saveStore, getActiveAlbum, createNewAlbum, deleteActiveAlbum, getFamilyNameString, syncWithCloud, claimFriendCode, getFriendBox } from './store.js?v=67';
+import { auth, provider, signInWithPopup, signOut, onAuthStateChanged } from './firebase-config.js?v=67';
+import { getGlobalMinifiedData, compareGlobalTrades, executeGlobalTrade, lastMatchResult } from './match.js?v=67';
 
-window.onerror = function(msg, url, line) { alert("🚨 ERROR EN LA APP:\n" + msg + "\nLínea: " + line); return false; };
+window.onerror = function(msg, url, line) { console.error("🚨 ERROR EN LA APP:\n" + msg + "\nLínea: " + line); return false; };
 
 let activeSearch = { text: '', team: 'all', group: 'all', sort: 'all' };
 let currentOpenTeam = null;
@@ -13,7 +13,6 @@ function loadQRLibraries(cb) {
     if (typeof QRCode === 'undefined') p.push(ls('https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.1/qrcode.min.js'));
     if (typeof jsQR === 'undefined') p.push(ls('https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js'));
     if (typeof Html5Qrcode === 'undefined') p.push(ls('https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js'));
-    /* NUEVO: Librería de compresión LZ-String */
     if (typeof LZString === 'undefined') p.push(ls('https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js'));
     
     if (p.length > 0) Promise.all(p).then(cb).catch(()=>alert("Error cargando librerías QR")); else if(cb) cb();
@@ -23,14 +22,23 @@ function formatCode(n) { return n === '00' ? '00' : n.replace(/^([A-Z]+)(\d+)$/,
 
 async function init() {
     try {
+        // 1. ESCUDO DE DATOS: Esperar a que data.js cargue completamente
+        let retries = 0;
+        while (!window.DATA && retries < 15) {
+            await new Promise(r => setTimeout(r, 200));
+            retries++;
+        }
+        if (!window.DATA) {
+            alert("🚨 La base de datos de la FIFA (data.js) no pudo cargar. Refresca la página.");
+            return;
+        }
+
         await loadStore();
         
+        // 2. BLINDAJE ANTI-FANTASMAS
         if (!getActiveAlbum()) {
-            if (typeof createNewAlbum === 'function') {
-                createNewAlbum('Mi Álbum');
-            }
+            if (typeof createNewAlbum === 'function') createNewAlbum('Mi Álbum');
         }
-        
         const active = getActiveAlbum();
         if (active) {
             if (!active.profile) active.profile = { name: active.name || 'Mi Álbum' };
@@ -38,12 +46,14 @@ async function init() {
             saveStore(); 
         }
 
+        // 3. RENDERIZADO INICIAL
         renderAlbumSelector();
         updateUIForActiveAlbum();
         
+        // 4. FIX DEFINITIVO: Nombre correcto de tu función de botones
         bindEvents(); 
         
-        
+        // 5. SINCRONIZACIÓN FIREBASE
         onAuthStateChanged(auth, async (user) => {
             updateAuthUI(user);
             if (user) {
@@ -57,6 +67,7 @@ async function init() {
             }
         });
 
+        // 6. DETECTOR DE LINK MÁGICO DE WHATSAPP
         const urlParams = new URLSearchParams(window.location.search);
         const matchCode = urlParams.get('match');
         if (matchCode) {
@@ -70,8 +81,9 @@ async function init() {
             }, 1500); 
         }
 
-    } catch (error) { alert("Error en init: " + error.message); }
+    } catch (error) { alert("Error en arranque: " + error.message); }
 }
+
 function renderAlbumSelector() {
     const sel = document.getElementById('select-album-global');
     if(!sel) return;
@@ -103,7 +115,8 @@ function updateProfileName(newName, updateInput = true) {
 
 function updateUIForActiveAlbum() {
     const album = getActiveAlbum();
-    if (!album) return;
+    if (!album) return; // Escudo extra
+    
     const titleEl = document.getElementById('album-title'); if (titleEl) titleEl.innerText = album.profile.name;
     const inputProfile = document.getElementById('input-profile-name'); if(inputProfile) inputProfile.value = album.profile.name;
     
@@ -224,8 +237,6 @@ function applyCollectionSearch() {
 
 // --- FILTROS ---
 function clearFilters() { const searchEl = document.getElementById('search-input'); if(searchEl) searchEl.value = ''; const filterTeam = document.getElementById('filter-team'); if(filterTeam) filterTeam.value = 'all'; const filterGroup = document.getElementById('filter-group'); if(filterGroup) filterGroup.value = 'all'; activeSearch = { ...activeSearch, text: '', team: 'all', group: 'all' }; applyCollectionSearch(); }
-function populateTeamFilter() { const sel = document.getElementById('filter-team'); if(!sel || !window.DATA || !window.DATA.TEAMS) return; sel.innerHTML = '<option value="all">Todos los Equipos</option>'; window.DATA.TEAMS.forEach(t => { const opt = document.createElement('option'); opt.value = t.code; opt.innerText = t.name; sel.appendChild(opt); }); }
-function populateGroupFilter() { const sel = document.getElementById('filter-group'); if(!sel || !window.DATA || !window.DATA.TEAMS) return; sel.innerHTML = '<option value="all">Todos los Grupos</option>'; const groups = new Set(window.DATA.TEAMS.map(t => t.group)); groups.forEach(g => { const opt = document.createElement('option'); opt.value = g; opt.innerText = g; sel.appendChild(opt); }); }
 
 // --- CAMBIOS / EXPORTACIONES ---
 function renderTrades() {
@@ -254,72 +265,12 @@ window.exportMissingExcel = function() { let csv = 'Seccion,Laminas Faltantes\n'
 
 window.exportTradesPdf = function() {
     const p = getTotalProgress(); 
-    
-    // Construimos un documento HTML completamente limpio y nativo
-    let html = `
-    <!DOCTYPE html>
-    <html lang="es">
-    <head>
-        <meta charset="UTF-8">
-        <title>Láminas Repetidas - ${getActiveAlbum().profile.name}</title>
-        <style>
-            body { font-family: sans-serif; color: #000; padding: 20px; background: #fff; }
-            table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-            th, td { border: 1px solid #111; padding: 10px; text-align: left; font-size: 14px; }
-            th { background-color: #f5f5f5; }
-            h1 { font-size: 22px; margin-bottom: 4px; }
-            p { color: #444; font-size: 13px; margin-top: 0; }
-            @media print {
-                @page { margin: 1.5cm; }
-            }
-        </style>
-    </head>
-    <body>
-        <h1>Láminas Repetidas - ${getActiveAlbum().profile.name}</h1>
-        <p>Progreso del Álbum: ${p.have}/${p.total} (${p.percentage}%) | Total de cambios listos: ${getRepeatedTotal()}</p>
-        <table>
-            <thead>
-                <tr>
-                    <th style="width:180px;">Sección / Equipo</th>
-                    <th>Láminas Disponibles para Cambio</th>
-                </tr>
-            </thead>
-            <tbody>`;
-            
-    getTradeExportRows().forEach(r => { 
-        html += `<tr><td><strong>${r.section}</strong></td><td>${r.text}</td></tr>`; 
-    }); 
-    
+    let html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Láminas Repetidas</title><style>body{font-family:sans-serif;padding:20px;}table{width:100%;border-collapse:collapse;margin-top:15px;}th,td{border:1px solid #111;padding:10px;text-align:left;font-size:14px;}th{background-color:#f5f5f5;}h1{font-size:22px;margin-bottom:4px;}p{color:#444;font-size:13px;margin-top:0;}</style></head><body><h1>Láminas Repetidas - ${getActiveAlbum().profile.name}</h1><p>Progreso del Álbum: ${p.have}/${p.total} (${p.percentage}%) | Total de cambios listos: ${getRepeatedTotal()}</p><table><thead><tr><th style="width:180px;">Sección / Equipo</th><th>Láminas Disponibles</th></tr></thead><tbody>`;
+    getTradeExportRows().forEach(r => { html += `<tr><td><strong>${r.section}</strong></td><td>${r.text}</td></tr>`; }); 
     html += `</tbody></table></body></html>`;
-
-    // Creamos un Iframe invisible
-    const iframe = document.createElement('iframe');
-    iframe.style.position = 'fixed';
-    iframe.style.right = '0';
-    iframe.style.bottom = '0';
-    iframe.style.width = '0';
-    iframe.style.height = '0';
-    iframe.style.border = 'none';
-    document.body.appendChild(iframe);
-
-    // Escribimos el documento en el iframe
-    const doc = iframe.contentWindow.document;
-    doc.open();
-    doc.write(html);
-    doc.close();
-
-    // Damos tiempo a que el navegador dibuje el iframe antes de llamar a print()
-    setTimeout(() => {
-        iframe.contentWindow.focus();
-        iframe.contentWindow.print();
-        
-        // Destruimos el iframe después de mucho tiempo para no interferir con la UI del celular
-        setTimeout(() => { 
-            if (document.body.contains(iframe)) {
-                document.body.removeChild(iframe); 
-            }
-        }, 15000); 
-    }, 500);
+    const iframe = document.createElement('iframe'); iframe.style.position = 'fixed'; iframe.style.right = '0'; iframe.style.bottom = '0'; iframe.style.width = '0'; iframe.style.height = '0'; iframe.style.border = 'none'; document.body.appendChild(iframe);
+    const doc = iframe.contentWindow.document; doc.open(); doc.write(html); doc.close();
+    setTimeout(() => { iframe.contentWindow.focus(); iframe.contentWindow.print(); setTimeout(() => { if (document.body.contains(iframe)) { document.body.removeChild(iframe); } }, 15000); }, 500);
 };
 
 window.generateShareText = function() { const p = getTotalProgress(); let txt = `*${getActiveAlbum().profile.name}*\nProgreso: ${p.have}/${p.total} (${p.percentage}%)\nRepetidas: ${getRepeatedTotal()}\n\n`; getTradeExportRows().forEach(r => { txt += `${r.section}: ${r.text}\n`; }); const shareEl = document.getElementById('share-textarea'); if(shareEl) shareEl.value = txt; window.showModal('modal-share'); }
@@ -327,26 +278,17 @@ function downloadBlob(b, f) { const u = URL.createObjectURL(b); const a = docume
 
 window.showMyQR = function() { loadQRLibraries(() => {
     const jsonStr = getGlobalMinifiedData(); 
-    
-    // COMPRESIÓN: Reducimos el JSON a una cadena de caracteres alfanuméricos segura
     const compressedData = LZString.compressToEncodedURIComponent(jsonStr);
-    
     if (compressedData.length > 2500) { alert("⚠️ Tienes demasiadas láminas repetidas. Usa el botón 'Copiar Texto'."); return; }
-    
     const imgEl = document.getElementById('qr-image');
-    try { 
-        QRCode.toDataURL(compressedData, { width: 800, margin: 2, errorCorrectionLevel: 'L', color: { dark: '#000', light: '#fff' } }, function (error, url) { 
-            if (error) { alert("Error interno."); } else { imgEl.src = url; window.showModal('modal-my-qr'); } 
-        }); 
-    } catch (e) { alert("Error al generar QR."); }
+    try { QRCode.toDataURL(compressedData, { width: 800, margin: 2, errorCorrectionLevel: 'L', color: { dark: '#000', light: '#fff' } }, function (error, url) { if (!error) { imgEl.src = url; window.showModal('modal-my-qr'); } }); } catch (e) { alert("Error al generar QR."); }
 }); };
 
-window.openCameraScanner = function() { loadQRLibraries(() => { window.showModal('modal-scanner'); html5QrcodeScanner = new Html5Qrcode("qr-reader"); html5QrcodeScanner.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 250 } }, (decodedText) => { window.closeScannerModal(); const matchInput = document.getElementById('match-input'); if(matchInput) { matchInput.value = decodedText; processQRText(); } }, (errorMessage) => {} ).catch(err => { alert("No se pudo iniciar la cámara."); window.closeScannerModal(); }); }); }
+window.openCameraScanner = function() { loadQRLibraries(() => { window.showModal('modal-scanner'); html5QrcodeScanner = new Html5Qrcode("qr-reader"); html5QrcodeScanner.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 250 } }, (decodedText) => { window.closeScannerModal(); const matchInput = document.getElementById('match-input'); if(matchInput) { matchInput.value = decodedText; processQRText(); } }, (e) => {} ).catch(err => { alert("No se pudo iniciar cámara."); window.closeScannerModal(); }); }); }
 window.closeScannerModal = function() { if (html5QrcodeScanner) { html5QrcodeScanner.stop().then(() => { html5QrcodeScanner.clear(); window.closeModal('modal-scanner'); }).catch(e => window.closeModal('modal-scanner')); } else { window.closeModal('modal-scanner'); } }
 
 window.uploadQRImage = function(event) { const file = event.target.files[0]; if (!file) return; loadQRLibraries(() => {
-    const reader = new FileReader();
-    reader.onload = (e) => { const img = new Image(); img.onload = () => {
+    const reader = new FileReader(); reader.onload = (e) => { const img = new Image(); img.onload = () => {
             const canvas = document.getElementById('hidden-qr-canvas'); const context = canvas.getContext('2d', { willReadFrequently: true }); const maxSize = 2000; let w = img.width; let h = img.height;
             if (w > maxSize || h > maxSize) { const r = Math.min(maxSize / w, maxSize / h); w *= r; h *= r; }
             canvas.width = w; canvas.height = h; context.fillStyle = '#FFFFFF'; context.fillRect(0, 0, w, h); context.drawImage(img, 0, 0, w, h);
@@ -356,84 +298,40 @@ window.uploadQRImage = function(event) { const file = event.target.files[0]; if 
 }); };
 
 function processQRText() {
-    const matchInput = document.getElementById('match-input');
-    if(!matchInput) return;
-    const input = matchInput.value.trim();
-    if(!input) { clearMatchInput(); return; }
-
-    // Envolvemos todo en loadQRLibraries para garantizar que LZString exista si pegaron texto directamente
+    const matchInput = document.getElementById('match-input'); if(!matchInput) return; const input = matchInput.value.trim(); if(!input) { clearMatchInput(); return; }
     loadQRLibraries(() => {
-        let finalDataToProcess = input;
-        
-        // INTENTO DE DESCOMPRESIÓN:
-        // Si el texto pegado/escaneado está comprimido, esto lo devolverá a formato JSON normal.
-        const decompressed = LZString.decompressFromEncodedURIComponent(input);
-        
-        // Si decompressed no es nulo, significa que era un código nuevo comprimido. Lo usamos.
-        // Si es nulo, significa que era un JSON crudo antiguo (v51). Conservamos el input original.
-        if (decompressed) {
-            finalDataToProcess = decompressed;
-        }
-
-        // Enviamos los datos (descomprimidos o antiguos) al Súper Match
-        if(compareGlobalTrades(finalDataToProcess)) {
-            renderMatchResultsUI();
-        }
+        let finalData = input; const decompressed = LZString.decompressFromEncodedURIComponent(input); if (decompressed) finalData = decompressed;
+        if(compareGlobalTrades(finalData)) renderMatchResultsUI();
     });
 }
-// PUENTE DE RETROCOMPATIBILIDAD
-window.processQRText = processQRText;
-window.compareTradesFromText = processQRText;
+window.processQRText = processQRText; window.compareTradesFromText = processQRText;
 
-function clearMatchInput() { 
-    const matchInput = document.getElementById('match-input'); if(matchInput) matchInput.value = ''; 
-    const container = document.getElementById('match-results-container'); if(container) container.style.display = 'none'; 
-}
+function clearMatchInput() { const matchInput = document.getElementById('match-input'); if(matchInput) matchInput.value = ''; const container = document.getElementById('match-results-container'); if(container) container.style.display = 'none'; }
 window.clearMatchInput = clearMatchInput;
 
 function renderMatchResultsUI() {
     if(!lastMatchResult) return;
     let totalRec = 0; for(let team in lastMatchResult.iReceive) totalRec += lastMatchResult.iReceive[team].length;
     let totalGive = 0; for(let team in lastMatchResult.iGive) totalGive += lastMatchResult.iGive[team].length;
-    
-    // Obtenemos el nombre dinámico calculado
     let myNameStr = getFamilyNameString();
-    
     let optimal = Math.min(totalRec, totalGive); 
     let bottleneck = totalRec < totalGive ? `(Menos repetidas: ${lastMatchResult.friendName})` : totalGive < totalRec ? `(Menos repetidas: ${myNameStr})` : `(Ambos ofrecen igual)`;
     
     let html = `<p style="text-align:center; color:var(--text-secondary); margin-bottom:1rem;">Comparación Global con: <strong style="color:var(--text-primary); font-size:1.1rem;">${lastMatchResult.friendName}</strong></p>`;
-    
-    html += `<div style="background: rgba(59,130,246,0.1); border: 1px dashed var(--blue-accent); padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; text-align: center;">
-                <p style="margin-bottom: 0.5rem; color: var(--text-primary);"><strong>📊 Resumen de Match</strong></p>
-                <p style="font-size: 0.9rem; margin-bottom: 0.2rem; color: var(--text-secondary);">${myNameStr} Recibe: <strong style="color:var(--green-complete)">${totalRec}</strong> láminas</p>
-                <p style="font-size: 0.9rem; margin-bottom: 0.8rem; color: var(--text-secondary);">${myNameStr} Entrega: <strong style="color:var(--gold)">${totalGive}</strong> láminas</p>
-                <div style="background: var(--blue-accent); color: white; padding: 0.4rem 0.8rem; border-radius: 6px; display: inline-block; margin-bottom: 1rem;"><strong>Máx. cambios: ${optimal}</strong> <span style="font-size: 0.8rem; opacity: 0.9;">${bottleneck}</span></div>
-                <button class="btn" style="background:var(--green-complete); width:100%; max-width:280px; margin:5px auto 0; display:block; font-size:0.85rem;" onclick="window.applyInterchangeAutomatic()">⚡ Aplicar Intercambio en 1-Clic</button>
-            </div>
-            <div class="match-columns">
-                <div class="match-col"><h3>⬇️ ${myNameStr} Recibe</h3>`;
+    html += `<div style="background: rgba(59,130,246,0.1); border: 1px dashed var(--blue-accent); padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; text-align: center;"><p style="margin-bottom: 0.5rem; color: var(--text-primary);"><strong>📊 Resumen de Match</strong></p><p style="font-size: 0.9rem; margin-bottom: 0.2rem; color: var(--text-secondary);">${myNameStr} Recibe: <strong style="color:var(--green-complete)">${totalRec}</strong> láminas</p><p style="font-size: 0.9rem; margin-bottom: 0.8rem; color: var(--text-secondary);">${myNameStr} Entrega: <strong style="color:var(--gold)">${totalGive}</strong> láminas</p><div style="background: var(--blue-accent); color: white; padding: 0.4rem 0.8rem; border-radius: 6px; display: inline-block; margin-bottom: 1rem;"><strong>Máx. cambios: ${optimal}</strong> <span style="font-size: 0.8rem; opacity: 0.9;">${bottleneck}</span></div><button class="btn" style="background:var(--green-complete); width:100%; max-width:280px; margin:5px auto 0; display:block; font-size:0.85rem;" onclick="window.applyInterchangeAutomatic()">⚡ Aplicar Intercambio en 1-Clic</button></div><div class="match-columns"><div class="match-col"><h3>⬇️ ${myNameStr} Recibe</h3>`;
     
     let recCount = 0; for(let team in lastMatchResult.iReceive) { html += `<strong>${team}</strong><span>${lastMatchResult.iReceive[team].join(', ')}</span>`; recCount++; }
     if(recCount === 0) html += '<p class="text-muted">Ninguna :(</p>'; 
-    
     html += `</div><div class="match-col"><h3>⬆️ ${myNameStr} Entrega</h3>`;
     
     let giveCount = 0; for(let team in lastMatchResult.iGive) { html += `<strong>${team}</strong><span>${lastMatchResult.iGive[team].join(', ')}</span>`; giveCount++; }
-    if(giveCount === 0) html += '<p class="text-muted">Ninguna :(</p>'; 
-    html += '</div></div>';
+    if(giveCount === 0) html += '<p class="text-muted">Ninguna :(</p>'; html += '</div></div>';
     
     const resultsDiv = document.getElementById('match-results'); if(resultsDiv) resultsDiv.innerHTML = html; 
     const container = document.getElementById('match-results-container'); if(container) container.style.display = 'block';
 }
 
-window.applyInterchangeAutomatic = function() {
-    if(executeGlobalTrade()) { 
-        alert("¡Intercambio aplicado globalmente en tus álbumes!"); 
-        clearMatchInput(); 
-        updateUIForActiveAlbum(); 
-    }
-};
+window.applyInterchangeAutomatic = function() { if(executeGlobalTrade()) { alert("¡Intercambio aplicado globalmente en tus álbumes!"); clearMatchInput(); updateUIForActiveAlbum(); } };
 
 window.shareMatchWhatsApp = function() {
     if(!lastMatchResult) return;
@@ -447,89 +345,33 @@ window.shareMatchWhatsApp = function() {
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
 }
 
-// --- UTILIDADES ---
-function checkIOSInstall() {
-    const isIos = () => /iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase()); const isStandalone = () => ('standalone' in window.navigator) && window.navigator.standalone;
-    if (isIos() && !isStandalone()) { const prompt = document.getElementById('ios-install-prompt'); if (prompt && !localStorage.getItem('ios_prompt_dismissed')) { prompt.style.display = 'block'; prompt.querySelector('.close-ios-prompt').onclick = () => { prompt.style.display = 'none'; localStorage.setItem('ios_prompt_dismissed', 'true'); }; } }
-}
-
 window.exportData = function() { downloadBlob(new Blob([JSON.stringify(globalState, null, 2)], { type: 'application/json' }), 'album_mundial_2026_backup.json'); }
 
 window.importData = function(e) { 
-    const f = e.target.files[0]; 
-    if (!f) return; 
-    const r = new FileReader(); 
+    const f = e.target.files[0]; if (!f) return; const r = new FileReader(); 
     r.onload = (ev) => { 
         try { 
             const d = JSON.parse(ev.target.result); 
-            
-            // CASO 1: Es un respaldo moderno Multi-Álbum (v49/v50)
             if (d.albums) { 
-                let action = prompt("Este archivo contiene un gestor Multi-Álbum.\n\nEscribe 'REEMPLAZAR' para borrar tu app y restaurar esta copia exacta, o 'FUSIONAR' para añadir los álbumes de este archivo a los que ya tienes.");
-                
-                if (action && action.toUpperCase() === 'REEMPLAZAR') {
-                    localStorage.setItem('album_mundial_2026_data', ev.target.result); 
-                    alert('Base de datos reemplazada al 100%.'); 
-                    window.location.reload(); 
-                } else if (action && action.toUpperCase() === 'FUSIONAR') {
-                    let added = 0;
-                    for (let id in d.albums) {
-                        let newId = 'album_imported_' + Date.now() + Math.floor(Math.random() * 1000);
-                        globalState.albums[newId] = d.albums[id];
-                        added++;
-                    }
-                    saveStore();
-                    alert(`Se han fusionado ${added} álbumes nuevos a tu cuenta.`);
-                    window.location.reload();
-                }
+                let action = prompt("Este archivo contiene un gestor Multi-Álbum.\n\nEscribe 'REEMPLAZAR' o 'FUSIONAR'.");
+                if (action && action.toUpperCase() === 'REEMPLAZAR') { localStorage.setItem('albumStore', ev.target.result); alert('Base de datos reemplazada.'); window.location.reload(); } 
+                else if (action && action.toUpperCase() === 'FUSIONAR') { for (let id in d.albums) { globalState.albums['album_imported_' + Date.now() + Math.random()] = d.albums[id]; } saveStore(); alert(`Álbumes fusionados.`); window.location.reload(); }
             } 
-            // CASO 2: Es un respaldo antiguo o de un solo álbum (v48 o inferior)
             else if (d.stickers) { 
-                let importedName = d.profile?.name || 'Álbum Importado';
-                let currentName = getActiveAlbum().profile.name;
-                
-                let action = prompt(`Se detectó el álbum: "${importedName}".\n\nEscribe 'REEMPLAZAR' para sobrescribir tu álbum actual ("${currentName}"), o 'AGREGAR' para sumarlo como una cuenta extra.`);
-                
-                if (action && action.toUpperCase() === 'REEMPLAZAR') {
-                    globalState.albums[globalState.activeAlbumId] = {
-                        profile: d.profile || { name: importedName },
-                        stickers: d.stickers || {},
-                        milestones: d.milestones || {}
-                    };
-                    saveStore();
-                    alert(`Álbum "${currentName}" reemplazado con éxito por "${importedName}".`);
-                    window.location.reload();
-                } else if (action && action.toUpperCase() === 'AGREGAR') {
-                    const newId = 'album_' + Date.now();
-                    globalState.albums[newId] = {
-                        profile: d.profile || { name: importedName },
-                        stickers: d.stickers || {},
-                        milestones: d.milestones || {}
-                    };
-                    globalState.activeAlbumId = newId;
-                    saveStore();
-                    alert(`¡Álbum de ${importedName} importado exitosamente como cuenta nueva!`);
-                    window.location.reload();
-                }
-            } else { 
-                alert('Archivo JSON no reconocido.'); 
-            }
-        } catch (err) { 
-            alert('Archivo JSON inválido.'); 
-        } 
+                let importedName = d.profile?.name || 'Álbum Importado'; let currentName = getActiveAlbum().profile.name;
+                let action = prompt(`Se detectó el álbum: "${importedName}".\n\nEscribe 'REEMPLAZAR' o 'AGREGAR'.`);
+                if (action && action.toUpperCase() === 'REEMPLAZAR') { globalState.albums[globalState.activeAlbumId] = { profile: d.profile || { name: importedName }, stickers: d.stickers || {}, milestones: d.milestones || {} }; saveStore(); alert(`Álbum reemplazado.`); window.location.reload(); } 
+                else if (action && action.toUpperCase() === 'AGREGAR') { const newId = 'album_' + Date.now(); globalState.albums[newId] = { profile: d.profile || { name: importedName }, stickers: d.stickers || {}, milestones: d.milestones || {} }; globalState.activeAlbumId = newId; saveStore(); alert(`Álbum importado.`); window.location.reload(); }
+            } else { alert('Archivo JSON no reconocido.'); }
+        } catch (err) { alert('Archivo JSON inválido.'); } 
     }; 
-    r.readAsText(f); 
-    e.target.value = ''; // Limpia el input para permitir subir el mismo archivo dos veces seguidas si se equivoca
+    r.readAsText(f); e.target.value = ''; 
 }
 
 window.confirmReset = function() { if (confirm('¿Seguro que deseas borrar el progreso del álbum actual?')) { getActiveAlbum().stickers = {}; getActiveAlbum().milestones = {}; saveStore(); window.closeModal('modal-settings'); updateUIForActiveAlbum(); } }
-window.forceUpdateCache = function() { if ('caches' in window) { caches.keys().then(names => { for (let n of names) caches.delete(n); }).then(() => { alert("Caché borrada."); window.location.href = window.location.pathname + '?v=' + new Date().getTime(); }); } else { window.location.reload(true); } }
 window.toggleTheme = function() { const root = document.documentElement; if (root.getAttribute('data-theme') === 'light') { root.removeAttribute('data-theme'); localStorage.setItem('album_theme_2026', 'dark'); } else { root.setAttribute('data-theme', 'light'); localStorage.setItem('album_theme_2026', 'light'); } }
-function loadTheme() { if (localStorage.getItem('album_theme_2026') === 'light') document.documentElement.setAttribute('data-theme', 'light'); }
 window.showModal = function(id) { const m = document.getElementById(id); if(m) m.style.display = 'flex'; }
 window.closeModal = function(id) { const m = document.getElementById(id); if(m) { m.style.display = 'none'; } currentOpenTeam = null; }
-function updateHeaderOffset() { const h = document.querySelector('.app-header'); if(h) document.documentElement.style.setProperty('--header-offset', `${h.offsetHeight + 18}px`); }
-function observeHeaderOffset() { updateHeaderOffset(); window.addEventListener('resize', updateHeaderOffset); window.addEventListener('orientationchange', () => setTimeout(updateHeaderOffset, 150)); if(document.fonts) document.fonts.ready.then(updateHeaderOffset); }
 
 function triggerConfetti(x, y) {
     const canvas = document.getElementById('confetti-canvas'); if(!canvas) return; const ctx = canvas.getContext('2d'); canvas.width = window.innerWidth; canvas.height = window.innerHeight; let particles = [];
@@ -538,29 +380,13 @@ function triggerConfetti(x, y) {
 }
 function shootBigConfetti() { triggerConfetti(window.innerWidth/2, window.innerHeight/2); setTimeout(() => triggerConfetti(window.innerWidth/3, window.innerHeight/2), 200); setTimeout(() => triggerConfetti((window.innerWidth/3)*2, window.innerHeight/2), 400); }
 
-// --- COPIAR JSON AL PORTAPAPELES (Sin compresión) ---
 window.copyMyJsonForTrade = function() {
-    // Obtenemos los datos minificados del Match Global en texto plano
-    const jsonStr = getGlobalMinifiedData(); 
-    if (!jsonStr) { alert("No hay datos para copiar."); return; }
-
-    // Usamos el JSON crudo directamente, sin LZString
-    if (navigator.clipboard && window.isSecureContext) {
-        navigator.clipboard.writeText(jsonStr).then(() => {
-            alert("¡Texto JSON copiado al portapapeles con éxito! Envíalo por WhatsApp o correo.");
-        }).catch(err => { alert("Error al copiar al portapapeles: " + err); });
-    } else {
-        let textArea = document.createElement("textarea");
-        textArea.value = jsonStr;
-        textArea.style.position = "fixed"; textArea.style.left = "-999999px"; textArea.style.top = "-999999px";
-        document.body.appendChild(textArea); textArea.focus(); textArea.select();
-        try { document.execCommand('copy'); alert("¡Texto JSON copiado al portapapeles con éxito!"); } 
-        catch (err) { alert("Hubo un problema copiando el código."); }
-        textArea.remove();
-    }
+    const jsonStr = getGlobalMinifiedData(); if (!jsonStr) { alert("No hay datos para copiar."); return; }
+    if (navigator.clipboard && window.isSecureContext) { navigator.clipboard.writeText(jsonStr).then(() => { alert("¡Texto JSON copiado al portapapeles!"); }); } 
+    else { let textArea = document.createElement("textarea"); textArea.value = jsonStr; textArea.style.position = "fixed"; textArea.style.left = "-999999px"; textArea.style.top = "-999999px"; document.body.appendChild(textArea); textArea.focus(); textArea.select(); try { document.execCommand('copy'); alert("¡Texto copiado!"); } catch (err) { alert("Hubo un problema copiando."); } textArea.remove(); }
 };
 
-// --- VINCULACIÓN SEGURA DE EVENTOS ---
+// --- VINCULACIÓN DE EVENTOS ---
 function bindEvents() {
     const click = (id, fn) => { const el = document.getElementById(id); if(el) el.onclick = fn; };
     const input = (id, fn) => { const el = document.getElementById(id); if(el) el.oninput = fn; };
@@ -579,220 +405,51 @@ function bindEvents() {
     change('filter-group', (e) => { activeSearch.group = e.target.value; applyCollectionSearch(); }); 
     change('sort-select', (e) => { activeSearch.sort = e.target.value; applyCollectionSearch(); });
     
-    input('match-input', processQRText); // Nuevo enlace de input
+    input('match-input', processQRText); 
     
-    document.querySelectorAll('.close-modal').forEach(btn => { 
-        btn.onclick = () => { 
-            const modal = btn.closest('.modal');
-            if(modal) modal.style.display = 'none'; 
-            currentOpenTeam = null; 
-        }; 
-    });
-
-    document.querySelectorAll('.nav-btn').forEach(btn => { 
-        btn.onclick = () => { 
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active')); 
-            document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active')); 
-            btn.classList.add('active'); 
-            const t = btn.getAttribute('data-target'); 
-            const targetPane = document.getElementById(t);
-            if(targetPane) targetPane.classList.add('active'); 
-            if (t === 'tab-trades') renderTrades(); 
-            window.scrollTo(0, 0); 
-        }; 
-    });
-    click('btn-modal-create-album', () => {
-        const input = document.getElementById('new-album-input');
-        if (input && input.value.trim() !== '') {
-            createNewAlbum(input.value.trim());
-            input.value = ''; // Limpiamos el cuadro
-            renderAlbumSelector();
-            updateUIForActiveAlbum();
-            window.closeModal('modal-manage-albums');
-        } else {
-            alert("Por favor, escribe un nombre válido.");
-        }
-    });
-
-    click('btn-modal-delete-album', () => {
-        window.closeModal('modal-manage-albums');
-        deleteActiveAlbum(); 
-    });
+    document.querySelectorAll('.close-modal').forEach(btn => { btn.onclick = () => { const modal = btn.closest('.modal'); if(modal) modal.style.display = 'none'; currentOpenTeam = null; }; });
+    document.querySelectorAll('.nav-btn').forEach(btn => { btn.onclick = () => { document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active')); document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active')); btn.classList.add('active'); const t = btn.getAttribute('data-target'); const targetPane = document.getElementById(t); if(targetPane) targetPane.classList.add('active'); if (t === 'tab-trades') renderTrades(); window.scrollTo(0, 0); }; });
+    
+    click('btn-modal-create-album', () => { const input = document.getElementById('new-album-input'); if (input && input.value.trim() !== '') { createNewAlbum(input.value.trim()); input.value = ''; renderAlbumSelector(); updateUIForActiveAlbum(); window.closeModal('modal-manage-albums'); } });
+    click('btn-modal-delete-album', () => { window.closeModal('modal-manage-albums'); deleteActiveAlbum(); });
 }
 
 // --- AUTENTICACIÓN FIREBASE ---
-window.loginGoogle = function() {
-    signInWithPopup(auth, provider).then((result) => {
-        console.log("Login exitoso", result.user.email);
-        alert("¡Sesión iniciada con éxito! Tus álbumes se están sincronizando.");
-    }).catch(err => alert("Error al iniciar sesión: " + err.message));
-};
-
-window.logoutGoogle = function() {
-    signOut(auth).then(() => {
-        alert("Sesión cerrada. Los datos actuales se mantienen guardados en este dispositivo.");
-    }).catch(err => alert("Error al cerrar sesión: " + err));
-};
+window.loginGoogle = function() { signInWithPopup(auth, provider).then(() => { alert("¡Sesión iniciada! Sincronizando..."); }).catch(err => alert("Error: " + err.message)); };
+window.logoutGoogle = function() { signOut(auth).then(() => { alert("Sesión cerrada. Datos mantenidos en dispositivo."); }).catch(err => alert("Error: " + err)); };
 
 function updateAuthUI(user) {
-    const btnLogin = document.getElementById('btn-login-google');
-    const authInfo = document.getElementById('auth-user-info');
-    const authText = document.getElementById('auth-status-text');
-    const emailText = document.getElementById('auth-user-email');
-
-    if (user) {
-        if(btnLogin) btnLogin.style.display = 'none';
-        if(authInfo) authInfo.style.display = 'flex';
-        if(authText) authText.innerText = "Tus álbumes se están guardando automáticamente en la nube.";
-        if(emailText) emailText.innerText = `👋 Hola, ${user.displayName || user.email}`;
-    } else {
-        if(btnLogin) btnLogin.style.display = 'flex';
-        if(authInfo) authInfo.style.display = 'none';
-        if(authText) authText.innerText = "Inicia sesión para sincronizar tus álbumes automáticamente en todos tus dispositivos.";
-        if(emailText) emailText.innerText = "";
-    }
+    const btnLogin = document.getElementById('btn-login-google'); const authInfo = document.getElementById('auth-user-info'); const authText = document.getElementById('auth-status-text'); const emailText = document.getElementById('auth-user-email');
+    if (user) { if(btnLogin) btnLogin.style.display = 'none'; if(authInfo) authInfo.style.display = 'flex'; if(authText) authText.innerText = "Tus álbumes se están guardando automáticamente."; if(emailText) emailText.innerText = `👋 Hola, ${user.displayName || user.email}`; } 
+    else { if(btnLogin) btnLogin.style.display = 'flex'; if(authInfo) authInfo.style.display = 'none'; if(authText) authText.innerText = "Inicia sesión para sincronizar automáticamente."; if(emailText) emailText.innerText = ""; }
 }
 
-// --- LÓGICA DE MATCH EN LÍNEA (v58) ---
+// --- MATCH EN LÍNEA ---
+window.openOnlineMatchModal = function() { const modal = document.getElementById('modal-online-match'); if (!modal) return; if (!auth || !auth.currentUser) { alert("Debes iniciar sesión para usar esto."); return; } if (globalState.friendCode) { document.getElementById('online-match-setup').style.display = 'none'; document.getElementById('online-match-ready').style.display = 'block'; document.getElementById('display-my-code').innerText = globalState.friendCode; } else { document.getElementById('online-match-setup').style.display = 'block'; document.getElementById('online-match-ready').style.display = 'none'; } modal.style.display = 'flex'; }
+window.closeOnlineMatchModal = function() { document.getElementById('modal-online-match').style.display = 'none'; }
 
-window.openOnlineMatchModal = function() {
-    const modal = document.getElementById('modal-online-match');
-    if (!modal) return;
-    
-    if (!auth || !auth.currentUser) {
-        alert("Debes iniciar sesión en Configuración (⚙️) para usar el Intercambio en Línea.");
-        return;
-    }
-    
-    if (globalState.friendCode) {
-        document.getElementById('online-match-setup').style.display = 'none';
-        document.getElementById('online-match-ready').style.display = 'block';
-        document.getElementById('display-my-code').innerText = globalState.friendCode;
-    } else {
-        document.getElementById('online-match-setup').style.display = 'block';
-        document.getElementById('online-match-ready').style.display = 'none';
-    }
-    
-    modal.style.display = 'flex';
-}
+window.handleClaimCode = async function() { const input = document.getElementById('input-claim-code'); const btn = document.getElementById('btn-claim-code'); const desiredCode = input.value; if (!desiredCode) return alert("Escribe un código."); btn.innerText = "Pensando..."; btn.disabled = true; try { await claimFriendCode(auth.currentUser, desiredCode); alert("¡Tu código es " + globalState.friendCode); window.openOnlineMatchModal(); } catch (error) { alert(error.message); } finally { btn.innerText = "Reclamar"; btn.disabled = false; } }
 
-window.closeOnlineMatchModal = function() {
-    document.getElementById('modal-online-match').style.display = 'none';
-}
-
-window.handleClaimCode = async function() {
-    const input = document.getElementById('input-claim-code');
-    const btn = document.getElementById('btn-claim-code');
-    const desiredCode = input.value;
-    
-    if (!desiredCode) return alert("Escribe un código primero.");
-    
-    btn.innerText = "Pensando...";
-    btn.disabled = true;
-    
-    try {
-        await claimFriendCode(auth.currentUser, desiredCode);
-        alert("¡Felicidades! Tu código único es " + globalState.friendCode);
-        window.openOnlineMatchModal(); // Refrescar pantalla
-    } catch (error) {
-        alert(error.message);
-    } finally {
-        btn.innerText = "Reclamar";
-        btn.disabled = false;
-    }
-}
-
-function getMagicLink() {
-    const baseUrl = window.location.href.split('?')[0]; 
-    return `${baseUrl}?match=${globalState.friendCode}`;
-}
-
-window.shareViaWhatsApp = function() {
-    const link = getMagicLink();
-    const mensaje = `¡Hola! Estoy juntando el Álbum del Mundial 2026. Mi código es ${globalState.friendCode}. Entra a este link para ver qué láminas podemos cambiar:\n\n${link}`;
-    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(mensaje)}`, '_blank');
-}
-
-window.copyMagicLink = function() {
-    const link = getMagicLink();
-    navigator.clipboard.writeText(link).then(() => {
-        alert("Enlace copiado al portapapeles.");
-    }).catch(err => alert("Error al copiar: " + err));
-}
+function getMagicLink() { return `${window.location.href.split('?')[0]}?match=${globalState.friendCode}`; }
+window.shareViaWhatsApp = function() { window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(`¡Hola! Mi código es ${globalState.friendCode}. Revisa qué láminas cambiamos:\n\n${getMagicLink()}`)}`, '_blank'); }
+window.copyMagicLink = function() { navigator.clipboard.writeText(getMagicLink()).then(() => alert("Copiado al portapapeles.")); }
 
 window.handleSearchFriend = async function() {
-    const input = document.getElementById('input-friend-code');
-    const btn = document.getElementById('btn-search-friend');
-    const friendCode = input.value;
-    
-    if (!friendCode) return alert("Escribe el código de tu amigo.");
-    
-    btn.innerText = "Buscando...";
-    btn.disabled = true;
-    
+    const input = document.getElementById('input-friend-code'); const btn = document.getElementById('btn-search-friend'); const friendCode = input.value; if (!friendCode) return alert("Escribe un código.");
+    btn.innerText = "Buscando..."; btn.disabled = true;
     try {
-        const compressedData = await getFriendBox(friendCode);
-        window.closeOnlineMatchModal(); 
+        const compressedData = await getFriendBox(friendCode); window.closeOnlineMatchModal(); 
+        const parts = compressedData.split('|'); const repArray = parts[1] ? parts[1].split(',') : []; const missingArray = parts[2] ? parts[2].split(',') : [];
+        let fakeS = {}; if (window.DATA && window.DATA.TEAMS) { window.DATA.TEAMS.forEach(team => { team.stickers.forEach(s => { if (!missingArray.includes(s.code)) { fakeS[s.code] = repArray.includes(s.code) ? 2 : 1; } }); }); }
         
-        // --- INICIO DEL TRADUCTOR BLINDADO ---
-        const parts = compressedData.split('|');
-        const repArray = parts[1] ? parts[1].split(',') : [];
-        const missingArray = parts[2] ? parts[2].split(',') : [];
+        const jsonForMatch = JSON.stringify({ n: friendCode, profile: { name: friendCode }, s: fakeS, m: [] });
         
-        let fakeS = {};
-        if (window.DATA && window.DATA.TEAMS) {
-            window.DATA.TEAMS.forEach(team => {
-                team.stickers.forEach(s => {
-                    if (!missingArray.includes(s.code)) {
-                        fakeS[s.code] = repArray.includes(s.code) ? 2 : 1;
-                    }
-                });
-            });
-        }
-        
-        // ¡BLINDAJE!: Agregamos TODAS las variables (n, profile, s, m) 
-        // para que tu código antiguo no extrañe absolutamente nada.
-        const jsonForMatch = JSON.stringify({
-            n: friendCode,
-            profile: { name: friendCode }, // <- Engaño para evitar el error 'null'
-            s: fakeS,
-            m: []
-        });
-        // --- FIN DEL TRADUCTOR ---
-
         if (typeof compareGlobalTrades === 'function') {
-            try {
-                // Intentamos hacer el cálculo matemático
-                const matchResult = compareGlobalTrades(jsonForMatch);
-                
-                if (matchResult) {
-                    try {
-                        // Intentamos dibujar la tabla en pantalla
-                        renderMatchResultsUI(); 
-                        setTimeout(() => {
-                            const matchContainer = document.getElementById('match-results-container');
-                            if(matchContainer) matchContainer.scrollIntoView({ behavior: 'smooth' });
-                        }, 100);
-                    } catch (uiError) {
-                        alert("Error al DIBUJAR la tabla:\n" + uiError.message + "\n" + uiError.stack);
-                    }
-                } else {
-                    alert("El Match se calculó, pero devolvió un resultado vacío.");
-                }
-            } catch (mathError) {
-                alert("Error al CALCULAR el Match:\n" + mathError.message + "\n\nLínea exacta: " + mathError.stack);
-                console.error(mathError);
-            }
-        } else {
-             alert("Error: La función compareGlobalTrades no está importada en app.js.");
-        }
-        
-    } catch (error) {
-        alert("Error de conexión a la nube: " + error.message);
-    } finally {
-        btn.innerText = "Buscar";
-        btn.disabled = false;
-    }
+            const matchResult = compareGlobalTrades(jsonForMatch);
+            if (matchResult) { renderMatchResultsUI(); setTimeout(() => { const matchContainer = document.getElementById('match-results-container'); if(matchContainer) matchContainer.scrollIntoView({ behavior: 'smooth' }); }, 100); } 
+            else { alert("Match calculó pero devolvió vacío."); }
+        } else { alert("Función compareGlobalTrades no encontrada."); }
+    } catch (error) { alert("Error: " + error.message); } finally { btn.innerText = "Buscar"; btn.disabled = false; }
 }
 
 document.addEventListener('DOMContentLoaded', init);
