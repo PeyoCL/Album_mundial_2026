@@ -1,5 +1,5 @@
-import { globalState, loadStore, saveStore, getActiveAlbum, createNewAlbum, deleteActiveAlbum, getFamilyNameString, syncWithCloud, claimFriendCode, getFriendBox } from './store.js?v=58';
-import { auth, provider, signInWithPopup, signOut, onAuthStateChanged } from './firebase-config.js?v=58';
+import { globalState, loadStore, saveStore, getActiveAlbum, createNewAlbum, deleteActiveAlbum, getFamilyNameString, syncWithCloud, claimFriendCode, getFriendBox } from './store.js?v=60';
+import { auth, provider, signInWithPopup, signOut, onAuthStateChanged } from './firebase-config.js?v=60';
 import { getGlobalMinifiedData, compareGlobalTrades, executeGlobalTrade, lastMatchResult } from './match.js';
 
 window.onerror = function(msg, url, line) { alert("🚨 ERROR EN LA APP:\n" + msg + "\nLínea: " + line); return false; };
@@ -719,13 +719,46 @@ window.handleSearchFriend = async function() {
     
     try {
         const compressedData = await getFriendBox(friendCode);
-        window.closeOnlineMatchModal();
+        window.closeOnlineMatchModal(); // Cerramos el modal de buscar amigo
         
-        // Ejecutamos tu función de Match original pasándole los datos de la nube
+        // --- INICIO DEL TRADUCTOR ---
+        const parts = compressedData.split('|');
+        const repArray = parts[1] ? parts[1].split(',') : [];
+        const missingArray = parts[2] ? parts[2].split(',') : [];
+        
+        let fakeS = {};
+        if (window.DATA && window.DATA.TEAMS) {
+            window.DATA.TEAMS.forEach(team => {
+                team.stickers.forEach(s => {
+                    if (!missingArray.includes(s.code)) {
+                        fakeS[s.code] = repArray.includes(s.code) ? 2 : 1;
+                    }
+                });
+            });
+        }
+        
+        const jsonForMatch = JSON.stringify({
+            n: friendCode,
+            s: fakeS
+        });
+        // --- FIN DEL TRADUCTOR ---
+
+        // Ejecutamos tu función de Match original (importada de match.js)
         if (typeof compareGlobalTrades === 'function') {
-             compareGlobalTrades(compressedData);
+            const matchResult = compareGlobalTrades(jsonForMatch);
+            
+            if (matchResult) {
+                // ¡AQUÍ ESTÁ LA MAGIA! Llamamos a tu función para que dibuje la pantalla
+                renderMatchResultsUI(); 
+                
+                // (Opcional) Si la pantalla de match está muy abajo, hacemos scroll hacia ella
+                setTimeout(() => {
+                    const matchContainer = document.getElementById('match-results-container');
+                    if(matchContainer) matchContainer.scrollIntoView({ behavior: 'smooth' });
+                }, 100);
+            }
         } else {
-             alert("Error: La función compareGlobalTrades no fue encontrada en app.js. Datos descargados: " + compressedData);
+             alert("Error: La función compareGlobalTrades no fue encontrada en app.js.");
         }
         
     } catch (error) {
