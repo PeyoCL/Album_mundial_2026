@@ -357,7 +357,21 @@ change('setting-display-mode', (e) => {
     document.querySelectorAll('.nav-btn').forEach(btn => { btn.onclick = () => { document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active')); document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active')); btn.classList.add('active'); const t = btn.getAttribute('data-target'); const targetPane = document.getElementById(t); if(targetPane) targetPane.classList.add('active'); if (t === 'tab-trades') renderTrades(); window.scrollTo(0, 0); }; });
     
     click('btn-modal-create-album', () => { const input = document.getElementById('new-album-input'); if (input && input.value.trim() !== '') { createNewAlbum(input.value.trim()); input.value = ''; renderAlbumSelector(); updateUIForActiveAlbum(); window.closeModal('modal-manage-albums'); } });
-    click('btn-modal-delete-album', () => { window.closeModal('modal-manage-albums'); deleteActiveAlbum(); });
+click('btn-modal-delete-album', () => { 
+        if (confirm("⚠️ ¿Estás seguro de que deseas eliminar este álbum permanentemente? Esta acción no se puede deshacer.")) {
+            deleteActiveAlbum(); 
+            
+            // Si el usuario borró su único álbum, le creamos uno nuevo vacío para que no quede la app en blanco
+            if (!getActiveAlbum() && typeof createNewAlbum === 'function') {
+                createNewAlbum('Mi Álbum');
+            }
+            
+            // Redibujamos la pantalla inmediatamente
+            renderAlbumSelector(); 
+            updateUIForActiveAlbum(); 
+            window.closeModal('modal-manage-albums'); 
+        }
+    });
 }
 
 window.loginGoogle = function() { signInWithPopup(auth, provider).then(() => { alert("¡Sesión iniciada!"); }).catch(err => alert("Error: " + err.message)); };
