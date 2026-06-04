@@ -1,5 +1,5 @@
-import { globalState, loadStore, saveStore, getActiveAlbum, createNewAlbum, deleteActiveAlbum, getFamilyNameString, syncWithCloud, claimFriendCode, getFriendBox } from './store.js?v=62';
-import { auth, provider, signInWithPopup, signOut, onAuthStateChanged } from './firebase-config.js?v=62';
+import { globalState, loadStore, saveStore, getActiveAlbum, createNewAlbum, deleteActiveAlbum, getFamilyNameString, syncWithCloud, claimFriendCode, getFriendBox } from './store.js?v=64';
+import { auth, provider, signInWithPopup, signOut, onAuthStateChanged } from './firebase-config.js?v=64';
 import { getGlobalMinifiedData, compareGlobalTrades, executeGlobalTrade, lastMatchResult } from './match.js';
 
 window.onerror = function(msg, url, line) { alert("🚨 ERROR EN LA APP:\n" + msg + "\nLínea: " + line); return false; };
