@@ -24,6 +24,7 @@ function formatCode(n) { return n === '00' ? '00' : n.replace(/^([A-Z]+)(\d+)$/,
 async function init() {
     try {
         await loadStore();
+        
         if (!getActiveAlbum()) {
             if (typeof createNewAlbum === 'function') {
                 createNewAlbum('Mi Álbum');
@@ -39,10 +40,10 @@ async function init() {
 
         renderAlbumSelector();
         updateUIForActiveAlbum();
-        attachEventListeners();
-        updateStats();
         
-        // Escuchar cambios de sesión en Firebase
+        bindEvents(); 
+        
+        
         onAuthStateChanged(auth, async (user) => {
             updateAuthUI(user);
             if (user) {
@@ -56,7 +57,6 @@ async function init() {
             }
         });
 
-        // NUEVO: Atrapa el "Link Mágico" si el usuario entra desde WhatsApp
         const urlParams = new URLSearchParams(window.location.search);
         const matchCode = urlParams.get('match');
         if (matchCode) {
@@ -67,12 +67,11 @@ async function init() {
                     window.openOnlineMatchModal();
                     window.handleSearchFriend();
                 }
-            }, 1500); // Da tiempo a que la app cargue la sesión
+            }, 1500); 
         }
 
     } catch (error) { alert("Error en init: " + error.message); }
 }
-
 function renderAlbumSelector() {
     const sel = document.getElementById('select-album-global');
     if(!sel) return;

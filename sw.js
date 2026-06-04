@@ -1,15 +1,15 @@
-const CACHE_NAME = 'album-2026-v62';
+const CACHE_NAME = 'album-2026-v63';
 
 const urlsToCache = [
   './', 
   './index.html', 
-  './style.css?v=62', 
-  './data.js?v=62', 
-  './album_names_2026_v1.csv?v=62',
-  './store.js?v=62', 
-  './match.js?v=62', 
-  './app.js?v=62',
-  './firebase-config.js?v=62',
+  './style.css?v=63', 
+  './data.js?v=63', 
+  './album_names_2026_v1.csv?v=63',
+  './store.js?v=63', 
+  './match.js?v=63', 
+  './app.js?v=63',
+  './firebase-config.js?v=63',
   './manifest.json', 
   './icon.svg', 
   './logo_fwc.svg', 
