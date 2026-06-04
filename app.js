@@ -1,5 +1,5 @@
-import { globalState, loadStore, saveStore, getActiveAlbum, createNewAlbum, deleteActiveAlbum, getFamilyNameString, syncWithCloud, claimFriendCode, getFriendBox } from './store.js?v=60';
-import { auth, provider, signInWithPopup, signOut, onAuthStateChanged } from './firebase-config.js?v=60';
+import { globalState, loadStore, saveStore, getActiveAlbum, createNewAlbum, deleteActiveAlbum, getFamilyNameString, syncWithCloud, claimFriendCode, getFriendBox } from './store.js?v=61';
+import { auth, provider, signInWithPopup, signOut, onAuthStateChanged } from './firebase-config.js?v=61';
 import { getGlobalMinifiedData, compareGlobalTrades, executeGlobalTrade, lastMatchResult } from './match.js';
 
 window.onerror = function(msg, url, line) { alert("🚨 ERROR EN LA APP:\n" + msg + "\nLínea: " + line); return false; };
@@ -719,9 +719,9 @@ window.handleSearchFriend = async function() {
     
     try {
         const compressedData = await getFriendBox(friendCode);
-        window.closeOnlineMatchModal(); // Cerramos el modal de buscar amigo
+        window.closeOnlineMatchModal(); 
         
-        // --- INICIO DEL TRADUCTOR ---
+        // --- INICIO DEL TRADUCTOR BLINDADO ---
         const parts = compressedData.split('|');
         const repArray = parts[1] ? parts[1].split(',') : [];
         const missingArray = parts[2] ? parts[2].split(',') : [];
@@ -737,32 +737,45 @@ window.handleSearchFriend = async function() {
             });
         }
         
+        // ¡BLINDAJE!: Agregamos TODAS las variables (n, profile, s, m) 
+        // para que tu código antiguo no extrañe absolutamente nada.
         const jsonForMatch = JSON.stringify({
             n: friendCode,
-            s: fakeS
+            profile: { name: friendCode }, // <- Engaño para evitar el error 'null'
+            s: fakeS,
+            m: []
         });
         // --- FIN DEL TRADUCTOR ---
 
-        // Ejecutamos tu función de Match original (importada de match.js)
         if (typeof compareGlobalTrades === 'function') {
-            const matchResult = compareGlobalTrades(jsonForMatch);
-            
-            if (matchResult) {
-                // ¡AQUÍ ESTÁ LA MAGIA! Llamamos a tu función para que dibuje la pantalla
-                renderMatchResultsUI(); 
+            try {
+                // Intentamos hacer el cálculo matemático
+                const matchResult = compareGlobalTrades(jsonForMatch);
                 
-                // (Opcional) Si la pantalla de match está muy abajo, hacemos scroll hacia ella
-                setTimeout(() => {
-                    const matchContainer = document.getElementById('match-results-container');
-                    if(matchContainer) matchContainer.scrollIntoView({ behavior: 'smooth' });
-                }, 100);
+                if (matchResult) {
+                    try {
+                        // Intentamos dibujar la tabla en pantalla
+                        renderMatchResultsUI(); 
+                        setTimeout(() => {
+                            const matchContainer = document.getElementById('match-results-container');
+                            if(matchContainer) matchContainer.scrollIntoView({ behavior: 'smooth' });
+                        }, 100);
+                    } catch (uiError) {
+                        alert("Error al DIBUJAR la tabla:\n" + uiError.message + "\n" + uiError.stack);
+                    }
+                } else {
+                    alert("El Match se calculó, pero devolvió un resultado vacío.");
+                }
+            } catch (mathError) {
+                alert("Error al CALCULAR el Match:\n" + mathError.message + "\n\nLínea exacta: " + mathError.stack);
+                console.error(mathError);
             }
         } else {
-             alert("Error: La función compareGlobalTrades no fue encontrada en app.js.");
+             alert("Error: La función compareGlobalTrades no está importada en app.js.");
         }
         
     } catch (error) {
-        alert(error.message);
+        alert("Error de conexión a la nube: " + error.message);
     } finally {
         btn.innerText = "Buscar";
         btn.disabled = false;
