@@ -352,6 +352,98 @@ window.handleSearchFriend = async function() {
     } catch (error) { alert("Error: " + error.message); } finally { btn.innerText = "Buscar"; btn.disabled = false; }
 }
 
+// --- FUNCIONES DE MATCH OFFLINE Y QR ---
+
+window.copyMyJsonForTrade = function() {
+    const jsonStr = getGlobalMinifiedData(); 
+    if (!jsonStr) { alert("No hay datos para copiar."); return; }
+    if (navigator.clipboard && window.isSecureContext) { 
+        navigator.clipboard.writeText(jsonStr).then(() => { alert("¡Copiado al portapapeles!"); }); 
+    } else { 
+        let t = document.createElement("textarea"); t.value = jsonStr; t.style.position = "fixed"; t.style.left = "-999999px";
+        document.body.appendChild(t); t.focus(); t.select(); 
+        try { document.execCommand('copy'); alert("¡Copiado!"); } catch (err) { alert("Hubo un error copiando."); } 
+        t.remove(); 
+    }
+};
+
+window.showMyQR = function() { 
+    loadQRLibraries(() => {
+        const jsonStr = getGlobalMinifiedData(); 
+        const compressedData = LZString.compressToEncodedURIComponent(jsonStr);
+        if (compressedData.length > 2500) { alert("⚠️ Tienes demasiadas láminas repetidas. Usa el botón 'Copiar Texto'."); return; }
+        const imgEl = document.getElementById('qr-image');
+        try { 
+            QRCode.toDataURL(compressedData, { width: 800, margin: 2, errorCorrectionLevel: 'L', color: { dark: '#000', light: '#fff' } }, function (error, url) { 
+                if (!error) { imgEl.src = url; window.showModal('modal-my-qr'); } 
+            }); 
+        } catch (e) { alert("Error al generar QR."); }
+    }); 
+};
+
+window.openCameraScanner = function() { 
+    loadQRLibraries(() => { 
+        window.showModal('modal-scanner'); 
+        html5QrcodeScanner = new Html5Qrcode("qr-reader"); 
+        html5QrcodeScanner.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 250 } }, (decodedText) => { 
+            window.closeScannerModal(); 
+            const matchInput = document.getElementById('match-input'); 
+            if(matchInput) { matchInput.value = decodedText; window.processQRText(); } 
+        }, (e) => {} ).catch(err => { alert("No se pudo iniciar la cámara."); window.closeScannerModal(); }); 
+    }); 
+}
+
+window.closeScannerModal = function() { 
+    if (html5QrcodeScanner) { 
+        html5QrcodeScanner.stop().then(() => { html5QrcodeScanner.clear(); window.closeModal('modal-scanner'); }).catch(e => window.closeModal('modal-scanner')); 
+    } else { 
+        window.closeModal('modal-scanner'); 
+    } 
+}
+
+window.uploadQRImage = function(event) { 
+    const file = event.target.files[0]; if (!file) return; 
+    loadQRLibraries(() => {
+        const reader = new FileReader(); 
+        reader.onload = (e) => { 
+            const img = new Image(); img.onload = () => {
+                const canvas = document.getElementById('hidden-qr-canvas'); const context = canvas.getContext('2d', { willReadFrequently: true }); 
+                const maxSize = 2000; let w = img.width; let h = img.height;
+                if (w > maxSize || h > maxSize) { const r = Math.min(maxSize / w, maxSize / h); w *= r; h *= r; }
+                canvas.width = w; canvas.height = h; context.fillStyle = '#FFFFFF'; context.fillRect(0, 0, w, h); context.drawImage(img, 0, 0, w, h);
+                const data = context.getImageData(0, 0, w, h); const code = jsQR(data.data, data.width, data.height, { inversionAttempts: "attemptBoth" });
+                if (code) { 
+                    const matchInput = document.getElementById('match-input'); 
+                    if(matchInput) { matchInput.value = code.data; window.processQRText(); } 
+                } else { alert('No se pudo leer el código QR.'); }
+            }; img.src = e.target.result; 
+        }; reader.readAsDataURL(file); event.target.value = ''; 
+    }); 
+};
+
+window.processQRText = function() {
+    const matchInput = document.getElementById('match-input'); if(!matchInput) return; 
+    const input = matchInput.value.trim(); if(!input) { window.clearMatchInput(); return; }
+    loadQRLibraries(() => {
+        let finalData = input; 
+        const decompressed = LZString.decompressFromEncodedURIComponent(input); 
+        if (decompressed) finalData = decompressed;
+        
+        if(typeof compareGlobalTrades === 'function') {
+            const matchResult = compareGlobalTrades(finalData);
+            if(matchResult) {
+                if (typeof window.renderMatchResultsUI === 'function') window.renderMatchResultsUI(); 
+                setTimeout(() => { const matchContainer = document.getElementById('match-results-container'); if(matchContainer) matchContainer.scrollIntoView({ behavior: 'smooth' }); }, 100);
+            }
+        }
+    });
+}
+
+window.clearMatchInput = function() { 
+    const matchInput = document.getElementById('match-input'); if(matchInput) matchInput.value = ''; 
+    const container = document.getElementById('match-results-container'); if(container) container.style.display = 'none'; 
+}
+
 // --- FUNCIONES VISUALES DE MATCH EN LÍNEA ---
 
 window.renderMatchResultsUI = function() {
