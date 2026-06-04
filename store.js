@@ -1,12 +1,47 @@
-// store.js - Manejo de datos locales y sincronización con Firebase (v65)
-import { db, doc, setDoc, getDoc, auth } from './firebase-config.js?v=65';
+// store.js - Manejo de datos locales y sincronización con Firebase (v66)
+import { db, doc, setDoc, getDoc, auth } from './firebase-config.js?v=66';
 
-// 1. ESTADO GLOBAL DE LA APLICACIÓN
+// 1. ESTADO GLOBAL
 export const globalState = {
     albums: {}, 
     activeAlbumId: null,
     friendCode: null
 };
+
+// --- EL SANITIZADOR MAESTRO ---
+// Esta función repara silenciosamente cualquier daño estructural en la base de datos.
+function sanitizeData() {
+    // 1. Si los álbumes se volvieron un Array, los reparamos a Diccionario
+    if (Array.isArray(globalState.albums)) {
+        const fixedAlbums = {};
+        globalState.albums.forEach(a => { if (a && a.id) fixedAlbums[a.id] = a; });
+        for (let k in globalState.albums) { if (isNaN(k) && globalState.albums[k]?.id) fixedAlbums[k] = globalState.albums[k]; }
+        globalState.albums = fixedAlbums;
+    }
+    
+    // 2. Revisamos cada álbum por dentro
+    for (let id in globalState.albums) {
+        let a = globalState.albums[id];
+        if (!a.profile) a.profile = { name: a.name || "Mi Álbum" };
+        
+        // Si las láminas se volvieron un Array, las convertimos de vuelta a Diccionario
+        if (Array.isArray(a.stickers)) {
+            let fixedS = {};
+            a.stickers.forEach(s => { 
+                if (s && s.code) fixedS[s.code] = s; 
+            });
+            a.stickers = fixedS;
+        } else if (!a.stickers) {
+            a.stickers = {};
+        }
+    }
+    
+    // 3. Asegurar que haya un álbum activo válido
+    if (!globalState.activeAlbumId || !globalState.albums[globalState.activeAlbumId]) {
+        const keys = Object.keys(globalState.albums);
+        globalState.activeAlbumId = keys.length > 0 ? keys[0] : null;
+    }
+}
 
 // 2. FUNCIONES DE ALMACENAMIENTO
 export async function loadStore() {
@@ -16,10 +51,12 @@ export async function loadStore() {
         globalState.albums = parsed.albums || {};
         globalState.activeAlbumId = parsed.activeAlbumId || null;
         globalState.friendCode = parsed.friendCode || null;
+        sanitizeData(); // Limpiamos al cargar de la memoria local
     }
 }
 
 export async function saveStore() {
+    sanitizeData(); // Limpiamos antes de guardar
     localStorage.setItem('albumStore', JSON.stringify(globalState));
     if (auth && auth.currentUser) {
         syncWithCloud(auth.currentUser, true);
@@ -28,14 +65,11 @@ export async function saveStore() {
 
 // 3. MANEJO DE ÁLBUMES
 export function getActiveAlbum() {
-    if (!globalState.activeAlbumId || !globalState.albums) return null;
+    sanitizeData();
+    if (!globalState.activeAlbumId) return null;
     let album = globalState.albums[globalState.activeAlbumId];
-    if (!album) return null;
-
-    // --- ESCUDO AUTO-RELLENADOR ---
-    // Asegura que todas las láminas existan en la memoria.
-    // Evita que la interfaz gráfica se estrelle buscando láminas vacías.
-    if (!album.stickers) album.stickers = {};
+    
+    // Auto-Rellenador de seguridad
     if (window.DATA && window.DATA.TEAMS) {
         window.DATA.TEAMS.forEach(team => {
             team.stickers.forEach(s => {
@@ -45,35 +79,21 @@ export function getActiveAlbum() {
             });
         });
     }
-    // ------------------------------
-    
-    // Seguro para el nombre
-    if (!album.profile) album.profile = { name: album.name || "Mi Álbum" };
-    
     return album;
 }
 
 export function createNewAlbum(name) {
     const id = 'album_' + Date.now();
-    const newAlbum = {
-        id: id,
-        name: name,
-        profile: { name: name },
-        stickers: {}
-    };
-    globalState.albums[id] = newAlbum;
+    globalState.albums[id] = { id: id, name: name, profile: { name: name }, stickers: {} };
     globalState.activeAlbumId = id;
-    
-    getActiveAlbum(); // Forzamos el auto-rellenado
     saveStore();
-    return globalState.albums[id];
+    return getActiveAlbum();
 }
 
 export function deleteActiveAlbum() {
     if (globalState.activeAlbumId) {
         delete globalState.albums[globalState.activeAlbumId];
-        const remainingKeys = Object.keys(globalState.albums);
-        globalState.activeAlbumId = remainingKeys.length > 0 ? remainingKeys[0] : null;
+        sanitizeData();
         saveStore();
     }
 }
@@ -85,10 +105,10 @@ export function getFamilyNameString(familyCode) {
 // 4. SINCRONIZACIÓN CON LA NUBE
 export async function syncWithCloud(user, isSaving = false) {
     if (!user) return false;
-    
     const docRef = doc(db, 'usuarios', user.uid);
     
     if (isSaving) {
+        sanitizeData();
         await setDoc(docRef, {
             albums: globalState.albums,
             activeAlbumId: globalState.activeAlbumId,
@@ -103,10 +123,12 @@ export async function syncWithCloud(user, isSaving = false) {
             globalState.albums = data.albums || {};
             globalState.activeAlbumId = data.activeAlbumId || null;
             globalState.friendCode = data.friendCode || null;
+            sanitizeData(); // Limpiamos los datos que llegan de la nube
             saveStore();
             uploadToPublicBox(user);
             return true;
         } else {
+            sanitizeData();
             await setDoc(docRef, {
                 albums: globalState.albums,
                 activeAlbumId: globalState.activeAlbumId,
@@ -162,22 +184,14 @@ export async function uploadToPublicBox(user) {
     }
 
     const compressedData = `${activeAlbum.id}|${repetidas.join(',')}|${faltantes.join(',')}`;
-
     const boxRef = doc(db, 'buzon_intercambios', globalState.friendCode);
-    await setDoc(boxRef, {
-        uid: user.uid,
-        data: compressedData,
-        lastUpdate: new Date().toISOString()
-    });
+    await setDoc(boxRef, { uid: user.uid, data: compressedData, lastUpdate: new Date().toISOString() });
 }
 
 export async function getFriendBox(friendCode) {
     const cleanCode = friendCode.trim().toUpperCase().replace(/\s+/g, '');
     const boxRef = doc(db, 'buzon_intercambios', cleanCode);
     const boxSnap = await getDoc(boxRef);
-    
-    if (!boxSnap.exists()) {
-        throw new Error("No se encontró a nadie con este código.");
-    }
+    if (!boxSnap.exists()) throw new Error("No se encontró a nadie con este código.");
     return boxSnap.data().data;
 }
