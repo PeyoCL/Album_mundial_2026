@@ -352,6 +352,81 @@ window.handleSearchFriend = async function() {
     } catch (error) { alert("Error: " + error.message); } finally { btn.innerText = "Buscar"; btn.disabled = false; }
 }
 
+// --- FUNCIONES VISUALES DE MATCH EN LÍNEA ---
+
+window.renderMatchResultsUI = function() {
+    if(!lastMatchResult) return;
+    
+    let totalRec = 0; for(let team in lastMatchResult.iReceive) totalRec += lastMatchResult.iReceive[team].length;
+    let totalGive = 0; for(let team in lastMatchResult.iGive) totalGive += lastMatchResult.iGive[team].length;
+    
+    let myNameStr = getFamilyNameString();
+    let optimal = Math.min(totalRec, totalGive); 
+    let bottleneck = totalRec < totalGive ? `(Menos repetidas: ${lastMatchResult.friendName})` : totalGive < totalRec ? `(Menos repetidas: ${myNameStr})` : `(Equilibrado)`;
+    
+    // Encabezado Global
+    let html = `<p style="text-align:center; color:var(--text-secondary); margin-bottom:1rem;">
+                    Comparación Global con: <strong style="color:var(--text-primary); font-size:1.1rem;">${lastMatchResult.friendName}</strong>
+                </p>`;
+    
+    // Tarjeta de Resumen
+    html += `<div style="background: rgba(59,130,246,0.05); border: 1px dashed var(--blue-accent, #3b82f6); padding: 1.2rem; border-radius: 12px; margin-bottom: 1.5rem; text-align: center;">
+                <p style="margin-bottom: 0.8rem; font-size: 1.1rem; color: var(--text-primary);"><strong>📊 Resumen de Match</strong></p>
+                <div style="display: flex; justify-content: space-around; margin-bottom: 1rem; font-size: 0.95rem;">
+                    <div>⬇️ Recibes:<br><strong style="color:var(--green-complete, #10b981); font-size:1.2rem;">${totalRec}</strong></div>
+                    <div>⬆️ Entregas:<br><strong style="color:var(--gold, #f59e0b); font-size:1.2rem;">${totalGive}</strong></div>
+                </div>
+                <div style="background: var(--blue-accent, #3b82f6); color: white; padding: 0.5rem 1rem; border-radius: 8px; display: inline-block; margin-bottom: 1rem; width: 100%; box-sizing: border-box;">
+                    <strong>Máx. cambios justos: ${optimal}</strong> <br><span style="font-size: 0.85rem; opacity: 0.9;">${bottleneck}</span>
+                </div>
+                <button class="btn" style="background:var(--green-complete, #10b981); width:100%; max-width:280px; margin:0 auto; display:block; font-size:0.9rem; font-weight:bold; padding: 0.8rem;" onclick="window.applyInterchangeAutomatic()">
+                    ⚡ Aplicar Intercambio en 1-Clic
+                </button>
+            </div>`;
+            
+    // Columnas Responsivas
+    html += `<div class="match-columns">`;
+
+    // --- COLUMNA: RECIBE ---
+    html += `<div class="match-col col-receive">
+                <h3 style="color: var(--green-complete, #10b981);">⬇️ ${myNameStr} Recibe</h3>`;
+    let recCount = 0; 
+    for(let team in lastMatchResult.iReceive) { 
+        let chips = lastMatchResult.iReceive[team].map(code => `<span class="match-sticker-chip">${code}</span>`).join('');
+        html += `<div class="match-team-row"><span class="match-team-name">${team}</span><div>${chips}</div></div>`; 
+        recCount++; 
+    }
+    if(recCount === 0) html += '<p style="color: var(--text-muted); text-align: center; margin-top: 2rem;">Ninguna :(</p>'; 
+    html += `</div>`;
+
+    // --- COLUMNA: ENTREGA ---
+    html += `<div class="match-col col-give">
+                <h3 style="color: var(--gold, #f59e0b);">⬆️ ${myNameStr} Entrega</h3>`;
+    let giveCount = 0; 
+    for(let team in lastMatchResult.iGive) { 
+        let chips = lastMatchResult.iGive[team].map(code => `<span class="match-sticker-chip">${code}</span>`).join('');
+        html += `<div class="match-team-row"><span class="match-team-name">${team}</span><div>${chips}</div></div>`; 
+        giveCount++; 
+    }
+    if(giveCount === 0) html += '<p style="color: var(--text-muted); text-align: center; margin-top: 2rem;">Ninguna :(</p>'; 
+    html += `</div></div>`; 
+    
+    const resultsDiv = document.getElementById('match-results'); 
+    if(resultsDiv) resultsDiv.innerHTML = html; 
+    
+    const container = document.getElementById('match-results-container'); 
+    if(container) container.style.display = 'block';
+}
+
+window.applyInterchangeAutomatic = function() { 
+    if(typeof executeGlobalTrade === 'function' && executeGlobalTrade()) { 
+        alert("¡Intercambio aplicado globalmente en tus álbumes!"); 
+        const container = document.getElementById('match-results-container'); 
+        if(container) container.style.display = 'none'; 
+        updateUIForActiveAlbum(); 
+    } 
+};
+
 // MOTOR DE ARRANQUE INFALIBLE
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
