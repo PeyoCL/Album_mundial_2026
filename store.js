@@ -1,9 +1,9 @@
-// store.js - Manejo de datos locales y sincronización con Firebase (v64)
-import { db, doc, setDoc, getDoc, auth } from './firebase-config.js?v=64';
+// store.js - Manejo de datos locales y sincronización con Firebase (v65)
+import { db, doc, setDoc, getDoc, auth } from './firebase-config.js?v=65';
 
 // 1. ESTADO GLOBAL DE LA APLICACIÓN
 export const globalState = {
-    albums: {}, // <-- CORREGIDO: Vuelve a ser un Diccionario (Objeto)
+    albums: {}, 
     activeAlbumId: null,
     friendCode: null
 };
@@ -29,8 +29,28 @@ export async function saveStore() {
 // 3. MANEJO DE ÁLBUMES
 export function getActiveAlbum() {
     if (!globalState.activeAlbumId || !globalState.albums) return null;
-    // CORREGIDO: Buscamos en el diccionario por ID en lugar de usar .find()
-    return globalState.albums[globalState.activeAlbumId] || null;
+    let album = globalState.albums[globalState.activeAlbumId];
+    if (!album) return null;
+
+    // --- ESCUDO AUTO-RELLENADOR ---
+    // Asegura que todas las láminas existan en la memoria.
+    // Evita que la interfaz gráfica se estrelle buscando láminas vacías.
+    if (!album.stickers) album.stickers = {};
+    if (window.DATA && window.DATA.TEAMS) {
+        window.DATA.TEAMS.forEach(team => {
+            team.stickers.forEach(s => {
+                if (!album.stickers[s.code]) {
+                    album.stickers[s.code] = { have: false, count: 0 };
+                }
+            });
+        });
+    }
+    // ------------------------------
+    
+    // Seguro para el nombre
+    if (!album.profile) album.profile = { name: album.name || "Mi Álbum" };
+    
+    return album;
 }
 
 export function createNewAlbum(name) {
@@ -38,12 +58,15 @@ export function createNewAlbum(name) {
     const newAlbum = {
         id: id,
         name: name,
-        stickers: {} // <-- CORREGIDO: Vuelve a usar tu estructura de stickers original
+        profile: { name: name },
+        stickers: {}
     };
     globalState.albums[id] = newAlbum;
     globalState.activeAlbumId = id;
+    
+    getActiveAlbum(); // Forzamos el auto-rellenado
     saveStore();
-    return newAlbum;
+    return globalState.albums[id];
 }
 
 export function deleteActiveAlbum() {
@@ -96,7 +119,6 @@ export async function syncWithCloud(user, isSaving = false) {
 }
 
 // 5. FUNCIONES SOCIALES (MATCH EN LÍNEA)
-
 export async function claimFriendCode(user, desiredCode) {
     if (!user) throw new Error("Inicia sesión para crear tu código.");
     const cleanCode = desiredCode.trim().toUpperCase().replace(/\s+/g, '');
@@ -129,7 +151,6 @@ export async function uploadToPublicBox(user) {
     let repetidas = [];
     let faltantes = [];
     
-    // CORREGIDO: Escaneamos el álbum usando tu estructura original
     if (window.DATA && window.DATA.TEAMS) {
         window.DATA.TEAMS.forEach(team => {
             team.stickers.forEach(s => {
