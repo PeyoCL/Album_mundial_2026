@@ -40,6 +40,10 @@ async function init() {
         // ---------------------------------------
 
         await loadStore();
+        const displaySelect = document.getElementById('setting-display-mode');
+        if (displaySelect && globalState.displayMode) {
+            displaySelect.value = globalState.displayMode;
+        }
         
         if (!getActiveAlbum()) { if (typeof createNewAlbum === 'function') createNewAlbum('Mi Álbum'); }
         const active = getActiveAlbum();
@@ -312,6 +316,14 @@ function bindEvents() {
 
     click('btn-theme', window.toggleTheme); click('btn-settings', () => window.showModal('modal-settings')); click('btn-clear-filters', clearFilters); click('btn-share-list', window.generateShareText); click('btn-export-excel', window.exportTradesExcel); click('btn-export-pdf', window.exportTradesPdf); click('btn-download-missing', window.exportMissingExcel);
     input('search-input', (e) => { activeSearch.text = e.target.value; applyCollectionSearch(); }); change('filter-team', (e) => { activeSearch.team = e.target.value; applyCollectionSearch(); }); change('filter-group', (e) => { activeSearch.group = e.target.value; applyCollectionSearch(); }); change('sort-select', (e) => { activeSearch.sort = e.target.value; applyCollectionSearch(); });
+    
+    // --- NUEVO: Conector para la visualización de láminas ---
+    change('setting-display-mode', (e) => { 
+        globalState.displayMode = e.target.value; 
+        saveStore(); 
+        updateUIForActiveAlbum(); 
+    });
+    // --------------------------------------------------------
     
     document.querySelectorAll('.close-modal').forEach(btn => { btn.onclick = () => { const modal = btn.closest('.modal'); if(modal) modal.style.display = 'none'; currentOpenTeam = null; }; });
     document.querySelectorAll('.nav-btn').forEach(btn => { btn.onclick = () => { document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active')); document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active')); btn.classList.add('active'); const t = btn.getAttribute('data-target'); const targetPane = document.getElementById(t); if(targetPane) targetPane.classList.add('active'); if (t === 'tab-trades') renderTrades(); window.scrollTo(0, 0); }; });
