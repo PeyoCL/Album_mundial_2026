@@ -170,72 +170,74 @@ textarea { width: 100%; background: var(--bg-base); color: var(--text-primary); 
 .close-ios-prompt { position: absolute; top: 5px; right: 5px; background: transparent; border: none; color: var(--text-secondary); font-size: 1.2rem; padding: 5px; }
 
 /* =========================================
-   UX MATCH EN LÍNEA - DISEÑO RESPONSIVO
+   MODAL MATCH EN LÍNEA - DISEÑO MÓVIL
    ========================================= */
 
-.match-columns {
-    display: flex;
-    flex-direction: column; /* Celulares: una sobre otra */
-    gap: 1rem;
-    margin-top: 1rem;
+#modal-online-match .modal-content {
+    width: 90%; /* Ocupa el 90% de la pantalla en celulares */
+    max-width: 400px; /* Evita que se vea gigante en PC */
+    padding: 1.5rem;
+    border-radius: 16px;
+    box-sizing: border-box;
+    text-align: center;
 }
 
-/* Solo en pantallas grandes (PC/Tablets), se ponen lado a lado */
-@media (min-width: 768px) {
-    .match-columns {
-        flex-direction: row;
-    }
-}
-
-.match-col {
-    flex: 1;
-    background: var(--bg-surface, #ffffff);
-    padding: 1.2rem;
-    border-radius: 12px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-    border: 1px solid rgba(0,0,0,0.05);
-}
-
-.match-col h3 {
+#modal-online-match h2 {
+    font-size: 1.4rem;
     margin-top: 0;
     margin-bottom: 1rem;
-    font-size: 1.1rem;
-    border-bottom: 2px solid rgba(0,0,0,0.05);
-    padding-bottom: 0.5rem;
+    color: var(--text-primary);
 }
 
-.match-team-row {
-    margin-bottom: 0.8rem;
+#modal-online-match p {
+    font-size: 0.95rem;
+    margin-bottom: 1rem;
+    color: var(--text-secondary);
 }
 
-.match-team-name {
+/* Ajuste de las cajas de texto (Inputs) para celular */
+#modal-online-match input[type="text"] {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 12px;
+    margin-bottom: 12px;
+    font-size: 16px; /* 16px exactos evita que los iPhone hagan zoom automático */
+    border: 2px solid rgba(0,0,0,0.1);
+    border-radius: 8px;
+    text-align: center;
+    font-weight: bold;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+#modal-online-match input[type="text"]:focus {
+    border-color: var(--blue-accent);
+    outline: none;
+}
+
+/* Ajuste de los botones para que sean fáciles de tocar */
+#modal-online-match .btn {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 12px;
+    margin-bottom: 10px;
+    font-size: 1rem;
+    border-radius: 8px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+}
+
+/* El código gigante que se muestra en pantalla */
+#display-my-code {
     display: block;
-    font-weight: bold;
-    font-size: 0.9rem;
-    margin-bottom: 0.3rem;
-    color: var(--text-primary, #333);
-}
-
-.match-sticker-chip {
-    display: inline-block;
+    font-size: 2rem;
+    font-weight: 900;
+    color: var(--blue-accent);
     background: rgba(59, 130, 246, 0.1);
-    border: 1px solid rgba(59, 130, 246, 0.2);
-    color: var(--text-primary, #333);
-    padding: 3px 8px;
-    border-radius: 6px;
-    margin: 2px;
-    font-size: 0.8rem;
-    font-family: monospace;
-    font-weight: bold;
-}
-
-/* Colores específicos para Recibir (Verde) y Entregar (Naranja/Oro) */
-.col-receive .match-sticker-chip {
-    background: rgba(16, 185, 129, 0.1);
-    border-color: rgba(16, 185, 129, 0.3);
-}
-
-.col-give .match-sticker-chip {
-    background: rgba(245, 158, 11, 0.1);
-    border-color: rgba(245, 158, 11, 0.3);
+    padding: 15px;
+    border-radius: 12px;
+    margin: 15px 0;
+    letter-spacing: 2px;
 }
