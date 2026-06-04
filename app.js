@@ -1,5 +1,5 @@
-import { globalState, loadStore, saveStore, getActiveAlbum, createNewAlbum, deleteActiveAlbum, getFamilyNameString, syncWithCloud, claimFriendCode, getFriendBox } from './store.js?v=61';
-import { auth, provider, signInWithPopup, signOut, onAuthStateChanged } from './firebase-config.js?v=61';
+import { globalState, loadStore, saveStore, getActiveAlbum, createNewAlbum, deleteActiveAlbum, getFamilyNameString, syncWithCloud, claimFriendCode, getFriendBox } from './store.js?v=62';
+import { auth, provider, signInWithPopup, signOut, onAuthStateChanged } from './firebase-config.js?v=62';
 import { getGlobalMinifiedData, compareGlobalTrades, executeGlobalTrade, lastMatchResult } from './match.js';
 
 window.onerror = function(msg, url, line) { alert("🚨 ERROR EN LA APP:\n" + msg + "\nLínea: " + line); return false; };
@@ -24,6 +24,19 @@ function formatCode(n) { return n === '00' ? '00' : n.replace(/^([A-Z]+)(\d+)$/,
 async function init() {
     try {
         await loadStore();
+        if (!getActiveAlbum()) {
+            if (typeof createNewAlbum === 'function') {
+                createNewAlbum('Mi Álbum');
+            }
+        }
+        
+        const active = getActiveAlbum();
+        if (active) {
+            if (!active.profile) active.profile = { name: active.name || 'Mi Álbum' };
+            if (!active.stickers) active.stickers = {};
+            saveStore(); 
+        }
+
         renderAlbumSelector();
         updateUIForActiveAlbum();
         attachEventListeners();
@@ -91,6 +104,7 @@ function updateProfileName(newName, updateInput = true) {
 
 function updateUIForActiveAlbum() {
     const album = getActiveAlbum();
+    if (!album) return;
     const titleEl = document.getElementById('album-title'); if (titleEl) titleEl.innerText = album.profile.name;
     const inputProfile = document.getElementById('input-profile-name'); if(inputProfile) inputProfile.value = album.profile.name;
     
