@@ -21,9 +21,23 @@ function formatCode(n) { if (!n) return '??'; return String(n) === '00' ? '00' :
 
 async function init() {
     try {
+        // --- 1. ENCENDIDO DEL MOTOR DE DATOS ---
+        // Si el motor existe, lo hacemos arrancar y esperamos a que termine
+        if (typeof window.LOAD_DATA === 'function') {
+            await window.LOAD_DATA();
+        }
+
+        // Esperamos a que la lista de países tenga al menos 1 elemento
         let retries = 0;
-        while (!window.DATA && retries < 15) { await new Promise(r => setTimeout(r, 200)); retries++; }
-        if (!window.DATA) return alert("🚨 La base de datos de la FIFA no cargó.");
+        while ((!window.DATA || !window.DATA.TEAMS || window.DATA.TEAMS.length === 0) && retries < 15) { 
+            await new Promise(r => setTimeout(r, 200)); 
+            retries++; 
+        }
+
+        if (!window.DATA || !window.DATA.TEAMS || window.DATA.TEAMS.length === 0) { 
+            return alert("🚨 Error CRÍTICO: El motor no pudo cargar el archivo CSV de la FIFA."); 
+        }
+        // ---------------------------------------
 
         await loadStore();
         
