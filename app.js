@@ -253,6 +253,41 @@ function getMissingExportRows() { let rows = []; let map = {}; getMissingList().
 function removeAccents(str) { if (!str) return ''; return str.normalize("NFD").replace(/[\u0300-\u036f]/g, ""); }
 window.exportTradesExcel = function() { let csv = 'Seccion,Laminas Repetidas\n'; getTradeExportRows().forEach(r => { csv += `"${removeAccents(r.section)}","${r.text}"\n`; }); downloadBlob(new Blob([csv], { type: 'text/csv;charset=utf-8' }), 'cambios_album.csv'); }
 window.exportMissingExcel = function() { let csv = 'Seccion,Laminas Faltantes\n'; getMissingExportRows().forEach(r => { csv += `"${removeAccents(r.section)}","${r.text}"\n`; }); downloadBlob(new Blob([csv], { type: 'text/csv;charset=utf-8' }), 'faltantes_album.csv'); }
+window.exportTradesPdf = function() {
+    const p = getTotalProgress(); 
+    let html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Láminas Repetidas</title><style>body{font-family:sans-serif;padding:20px;}table{width:100%;border-collapse:collapse;margin-top:15px;}th,td{border:1px solid #111;padding:10px;text-align:left;font-size:14px;}th{background-color:#f5f5f5;}h1{font-size:22px;margin-bottom:4px;}p{color:#444;font-size:13px;margin-top:0;}</style></head><body><h1>Láminas Repetidas - ${getActiveAlbum().profile.name}</h1><p>Progreso del Álbum: ${p.have}/${p.total} (${p.percentage}%) | Total de cambios listos: ${getRepeatedTotal()}</p><table><thead><tr><th style="width:180px;">Sección / Equipo</th><th>Láminas Disponibles</th></tr></thead><tbody>`;
+    
+    getTradeExportRows().forEach(r => { 
+        html += `<tr><td><strong>${r.section}</strong></td><td>${r.text}</td></tr>`; 
+    }); 
+    
+    html += `</tbody></table></body></html>`;
+    
+    // Motor mágico que crea un documento oculto y abre el diálogo de guardado PDF
+    const iframe = document.createElement('iframe'); 
+    iframe.style.position = 'fixed'; 
+    iframe.style.right = '0'; 
+    iframe.style.bottom = '0'; 
+    iframe.style.width = '0'; 
+    iframe.style.height = '0'; 
+    iframe.style.border = 'none'; 
+    document.body.appendChild(iframe);
+    
+    const doc = iframe.contentWindow.document; 
+    doc.open(); 
+    doc.write(html); 
+    doc.close();
+    
+    setTimeout(() => { 
+        iframe.contentWindow.focus(); 
+        iframe.contentWindow.print(); 
+        setTimeout(() => { 
+            if (document.body.contains(iframe)) { 
+                document.body.removeChild(iframe); 
+            } 
+        }, 15000); 
+    }, 500);
+};
 window.generateShareText = function() { const p = getTotalProgress(); let txt = `*${getActiveAlbum().profile.name}*\nProgreso: ${p.have}/${p.total} (${p.percentage}%)\nRepetidas: ${getRepeatedTotal()}\n\n`; getTradeExportRows().forEach(r => { txt += `${r.section}: ${r.text}\n`; }); const shareEl = document.getElementById('share-textarea'); if(shareEl) shareEl.value = txt; window.showModal('modal-share'); }
 function downloadBlob(b, f) { const u = URL.createObjectURL(b); const a = document.createElement('a'); a.href = u; a.download = f; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(u); }
 
