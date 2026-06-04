@@ -1,6 +1,6 @@
 // app.js v50.2 - UI Controller (Estabilizado y Retrocompatible)
 import { globalState, loadStore, saveStore, getActiveAlbum, createNewAlbum, deleteActiveAlbum, getFamilyNameString, syncWithCloud } from './store.js';
-import { auth, provider, signInWithPopup, signOut, onAuthStateChanged } from './firebase-config.js';
+import { auth, provider, signInWithPopup, signInWithRedirect, signOut, onAuthStateChanged } from './firebase-config.js';
 import { getGlobalMinifiedData, compareGlobalTrades, executeGlobalTrade, lastMatchResult } from './match.js';
 
 window.onerror = function(msg, url, line) { alert("🚨 ERROR EN LA APP:\n" + msg + "\nLínea: " + line); return false; };
@@ -615,7 +615,7 @@ function bindEvents() {
 
 // --- AUTENTICACIÓN FIREBASE ---
 window.loginGoogle = function() {
-    signInWithPopup(auth, provider).catch(err => alert("Error al iniciar sesión: " + err.message));
+    signInWithRedirect(auth, provider).catch(err => alert("Error al iniciar sesión: " + err.message));
 };
 
 window.logoutGoogle = function() {
