@@ -1,5 +1,5 @@
-import { globalState, loadStore, saveStore, getActiveAlbum, createNewAlbum, deleteActiveAlbum, getFamilyNameString, syncWithCloud } from './store.js?v=57';
-import { auth, provider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut, onAuthStateChanged } from './firebase-config.js?v=57';
+import { globalState, loadStore, saveStore, getActiveAlbum, createNewAlbum, deleteActiveAlbum, getFamilyNameString, syncWithCloud, claimFriendCode, getFriendBox } from './store.js?v=58';
+import { auth, provider, signInWithPopup, signOut, onAuthStateChanged } from './firebase-config.js?v=58';
 import { getGlobalMinifiedData, compareGlobalTrades, executeGlobalTrade, lastMatchResult } from './match.js';
 
 window.onerror = function(msg, url, line) { alert("🚨 ERROR EN LA APP:\n" + msg + "\nLínea: " + line); return false; };
@@ -23,46 +23,40 @@ function formatCode(n) { return n === '00' ? '00' : n.replace(/^([A-Z]+)(\d+)$/,
 
 async function init() {
     try {
-        if (window.LOAD_DATA) await window.LOAD_DATA();
-        loadStore();
-        loadTheme();
-        
-        const title = document.getElementById('album-title');
-        if(title) { 
-            title.addEventListener('blur', () => updateProfileName(title.innerText)); 
-            title.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); title.blur(); } }); 
-        }
-        const inputProfile = document.getElementById('input-profile-name'); 
-        if(inputProfile) inputProfile.addEventListener('input', (e) => updateProfileName(e.target.value, false));
-        
-        const displaySelect = document.getElementById('setting-display-mode');
-        if (displaySelect) {
-            displaySelect.value = globalState.displayMode || 'code';
-            displaySelect.addEventListener('change', (e) => { globalState.displayMode = e.target.value; saveStore(); applyCollectionSearch(); if(currentOpenTeam) renderStickersGrid(currentOpenTeam); });
-        }
-
+        await loadStore();
         renderAlbumSelector();
         updateUIForActiveAlbum();
+        attachEventListeners();
+        updateStats();
         
-        populateTeamFilter(); 
-        populateGroupFilter(); 
-        bindEvents(); 
-        observeHeaderOffset(); 
-        checkIOSInstall();
-
+        // Escuchar cambios de sesión en Firebase
         onAuthStateChanged(auth, async (user) => {
             updateAuthUI(user);
             if (user) {
-                // Sincronizamos. Si bajó datos nuevos de la nube, refrescamos la pantalla.
-                const wasUpdatedFromCloud = await syncWithCloud(user);
+                const wasUpdatedFromCloud = await syncWithCloud(user, false);
                 if (wasUpdatedFromCloud) {
                     renderAlbumSelector();
                     updateUIForActiveAlbum();
                 }
             } else {
-                syncWithCloud(null);
+                syncWithCloud(null, false);
             }
         });
+
+        // NUEVO: Atrapa el "Link Mágico" si el usuario entra desde WhatsApp
+        const urlParams = new URLSearchParams(window.location.search);
+        const matchCode = urlParams.get('match');
+        if (matchCode) {
+            setTimeout(() => {
+                const inputElement = document.getElementById('input-friend-code');
+                if(inputElement) {
+                    inputElement.value = matchCode;
+                    window.openOnlineMatchModal();
+                    window.handleSearchFriend();
+                }
+            }, 1500); // Da tiempo a que la app cargue la sesión
+        }
+
     } catch (error) { alert("Error en init: " + error.message); }
 }
 
@@ -643,6 +637,102 @@ function updateAuthUI(user) {
         if(authInfo) authInfo.style.display = 'none';
         if(authText) authText.innerText = "Inicia sesión para sincronizar tus álbumes automáticamente en todos tus dispositivos.";
         if(emailText) emailText.innerText = "";
+    }
+}
+
+// --- LÓGICA DE MATCH EN LÍNEA (v58) ---
+
+window.openOnlineMatchModal = function() {
+    const modal = document.getElementById('modal-online-match');
+    if (!modal) return;
+    
+    if (!auth || !auth.currentUser) {
+        alert("Debes iniciar sesión en Configuración (⚙️) para usar el Intercambio en Línea.");
+        return;
+    }
+    
+    if (globalState.friendCode) {
+        document.getElementById('online-match-setup').style.display = 'none';
+        document.getElementById('online-match-ready').style.display = 'block';
+        document.getElementById('display-my-code').innerText = globalState.friendCode;
+    } else {
+        document.getElementById('online-match-setup').style.display = 'block';
+        document.getElementById('online-match-ready').style.display = 'none';
+    }
+    
+    modal.style.display = 'flex';
+}
+
+window.closeOnlineMatchModal = function() {
+    document.getElementById('modal-online-match').style.display = 'none';
+}
+
+window.handleClaimCode = async function() {
+    const input = document.getElementById('input-claim-code');
+    const btn = document.getElementById('btn-claim-code');
+    const desiredCode = input.value;
+    
+    if (!desiredCode) return alert("Escribe un código primero.");
+    
+    btn.innerText = "Pensando...";
+    btn.disabled = true;
+    
+    try {
+        await claimFriendCode(auth.currentUser, desiredCode);
+        alert("¡Felicidades! Tu código único es " + globalState.friendCode);
+        window.openOnlineMatchModal(); // Refrescar pantalla
+    } catch (error) {
+        alert(error.message);
+    } finally {
+        btn.innerText = "Reclamar";
+        btn.disabled = false;
+    }
+}
+
+function getMagicLink() {
+    const baseUrl = window.location.href.split('?')[0]; 
+    return `${baseUrl}?match=${globalState.friendCode}`;
+}
+
+window.shareViaWhatsApp = function() {
+    const link = getMagicLink();
+    const mensaje = `¡Hola! Estoy juntando el Álbum del Mundial 2026. Mi código es ${globalState.friendCode}. Entra a este link para ver qué láminas podemos cambiar:\n\n${link}`;
+    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(mensaje)}`, '_blank');
+}
+
+window.copyMagicLink = function() {
+    const link = getMagicLink();
+    navigator.clipboard.writeText(link).then(() => {
+        alert("Enlace copiado al portapapeles.");
+    }).catch(err => alert("Error al copiar: " + err));
+}
+
+window.handleSearchFriend = async function() {
+    const input = document.getElementById('input-friend-code');
+    const btn = document.getElementById('btn-search-friend');
+    const friendCode = input.value;
+    
+    if (!friendCode) return alert("Escribe el código de tu amigo.");
+    
+    btn.innerText = "Buscando...";
+    btn.disabled = true;
+    
+    try {
+        const compressedData = await getFriendBox(friendCode);
+        window.closeOnlineMatchModal();
+        
+        // Ejecutamos tu función de Match original pasándole los datos de la nube
+        if (typeof compareGlobalTrades === 'function') {
+             compareGlobalTrades(compressedData);
+        } else {
+             alert("Error: La función compareGlobalTrades no fue encontrada en app.js. Datos descargados: " + compressedData);
+        }
+        
+    } catch (error) {
+        alert(error.message);
+    } finally {
+        btn.innerText = "Buscar";
+        btn.disabled = false;
     }
 }
 
