@@ -1,6 +1,6 @@
-import { globalState, loadStore, saveStore, getActiveAlbum, createNewAlbum, deleteActiveAlbum, getFamilyNameString, syncWithCloud, claimFriendCode, getFriendBox } from './store.js?v=69';
-import { auth, provider, signInWithPopup, signOut, onAuthStateChanged } from './firebase-config.js?v=69';
-import { getGlobalMinifiedData, compareGlobalTrades, executeGlobalTrade, lastMatchResult } from './match.js?v=69';
+import { globalState, loadStore, saveStore, getActiveAlbum, createNewAlbum, deleteActiveAlbum, getFamilyNameString, fullCloudBackup, saveStickerToCloud, startRealTimeSync, claimFriendCode, getFriendBox } from './store.js?v=70';
+import { auth, provider, signInWithPopup, signOut, onAuthStateChanged } from './firebase-config.js?v=70';
+import { getGlobalMinifiedData, compareGlobalTrades, executeGlobalTrade, lastMatchResult } from './match.js?v=70';
 
 window.onerror = function(msg, url, line) { console.error("🚨 ERROR EN LA APP:\n" + msg + "\nLínea: " + line); return false; };
 
@@ -21,136 +21,100 @@ function formatCode(n) { if (!n) return '??'; return String(n) === '00' ? '00' :
 
 async function init() {
     try {
-        // --- 1. ENCENDIDO DEL MOTOR DE DATOS ---
-        // Si el motor existe, lo hacemos arrancar y esperamos a que termine
-        if (typeof window.LOAD_DATA === 'function') {
-            await window.LOAD_DATA();
-        }
-
-        // Esperamos a que la lista de países tenga al menos 1 elemento
-        let retries = 0;
-        while ((!window.DATA || !window.DATA.TEAMS || window.DATA.TEAMS.length === 0) && retries < 15) { 
-            await new Promise(r => setTimeout(r, 200)); 
-            retries++; 
-        }
-
-        if (!window.DATA || !window.DATA.TEAMS || window.DATA.TEAMS.length === 0) { 
-            return alert("🚨 Error CRÍTICO: El motor no pudo cargar el archivo CSV de la FIFA."); 
-        }
-        // ---------------------------------------
+        if (typeof window.LOAD_DATA === 'function') await window.LOAD_DATA();
+        let retries = 0; while ((!window.DATA || !window.DATA.TEAMS || window.DATA.TEAMS.length === 0) && retries < 15) { await new Promise(r => setTimeout(r, 200)); retries++; }
+        if (!window.DATA || !window.DATA.TEAMS || window.DATA.TEAMS.length === 0) return alert("🚨 Error CRÍTICO: La base de datos de la FIFA está vacía.");
 
         await loadStore();
+        
         const savedMode = localStorage.getItem('album_display_mode');
-        if (savedMode) {
-            globalState.displayMode = savedMode; // Le enseñamos la preferencia al cerebro de la app
-            const displaySelect = document.getElementById('setting-display-mode');
-            if (displaySelect) displaySelect.value = savedMode; // Movemos el selector visual
-        }
+        if (savedMode) { globalState.displayMode = savedMode; const displaySelect = document.getElementById('setting-display-mode'); if (displaySelect) displaySelect.value = savedMode; }
+        
+        if (!getActiveAlbum()) { if (typeof createNewAlbum === 'function') createNewAlbum('Mi Álbum'); }
+        const active = getActiveAlbum();
+        if (active) { if (!active.profile) active.profile = { name: active.name || 'Mi Álbum' }; if (!active.stickers) active.stickers = {}; saveStore(); }
 
-        loadTheme();
-        checkIOSInstall();
-        observeHeaderOffset();
-        populateFilters();
-        renderAlbumSelector();
-        updateUIForActiveAlbum();
-        bindEvents(); 
+        loadTheme(); checkIOSInstall(); observeHeaderOffset(); populateFilters();
+
+        renderAlbumSelector(); updateUIForActiveAlbum(); bindEvents(); 
         
         onAuthStateChanged(auth, async (user) => {
             updateAuthUI(user);
             if (user) {
-                const wasUpdatedFromCloud = await syncWithCloud(user, false);
-                if (wasUpdatedFromCloud) { renderAlbumSelector(); updateUIForActiveAlbum(); }
-            } else { syncWithCloud(null, false); }
+                // ESCUCHA ACTIVA: Cualquier cambio en otro celular se redibujará solo
+                startRealTimeSync(user, () => { renderAlbumSelector(); updateUIForActiveAlbum(); });
+            } else { 
+                startRealTimeSync(null); 
+            }
         });
 
         const urlParams = new URLSearchParams(window.location.search);
         const matchCode = urlParams.get('match');
-        if (matchCode) {
-            setTimeout(() => {
-                const inputElement = document.getElementById('input-friend-code');
-                if(inputElement) {
-                    inputElement.value = matchCode;
-                    window.openOnlineMatchModal();
-                    window.handleSearchFriend();
-                }
-            }, 1500); 
-        }
+        if (matchCode) { setTimeout(() => { const inputElement = document.getElementById('input-friend-code'); if(inputElement) { inputElement.value = matchCode; window.openOnlineMatchModal(); window.handleSearchFriend(); } }, 1500); }
     } catch (error) { alert("Error en arranque: " + error.message); }
 }
 
+function populateFilters() {
+    if (!window.DATA || !window.DATA.TEAMS) return;
+    const teamSelect = document.getElementById('filter-team'); const groupSelect = document.getElementById('filter-group'); if (!teamSelect || !groupSelect) return;
+    teamSelect.innerHTML = '<option value="all">Todos los Equipos</option>'; groupSelect.innerHTML = '<option value="all">Todos los Grupos</option>';
+    const groups = new Set();
+    window.DATA.TEAMS.forEach(team => {
+        if (team.code && team.name) { const opt = document.createElement('option'); opt.value = team.code; opt.innerText = team.name; teamSelect.appendChild(opt); }
+        if (team.group) groups.add(team.group);
+    });
+    Array.from(groups).sort().forEach(group => { const opt = document.createElement('option'); opt.value = group; opt.innerText = group; groupSelect.appendChild(opt); });
+}
+
 function renderAlbumSelector() {
-    const sel = document.getElementById('select-album-global'); if(!sel) return;
-    sel.innerHTML = '';
-    for (let id in globalState.albums) {
-        let opt = document.createElement('option');
-        opt.value = id; opt.innerText = globalState.albums[id].profile.name;
-        if (id === globalState.activeAlbumId) opt.selected = true;
-        sel.appendChild(opt);
-    }
-    sel.onchange = (e) => { globalState.activeAlbumId = e.target.value; saveStore(); updateUIForActiveAlbum(); };
+    const sel = document.getElementById('select-album-global'); if(!sel) return; sel.innerHTML = '';
+    for (let id in globalState.albums) { let opt = document.createElement('option'); opt.value = id; opt.innerText = globalState.albums[id].profile.name; if (id === globalState.activeAlbumId) opt.selected = true; sel.appendChild(opt); }
+    sel.onchange = (e) => { globalState.activeAlbumId = e.target.value; saveStore(); if (auth && auth.currentUser) fullCloudBackup(auth.currentUser); updateUIForActiveAlbum(); };
     const btnManage = document.getElementById('btn-manage-albums'); if (btnManage) btnManage.onclick = () => window.showModal('modal-manage-albums');
 }
 
 function updateProfileName(newName, updateInput = true) {
-    let name = newName ? newName.trim() : 'Mi Álbum';
-    getActiveAlbum().profile.name = name;
+    let name = newName ? newName.trim() : 'Mi Álbum'; getActiveAlbum().profile.name = name;
     const titleEl = document.getElementById('album-title'); if (titleEl) titleEl.innerText = name;
     if (updateInput) { const inputEl = document.getElementById('input-profile-name'); if (inputEl) inputEl.value = name; }
-    saveStore(); renderAlbumSelector();
+    saveStore(); if (auth && auth.currentUser) fullCloudBackup(auth.currentUser); renderAlbumSelector();
 }
 
 function updateUIForActiveAlbum() {
     const album = getActiveAlbum(); if (!album) return;
     const titleEl = document.getElementById('album-title'); if (titleEl) titleEl.innerText = album.profile.name;
     const inputProfile = document.getElementById('input-profile-name'); if(inputProfile) inputProfile.value = album.profile.name;
-    
-    applyCollectionSearch();
-    renderDashboardCards();
-    renderTrades();
-    if(currentOpenTeam) openTeamDetail(currentOpenTeam);
+    applyCollectionSearch(); renderDashboardCards(); renderTrades(); if(currentOpenTeam) openTeamDetail(currentOpenTeam);
 }
 
-// --- LÓGICA DE STICKERS ---
 function getStickerState(code) { return getActiveAlbum().stickers[code] || { have: false, count: 0 }; }
 
+// ACTULIZACIONES QUIRÚRGICAS (DOT NOTATION)
 window.toggleSticker = function(code, ev) {
     if(ev) ev.stopPropagation(); let s = getStickerState(code);
     if (!s.have) { s.have = true; s.count = 1; triggerConfetti(ev?.clientX || window.innerWidth/2, ev?.clientY || window.innerHeight/2); } else { s.count++; }
-    getActiveAlbum().stickers[code] = s; saveStore(); checkMilestones(); updateUIForActiveAlbum();
+    getActiveAlbum().stickers[code] = s; saveStore(); 
+    if (auth && auth.currentUser) saveStickerToCloud(auth.currentUser, getActiveAlbum().id, code, s);
+    checkMilestones(); updateUIForActiveAlbum();
 }
 window.decrementSticker = function(code, ev) {
     if(ev) ev.stopPropagation(); let s = getStickerState(code);
-    if (s.have && s.count > 0) { s.count--; if(s.count === 0) s.have = false; getActiveAlbum().stickers[code] = s; saveStore(); updateUIForActiveAlbum(); }
+    if (s.have && s.count > 0) { 
+        s.count--; if(s.count === 0) s.have = false; 
+        getActiveAlbum().stickers[code] = s; saveStore(); 
+        if (auth && auth.currentUser) saveStickerToCloud(auth.currentUser, getActiveAlbum().id, code, s);
+        updateUIForActiveAlbum(); 
+    }
 }
 
 function getHaveCount() { return Object.values(getActiveAlbum().stickers).filter(s => s.have).length; }
-function getTeamProgress(teamCode) {
-    if (!window.DATA || !window.DATA.TEAMS) return { have: 0, total: 0 };
-    const team = window.DATA.TEAMS.find(t => t.code === teamCode); if(!team) return { have: 0, total: 0 };
-    let have = team.stickers.filter(s => getStickerState(s.code).have).length; return { have, total: team.stickers.length };
-}
-function getTotalProgress() {
-    let have = getHaveCount(); let total = window.DATA ? window.DATA.TOTAL_STICKERS : 994;
-    let percentage = Math.round((have / total) * 100) || 0; if (percentage === 100 && have < total) percentage = 99;
-    return { have, total, percentage };
-}
+function getTeamProgress(teamCode) { if (!window.DATA || !window.DATA.TEAMS) return { have: 0, total: 0 }; const team = window.DATA.TEAMS.find(t => t.code === teamCode); if(!team) return { have: 0, total: 0 }; let have = team.stickers.filter(s => getStickerState(s.code).have).length; return { have, total: team.stickers.length }; }
+function getTotalProgress() { let have = getHaveCount(); let total = window.DATA ? window.DATA.TOTAL_STICKERS : 994; let percentage = Math.round((have / total) * 100) || 0; if (percentage === 100 && have < total) percentage = 99; return { have, total, percentage }; }
 function getRepeatedTotal() { return Object.values(getActiveAlbum().stickers).reduce((sum, s) => s.have && s.count > 1 ? sum + (s.count - 1) : sum, 0); }
+function getRepeatedList() { let repeated = []; if (!window.DATA || !window.DATA.TEAMS) return repeated; window.DATA.TEAMS.forEach(team => { let teamReps = []; team.stickers.forEach(s => { let st = getStickerState(s.code); if (st.have && st.count > 1) { teamReps.push({ name: s.name, count: st.count - 1, code: s.code }); } }); if (teamReps.length > 0) repeated.push({ team: team.name, items: teamReps }); }); return repeated; }
+function getMissingList() { let missing = []; if (!window.DATA || !window.DATA.TEAMS) return missing; window.DATA.TEAMS.forEach(team => { team.stickers.forEach(s => { if (!getStickerState(s.code).have) missing.push({ team: team.name, name: s.name, code: s.code }); }); }); return missing; }
+function checkMilestones() { const p = getTotalProgress().percentage; const targets = [25, 50, 75, 100]; let m = getActiveAlbum().milestones; if(!m) { m = {}; getActiveAlbum().milestones = m; } for (let t of targets) { if (p >= t && !m[`m${t}`]) { m[`m${t}`] = true; saveStore(); shootBigConfetti(); setTimeout(() => alert(`¡Felicidades! Has completado el ${t}% de este álbum.`), 500); } } }
 
-function getRepeatedList() {
-    let repeated = []; if (!window.DATA || !window.DATA.TEAMS) return repeated;
-    window.DATA.TEAMS.forEach(team => { let teamReps = []; team.stickers.forEach(s => { let st = getStickerState(s.code); if (st.have && st.count > 1) { teamReps.push({ name: s.name, count: st.count - 1, code: s.code }); } }); if (teamReps.length > 0) repeated.push({ team: team.name, items: teamReps }); }); return repeated;
-}
-function getMissingList() {
-    let missing = []; if (!window.DATA || !window.DATA.TEAMS) return missing; window.DATA.TEAMS.forEach(team => { team.stickers.forEach(s => { if (!getStickerState(s.code).have) missing.push({ team: team.name, name: s.name, code: s.code }); }); }); return missing;
-}
-
-function checkMilestones() {
-    const p = getTotalProgress().percentage; const targets = [25, 50, 75, 100]; 
-    let m = getActiveAlbum().milestones; if(!m) { m = {}; getActiveAlbum().milestones = m; }
-    for (let t of targets) { if (p >= t && !m[`m${t}`]) { m[`m${t}`] = true; saveStore(); shootBigConfetti(); setTimeout(() => alert(`¡Felicidades! Has completado el ${t}% de este álbum.`), 500); } }
-}
-
-// --- RENDER UI ---
 function renderDashboardCards() {
     try {
         const p = getTotalProgress(); const rep = getRepeatedTotal();
@@ -170,45 +134,26 @@ function makeTeamCard(team) {
         const div = document.createElement('div'); div.className = `team-card ${prog.have === prog.total && prog.total > 0 ? 'completed' : ''}`; div.id = `team-card-${team.code}`; div.onclick = () => openTeamDetail(team);
         let iconHtml = ''; let iconStr = team.icon ? String(team.icon) : '';
         if (iconStr.endsWith('.svg')) { iconHtml = `<img src="${iconStr}" class="team-icon section-logo" alt="${team.name}" style="object-fit: contain; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5)); padding: 2px;">`; } 
-        else if (iconStr) { iconHtml = `<div class="team-icon emoji-icon" style="font-size:24px; display:flex; align-items:center; justify-content:center;">${iconStr}</div>`; } 
-        else { iconHtml = `<div class="team-icon placeholder">?</div>`; }
-        div.innerHTML = `<div class="team-card-header">${iconHtml}<div class="team-info"><h3>${team.name || 'Equipo'}</h3><span>${team.group || ''}</span></div></div><div class="team-stats"><span>Progreso</span><span id="card-count-${team.code}">${prog.have}/${prog.total} (${pct}%)</span></div><div class="linear-progress"><div class="linear-bar" id="card-bar-${team.code}" style="width: ${pct}%;"></div></div>`; 
-        return div;
+        else if (iconStr) { iconHtml = `<div class="team-icon emoji-icon" style="font-size:24px; display:flex; align-items:center; justify-content:center;">${iconStr}</div>`; } else { iconHtml = `<div class="team-icon placeholder">?</div>`; }
+        div.innerHTML = `<div class="team-card-header">${iconHtml}<div class="team-info"><h3>${team.name || 'Equipo'}</h3><span>${team.group || ''}</span></div></div><div class="team-stats"><span>Progreso</span><span id="card-count-${team.code}">${prog.have}/${prog.total} (${pct}%)</span></div><div class="linear-progress"><div class="linear-bar" id="card-bar-${team.code}" style="width: ${pct}%;"></div></div>`; return div;
     } catch (e) { return document.createElement('div'); }
 }
 
 function applyCollectionSearch() {
     try {
         if (!window.DATA || !window.DATA.TEAMS) return;
-        
         let filtered = window.DATA.TEAMS.filter(t => {
             let matchText = true;
-            if (activeSearch.text) { 
-                let txt = activeSearch.text.toLowerCase(); 
-                let hasSticker = t.stickers.some(s => (s.name||'').toLowerCase().includes(txt) || ((s.playerName||'').toLowerCase().includes(txt))); 
-                matchText = (t.name||'').toLowerCase().includes(txt) || (t.group||'').toLowerCase().includes(txt) || hasSticker; 
-            }
+            if (activeSearch.text) { let txt = activeSearch.text.toLowerCase(); let hasSticker = t.stickers.some(s => (s.name||'').toLowerCase().includes(txt) || ((s.playerName||'').toLowerCase().includes(txt))); matchText = (t.name||'').toLowerCase().includes(txt) || (t.group||'').toLowerCase().includes(txt) || hasSticker; }
             return matchText && (activeSearch.team === 'all' || t.code === activeSearch.team) && (activeSearch.group === 'all' || t.group === activeSearch.group);
         });
-        
         if (activeSearch.sort === 'most') { filtered.sort((a,b) => (getTeamProgress(b.code).have / b.stickers.length) - (getTeamProgress(a.code).have / a.stickers.length)); }
         else if (activeSearch.sort === 'least') { filtered.sort((a,b) => (getTeamProgress(a.code).have / a.stickers.length) - (getTeamProgress(b.code).have / b.stickers.length)); }
         else if (activeSearch.sort === 'az') { filtered.sort((a,b) => (a.name||'').localeCompare(b.name||'')); }
-        
-        const grid = document.getElementById('teams-grid'); 
-        if(!grid) return; 
-        
-        grid.innerHTML = '';
-        const counterEl = document.getElementById('results-counter'); 
-        if(counterEl) counterEl.innerText = `${filtered.length} resultados`;
-        
-        filtered.forEach(team => { 
-            grid.appendChild(makeTeamCard(team)); 
-        });
-        
-    } catch (e) { 
-        console.error("Error dibujando países", e); 
-    }
+        const grid = document.getElementById('teams-grid'); if(!grid) return; grid.innerHTML = '';
+        const counterEl = document.getElementById('results-counter'); if(counterEl) counterEl.innerText = `${filtered.length} resultados`;
+        filtered.forEach(team => { grid.appendChild(makeTeamCard(team)); });
+    } catch (e) { console.error("Error dibujando países", e); }
 }
 
 function renderTrades() {
@@ -253,59 +198,21 @@ function getMissingExportRows() { let rows = []; let map = {}; getMissingList().
 function removeAccents(str) { if (!str) return ''; return str.normalize("NFD").replace(/[\u0300-\u036f]/g, ""); }
 window.exportTradesExcel = function() { let csv = 'Seccion,Laminas Repetidas\n'; getTradeExportRows().forEach(r => { csv += `"${removeAccents(r.section)}","${r.text}"\n`; }); downloadBlob(new Blob([csv], { type: 'text/csv;charset=utf-8' }), 'cambios_album.csv'); }
 window.exportMissingExcel = function() { let csv = 'Seccion,Laminas Faltantes\n'; getMissingExportRows().forEach(r => { csv += `"${removeAccents(r.section)}","${r.text}"\n`; }); downloadBlob(new Blob([csv], { type: 'text/csv;charset=utf-8' }), 'faltantes_album.csv'); }
-window.exportTradesPdf = function() {
-    const p = getTotalProgress(); 
-    let html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Láminas Repetidas</title><style>body{font-family:sans-serif;padding:20px;}table{width:100%;border-collapse:collapse;margin-top:15px;}th,td{border:1px solid #111;padding:10px;text-align:left;font-size:14px;}th{background-color:#f5f5f5;}h1{font-size:22px;margin-bottom:4px;}p{color:#444;font-size:13px;margin-top:0;}</style></head><body><h1>Láminas Repetidas - ${getActiveAlbum().profile.name}</h1><p>Progreso del Álbum: ${p.have}/${p.total} (${p.percentage}%) | Total de cambios listos: ${getRepeatedTotal()}</p><table><thead><tr><th style="width:180px;">Sección / Equipo</th><th>Láminas Disponibles</th></tr></thead><tbody>`;
-    
-    getTradeExportRows().forEach(r => { 
-        html += `<tr><td><strong>${r.section}</strong></td><td>${r.text}</td></tr>`; 
-    }); 
-    
-    html += `</tbody></table></body></html>`;
-    
-    // Motor mágico que crea un documento oculto y abre el diálogo de guardado PDF
-    const iframe = document.createElement('iframe'); 
-    iframe.style.position = 'fixed'; 
-    iframe.style.right = '0'; 
-    iframe.style.bottom = '0'; 
-    iframe.style.width = '0'; 
-    iframe.style.height = '0'; 
-    iframe.style.border = 'none'; 
-    document.body.appendChild(iframe);
-    
-    const doc = iframe.contentWindow.document; 
-    doc.open(); 
-    doc.write(html); 
-    doc.close();
-    
-    setTimeout(() => { 
-        iframe.contentWindow.focus(); 
-        iframe.contentWindow.print(); 
-        setTimeout(() => { 
-            if (document.body.contains(iframe)) { 
-                document.body.removeChild(iframe); 
-            } 
-        }, 15000); 
-    }, 500);
-};
 window.generateShareText = function() { const p = getTotalProgress(); let txt = `*${getActiveAlbum().profile.name}*\nProgreso: ${p.have}/${p.total} (${p.percentage}%)\nRepetidas: ${getRepeatedTotal()}\n\n`; getTradeExportRows().forEach(r => { txt += `${r.section}: ${r.text}\n`; }); const shareEl = document.getElementById('share-textarea'); if(shareEl) shareEl.value = txt; window.showModal('modal-share'); }
 function downloadBlob(b, f) { const u = URL.createObjectURL(b); const a = document.createElement('a'); a.href = u; a.download = f; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(u); }
 
-// --- UTILIDADES RECUPERADAS ---
-window.forceUpdateCache = function() { 
-    if ('caches' in window) { 
-        caches.keys().then(names => { for (let n of names) caches.delete(n); })
-        .then(() => { alert("Caché borrada."); window.location.href = window.location.pathname + '?v=' + new Date().getTime(); }); 
-    } else { 
-        window.location.reload(true); 
-    } 
-}
+window.exportTradesPdf = function() {
+    const p = getTotalProgress(); 
+    let html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Láminas Repetidas</title><style>body{font-family:sans-serif;padding:20px;}table{width:100%;border-collapse:collapse;margin-top:15px;}th,td{border:1px solid #111;padding:10px;text-align:left;font-size:14px;}th{background-color:#f5f5f5;}h1{font-size:22px;margin-bottom:4px;}p{color:#444;font-size:13px;margin-top:0;}</style></head><body><h1>Láminas Repetidas - ${getActiveAlbum().profile.name}</h1><p>Progreso del Álbum: ${p.have}/${p.total} (${p.percentage}%) | Total de cambios listos: ${getRepeatedTotal()}</p><table><thead><tr><th style="width:180px;">Sección / Equipo</th><th>Láminas Disponibles</th></tr></thead><tbody>`;
+    getTradeExportRows().forEach(r => { html += `<tr><td><strong>${r.section}</strong></td><td>${r.text}</td></tr>`; }); 
+    html += `</tbody></table></body></html>`;
+    const iframe = document.createElement('iframe'); iframe.style.position = 'fixed'; iframe.style.right = '0'; iframe.style.bottom = '0'; iframe.style.width = '0'; iframe.style.height = '0'; iframe.style.border = 'none'; document.body.appendChild(iframe);
+    const doc = iframe.contentWindow.document; doc.open(); doc.write(html); doc.close();
+    setTimeout(() => { iframe.contentWindow.focus(); iframe.contentWindow.print(); setTimeout(() => { if (document.body.contains(iframe)) { document.body.removeChild(iframe); } }, 15000); }, 500);
+};
 
-function checkIOSInstall() {
-    const isIos = () => /iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase()); const isStandalone = () => ('standalone' in window.navigator) && window.navigator.standalone;
-    if (isIos() && !isStandalone()) { const prompt = document.getElementById('ios-install-prompt'); if (prompt && !localStorage.getItem('ios_prompt_dismissed')) { prompt.style.display = 'block'; prompt.querySelector('.close-ios-prompt').onclick = () => { prompt.style.display = 'none'; localStorage.setItem('ios_prompt_dismissed', 'true'); }; } }
-}
-
+window.forceUpdateCache = function() { if ('caches' in window) { caches.keys().then(names => { for (let n of names) caches.delete(n); }).then(() => { alert("Caché borrada."); window.location.href = window.location.pathname + '?v=' + new Date().getTime(); }); } else { window.location.reload(true); } }
+function checkIOSInstall() { const isIos = () => /iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase()); const isStandalone = () => ('standalone' in window.navigator) && window.navigator.standalone; if (isIos() && !isStandalone()) { const prompt = document.getElementById('ios-install-prompt'); if (prompt && !localStorage.getItem('ios_prompt_dismissed')) { prompt.style.display = 'block'; prompt.querySelector('.close-ios-prompt').onclick = () => { prompt.style.display = 'none'; localStorage.setItem('ios_prompt_dismissed', 'true'); }; } } }
 function loadTheme() { if (localStorage.getItem('album_theme_2026') === 'light') document.documentElement.setAttribute('data-theme', 'light'); }
 function updateHeaderOffset() { const h = document.querySelector('.app-header'); if(h) document.documentElement.style.setProperty('--header-offset', `${h.offsetHeight + 18}px`); }
 function observeHeaderOffset() { updateHeaderOffset(); window.addEventListener('resize', updateHeaderOffset); window.addEventListener('orientationchange', () => setTimeout(updateHeaderOffset, 150)); if(document.fonts) document.fonts.ready.then(updateHeaderOffset); }
@@ -314,7 +221,7 @@ window.toggleTheme = function() { const root = document.documentElement; if (roo
 window.showModal = function(id) { const m = document.getElementById(id); if(m) m.style.display = 'flex'; }
 window.closeModal = function(id) { const m = document.getElementById(id); if(m) { m.style.display = 'none'; } currentOpenTeam = null; }
 window.exportData = function() { downloadBlob(new Blob([JSON.stringify(globalState, null, 2)], { type: 'application/json' }), 'album_mundial_2026_backup.json'); }
-window.confirmReset = function() { if (confirm('¿Borrar el progreso actual?')) { getActiveAlbum().stickers = {}; getActiveAlbum().milestones = {}; saveStore(); window.closeModal('modal-settings'); updateUIForActiveAlbum(); } }
+window.confirmReset = function() { if (confirm('¿Borrar el progreso actual?')) { getActiveAlbum().stickers = {}; getActiveAlbum().milestones = {}; saveStore(); if (auth && auth.currentUser) fullCloudBackup(auth.currentUser); window.closeModal('modal-settings'); updateUIForActiveAlbum(); } }
 
 window.importData = function(e) { 
     const f = e.target.files[0]; if (!f) return; const r = new FileReader(); 
@@ -324,12 +231,11 @@ window.importData = function(e) {
             if (d.albums) { 
                 let action = prompt("Este archivo contiene un gestor Multi-Álbum.\n\nEscribe 'REEMPLAZAR' o 'FUSIONAR'.");
                 if (action && action.toUpperCase() === 'REEMPLAZAR') { localStorage.setItem('albumStore', ev.target.result); alert('Base de datos reemplazada.'); window.location.reload(); } 
-                else if (action && action.toUpperCase() === 'FUSIONAR') { for (let id in d.albums) { globalState.albums['album_imported_' + Date.now() + Math.random()] = d.albums[id]; } saveStore(); alert(`Álbumes fusionados.`); window.location.reload(); }
+                else if (action && action.toUpperCase() === 'FUSIONAR') { for (let id in d.albums) { globalState.albums['album_imported_' + Date.now() + Math.random()] = d.albums[id]; } saveStore(); if (auth && auth.currentUser) fullCloudBackup(auth.currentUser); alert(`Álbumes fusionados.`); window.location.reload(); }
             } else if (d.stickers) { 
-                let importedName = d.profile?.name || 'Álbum Importado'; 
-                let action = prompt(`Se detectó el álbum: "${importedName}".\n\nEscribe 'REEMPLAZAR' o 'AGREGAR'.`);
-                if (action && action.toUpperCase() === 'REEMPLAZAR') { globalState.albums[globalState.activeAlbumId] = { profile: d.profile || { name: importedName }, stickers: d.stickers || {}, milestones: d.milestones || {} }; saveStore(); alert(`Álbum reemplazado.`); window.location.reload(); } 
-                else if (action && action.toUpperCase() === 'AGREGAR') { const newId = 'album_' + Date.now(); globalState.albums[newId] = { profile: d.profile || { name: importedName }, stickers: d.stickers || {}, milestones: d.milestones || {} }; globalState.activeAlbumId = newId; saveStore(); alert(`Álbum importado.`); window.location.reload(); }
+                let importedName = d.profile?.name || 'Álbum Importado'; let action = prompt(`Se detectó el álbum: "${importedName}".\n\nEscribe 'REEMPLAZAR' o 'AGREGAR'.`);
+                if (action && action.toUpperCase() === 'REEMPLAZAR') { globalState.albums[globalState.activeAlbumId] = { profile: d.profile || { name: importedName }, stickers: d.stickers || {}, milestones: d.milestones || {} }; saveStore(); if (auth && auth.currentUser) fullCloudBackup(auth.currentUser); alert(`Álbum reemplazado.`); window.location.reload(); } 
+                else if (action && action.toUpperCase() === 'AGREGAR') { const newId = 'album_' + Date.now(); globalState.albums[newId] = { profile: d.profile || { name: importedName }, stickers: d.stickers || {}, milestones: d.milestones || {} }; globalState.activeAlbumId = newId; saveStore(); if (auth && auth.currentUser) fullCloudBackup(auth.currentUser); alert(`Álbum importado.`); window.location.reload(); }
             } else { alert('Archivo JSON no reconocido.'); }
         } catch (err) { alert('Archivo JSON inválido.'); } 
     }; r.readAsText(f); e.target.value = ''; 
@@ -345,43 +251,18 @@ function bindEvents() {
 
     click('btn-theme', window.toggleTheme); click('btn-settings', () => window.showModal('modal-settings')); click('btn-clear-filters', clearFilters); click('btn-share-list', window.generateShareText); click('btn-export-excel', window.exportTradesExcel); click('btn-export-pdf', window.exportTradesPdf); click('btn-download-missing', window.exportMissingExcel);
     input('search-input', (e) => { activeSearch.text = e.target.value; applyCollectionSearch(); }); change('filter-team', (e) => { activeSearch.team = e.target.value; applyCollectionSearch(); }); change('filter-group', (e) => { activeSearch.group = e.target.value; applyCollectionSearch(); }); change('sort-select', (e) => { activeSearch.sort = e.target.value; applyCollectionSearch(); });
-    
-change('setting-display-mode', (e) => { 
-        globalState.displayMode = e.target.value; 
-        localStorage.setItem('album_display_mode', e.target.value); 
-        updateUIForActiveAlbum(); 
-    });
-    // --------------------------------------------------------
+    change('setting-display-mode', (e) => { globalState.displayMode = e.target.value; localStorage.setItem('album_display_mode', e.target.value); updateUIForActiveAlbum(); });
     
     document.querySelectorAll('.close-modal').forEach(btn => { btn.onclick = () => { const modal = btn.closest('.modal'); if(modal) modal.style.display = 'none'; currentOpenTeam = null; }; });
     document.querySelectorAll('.nav-btn').forEach(btn => { btn.onclick = () => { document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active')); document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active')); btn.classList.add('active'); const t = btn.getAttribute('data-target'); const targetPane = document.getElementById(t); if(targetPane) targetPane.classList.add('active'); if (t === 'tab-trades') renderTrades(); window.scrollTo(0, 0); }; });
     
     click('btn-modal-create-album', () => { const input = document.getElementById('new-album-input'); if (input && input.value.trim() !== '') { createNewAlbum(input.value.trim()); input.value = ''; renderAlbumSelector(); updateUIForActiveAlbum(); window.closeModal('modal-manage-albums'); } });
-click('btn-modal-delete-album', () => { 
-        if (confirm("⚠️ ¿Estás seguro de que deseas eliminar este álbum permanentemente? Esta acción no se puede deshacer.")) {
-            deleteActiveAlbum(); 
-            
-            // Si el usuario borró su único álbum, le creamos uno nuevo vacío para que no quede la app en blanco
-            if (!getActiveAlbum() && typeof createNewAlbum === 'function') {
-                createNewAlbum('Mi Álbum');
-            }
-            
-            // Redibujamos la pantalla inmediatamente
-            renderAlbumSelector(); 
-            updateUIForActiveAlbum(); 
-            window.closeModal('modal-manage-albums'); 
-        }
-    });
+    click('btn-modal-delete-album', () => { if (confirm("⚠️ ¿Estás seguro de que deseas eliminar este álbum permanentemente?")) { deleteActiveAlbum(); if (!getActiveAlbum() && typeof createNewAlbum === 'function') { createNewAlbum('Mi Álbum'); } renderAlbumSelector(); updateUIForActiveAlbum(); window.closeModal('modal-manage-albums'); } });
 }
 
 window.loginGoogle = function() { signInWithPopup(auth, provider).then(() => { alert("¡Sesión iniciada!"); }).catch(err => alert("Error: " + err.message)); };
 window.logoutGoogle = function() { signOut(auth).then(() => { alert("Sesión cerrada."); }).catch(err => alert("Error: " + err)); };
-
-function updateAuthUI(user) {
-    const btnLogin = document.getElementById('btn-login-google'); const authInfo = document.getElementById('auth-user-info'); const authText = document.getElementById('auth-status-text'); const emailText = document.getElementById('auth-user-email');
-    if (user) { if(btnLogin) btnLogin.style.display = 'none'; if(authInfo) authInfo.style.display = 'flex'; if(authText) authText.innerText = "Sincronizando automáticamente en la nube."; if(emailText) emailText.innerText = `👋 Hola, ${user.displayName || user.email}`; } 
-    else { if(btnLogin) btnLogin.style.display = 'flex'; if(authInfo) authInfo.style.display = 'none'; if(authText) authText.innerText = "Inicia sesión para sincronizar automáticamente."; if(emailText) emailText.innerText = ""; }
-}
+function updateAuthUI(user) { const btnLogin = document.getElementById('btn-login-google'); const authInfo = document.getElementById('auth-user-info'); const authText = document.getElementById('auth-status-text'); const emailText = document.getElementById('auth-user-email'); if (user) { if(btnLogin) btnLogin.style.display = 'none'; if(authInfo) authInfo.style.display = 'flex'; if(authText) authText.innerText = "Sincronizando en tiempo real."; if(emailText) emailText.innerText = `👋 Hola, ${user.displayName || user.email}`; } else { if(btnLogin) btnLogin.style.display = 'flex'; if(authInfo) authInfo.style.display = 'none'; if(authText) authText.innerText = "Inicia sesión para sincronizar."; if(emailText) emailText.innerText = ""; } }
 
 window.openOnlineMatchModal = function() { const modal = document.getElementById('modal-online-match'); if (!modal) return; if (!auth || !auth.currentUser) { alert("Debes iniciar sesión para usar esto."); return; } if (globalState.friendCode) { document.getElementById('online-match-setup').style.display = 'none'; document.getElementById('online-match-ready').style.display = 'block'; document.getElementById('display-my-code').innerText = globalState.friendCode; } else { document.getElementById('online-match-setup').style.display = 'block'; document.getElementById('online-match-ready').style.display = 'none'; } modal.style.display = 'flex'; }
 window.closeOnlineMatchModal = function() { document.getElementById('modal-online-match').style.display = 'none'; }
@@ -391,233 +272,42 @@ window.shareViaWhatsApp = function() { window.open(`https://api.whatsapp.com/sen
 window.copyMagicLink = function() { navigator.clipboard.writeText(getMagicLink()).then(() => alert("Copiado al portapapeles.")); }
 
 window.handleSearchFriend = async function() {
-    const input = document.getElementById('input-friend-code'); const btn = document.getElementById('btn-search-friend'); const friendCode = input.value; if (!friendCode) return alert("Escribe un código.");
-    btn.innerText = "Buscando..."; btn.disabled = true;
+    const input = document.getElementById('input-friend-code'); const btn = document.getElementById('btn-search-friend'); const friendCode = input.value; if (!friendCode) return alert("Escribe un código."); btn.innerText = "Buscando..."; btn.disabled = true;
     try {
         const compressedData = await getFriendBox(friendCode); window.closeOnlineMatchModal(); 
         const parts = compressedData.split('|'); const repArray = parts[1] ? parts[1].split(',') : []; const missingArray = parts[2] ? parts[2].split(',') : [];
         let fakeS = {}; if (window.DATA && window.DATA.TEAMS) { window.DATA.TEAMS.forEach(team => { team.stickers.forEach(s => { if (!missingArray.includes(s.code)) { fakeS[s.code] = repArray.includes(s.code) ? 2 : 1; } }); }); }
         const jsonForMatch = JSON.stringify({ n: friendCode, profile: { name: friendCode }, s: fakeS, m: [] });
-        if (typeof compareGlobalTrades === 'function') {
-            const matchResult = compareGlobalTrades(jsonForMatch);
-            if (matchResult) { if (typeof renderMatchResultsUI === 'function') renderMatchResultsUI(); setTimeout(() => { const matchContainer = document.getElementById('match-results-container'); if(matchContainer) matchContainer.scrollIntoView({ behavior: 'smooth' }); }, 100); } 
-            else { alert("Match calculó pero devolvió vacío."); }
-        } else { alert("Función compareGlobalTrades no encontrada."); }
+        if (typeof compareGlobalTrades === 'function') { const matchResult = compareGlobalTrades(jsonForMatch); if (matchResult) { if (typeof window.renderMatchResultsUI === 'function') window.renderMatchResultsUI(); setTimeout(() => { const matchContainer = document.getElementById('match-results-container'); if(matchContainer) matchContainer.scrollIntoView({ behavior: 'smooth' }); }, 100); } else { alert("Match calculó pero devolvió vacío."); } }
     } catch (error) { alert("Error: " + error.message); } finally { btn.innerText = "Buscar"; btn.disabled = false; }
 }
 
-// --- FUNCIONES DE MATCH OFFLINE Y QR ---
-
-window.copyMyJsonForTrade = function() {
-    const jsonStr = getGlobalMinifiedData(); 
-    if (!jsonStr) { alert("No hay datos para copiar."); return; }
-    if (navigator.clipboard && window.isSecureContext) { 
-        navigator.clipboard.writeText(jsonStr).then(() => { alert("¡Copiado al portapapeles!"); }); 
-    } else { 
-        let t = document.createElement("textarea"); t.value = jsonStr; t.style.position = "fixed"; t.style.left = "-999999px";
-        document.body.appendChild(t); t.focus(); t.select(); 
-        try { document.execCommand('copy'); alert("¡Copiado!"); } catch (err) { alert("Hubo un error copiando."); } 
-        t.remove(); 
-    }
-};
-
-window.showMyQR = function() { 
-    loadQRLibraries(() => {
-        const jsonStr = getGlobalMinifiedData(); 
-        const compressedData = LZString.compressToEncodedURIComponent(jsonStr);
-        if (compressedData.length > 2500) { alert("⚠️ Tienes demasiadas láminas repetidas. Usa el botón 'Copiar Texto'."); return; }
-        const imgEl = document.getElementById('qr-image');
-        try { 
-            QRCode.toDataURL(compressedData, { width: 800, margin: 2, errorCorrectionLevel: 'L', color: { dark: '#000', light: '#fff' } }, function (error, url) { 
-                if (!error) { imgEl.src = url; window.showModal('modal-my-qr'); } 
-            }); 
-        } catch (e) { alert("Error al generar QR."); }
-    }); 
-};
-
-window.openCameraScanner = function() { 
-    loadQRLibraries(() => { 
-        window.showModal('modal-scanner'); 
-        html5QrcodeScanner = new Html5Qrcode("qr-reader"); 
-        html5QrcodeScanner.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 250 } }, (decodedText) => { 
-            window.closeScannerModal(); 
-            const matchInput = document.getElementById('match-input'); 
-            if(matchInput) { matchInput.value = decodedText; window.processQRText(); } 
-        }, (e) => {} ).catch(err => { alert("No se pudo iniciar la cámara."); window.closeScannerModal(); }); 
-    }); 
-}
-
-window.closeScannerModal = function() { 
-    if (html5QrcodeScanner) { 
-        html5QrcodeScanner.stop().then(() => { html5QrcodeScanner.clear(); window.closeModal('modal-scanner'); }).catch(e => window.closeModal('modal-scanner')); 
-    } else { 
-        window.closeModal('modal-scanner'); 
-    } 
-}
-
-window.uploadQRImage = function(event) { 
-    const file = event.target.files[0]; if (!file) return; 
-    loadQRLibraries(() => {
-        const reader = new FileReader(); 
-        reader.onload = (e) => { 
-            const img = new Image(); img.onload = () => {
-                const canvas = document.getElementById('hidden-qr-canvas'); const context = canvas.getContext('2d', { willReadFrequently: true }); 
-                const maxSize = 2000; let w = img.width; let h = img.height;
-                if (w > maxSize || h > maxSize) { const r = Math.min(maxSize / w, maxSize / h); w *= r; h *= r; }
-                canvas.width = w; canvas.height = h; context.fillStyle = '#FFFFFF'; context.fillRect(0, 0, w, h); context.drawImage(img, 0, 0, w, h);
-                const data = context.getImageData(0, 0, w, h); const code = jsQR(data.data, data.width, data.height, { inversionAttempts: "attemptBoth" });
-                if (code) { 
-                    const matchInput = document.getElementById('match-input'); 
-                    if(matchInput) { matchInput.value = code.data; window.processQRText(); } 
-                } else { alert('No se pudo leer el código QR.'); }
-            }; img.src = e.target.result; 
-        }; reader.readAsDataURL(file); event.target.value = ''; 
-    }); 
-};
-
-window.processQRText = function() {
-    const matchInput = document.getElementById('match-input'); if(!matchInput) return; 
-    const input = matchInput.value.trim(); if(!input) { window.clearMatchInput(); return; }
-    loadQRLibraries(() => {
-        let finalData = input; 
-        const decompressed = LZString.decompressFromEncodedURIComponent(input); 
-        if (decompressed) finalData = decompressed;
-        
-        if(typeof compareGlobalTrades === 'function') {
-            const matchResult = compareGlobalTrades(finalData);
-            if(matchResult) {
-                if (typeof window.renderMatchResultsUI === 'function') window.renderMatchResultsUI(); 
-                setTimeout(() => { const matchContainer = document.getElementById('match-results-container'); if(matchContainer) matchContainer.scrollIntoView({ behavior: 'smooth' }); }, 100);
-            }
-        }
-    });
-}
-
+// MATCH OFFLINE Y QR
+window.copyMyJsonForTrade = function() { const jsonStr = getGlobalMinifiedData(); if (!jsonStr) { alert("No hay datos."); return; } if (navigator.clipboard && window.isSecureContext) { navigator.clipboard.writeText(jsonStr).then(() => { alert("¡Copiado!"); }); } else { let t = document.createElement("textarea"); t.value = jsonStr; t.style.position = "fixed"; document.body.appendChild(t); t.focus(); t.select(); try { document.execCommand('copy'); alert("¡Copiado!"); } catch (err) {} t.remove(); } };
+window.showMyQR = function() { loadQRLibraries(() => { const jsonStr = getGlobalMinifiedData(); const compressedData = LZString.compressToEncodedURIComponent(jsonStr); if (compressedData.length > 2500) { alert("Demasiadas repetidas. Usa Texto."); return; } const imgEl = document.getElementById('qr-image'); try { QRCode.toDataURL(compressedData, { width: 800, margin: 2, errorCorrectionLevel: 'L', color: { dark: '#000', light: '#fff' } }, function (error, url) { if (!error) { imgEl.src = url; window.showModal('modal-my-qr'); } }); } catch (e) { alert("Error QR."); } }); };
+window.openCameraScanner = function() { loadQRLibraries(() => { window.showModal('modal-scanner'); html5QrcodeScanner = new Html5Qrcode("qr-reader"); html5QrcodeScanner.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 250 } }, (decodedText) => { window.closeScannerModal(); const matchInput = document.getElementById('match-input'); if(matchInput) { matchInput.value = decodedText; window.processQRText(); } }, (e) => {} ).catch(err => { alert("No se pudo iniciar cámara."); window.closeScannerModal(); }); }); }
+window.closeScannerModal = function() { if (html5QrcodeScanner) { html5QrcodeScanner.stop().then(() => { html5QrcodeScanner.clear(); window.closeModal('modal-scanner'); }).catch(e => window.closeModal('modal-scanner')); } else { window.closeModal('modal-scanner'); } }
+window.uploadQRImage = function(event) { const file = event.target.files[0]; if (!file) return; loadQRLibraries(() => { const reader = new FileReader(); reader.onload = (e) => { const img = new Image(); img.onload = () => { const canvas = document.getElementById('hidden-qr-canvas'); const context = canvas.getContext('2d', { willReadFrequently: true }); const maxSize = 2000; let w = img.width; let h = img.height; if (w > maxSize || h > maxSize) { const r = Math.min(maxSize / w, maxSize / h); w *= r; h *= r; } canvas.width = w; canvas.height = h; context.fillStyle = '#FFFFFF'; context.fillRect(0, 0, w, h); context.drawImage(img, 0, 0, w, h); const data = context.getImageData(0, 0, w, h); const code = jsQR(data.data, data.width, data.height, { inversionAttempts: "attemptBoth" }); if (code) { const matchInput = document.getElementById('match-input'); if(matchInput) { matchInput.value = code.data; window.processQRText(); } } else { alert('Error leyendo QR.'); } }; img.src = e.target.result; }; reader.readAsDataURL(file); event.target.value = ''; }); };
+window.processQRText = function() { const matchInput = document.getElementById('match-input'); if(!matchInput) return; const input = matchInput.value.trim(); if(!input) { window.clearMatchInput(); return; } loadQRLibraries(() => { let finalData = input; const decompressed = LZString.decompressFromEncodedURIComponent(input); if (decompressed) finalData = decompressed; if(typeof compareGlobalTrades === 'function') { const matchResult = compareGlobalTrades(finalData); if(matchResult) { if (typeof window.renderMatchResultsUI === 'function') window.renderMatchResultsUI(); setTimeout(() => { const matchContainer = document.getElementById('match-results-container'); if(matchContainer) matchContainer.scrollIntoView({ behavior: 'smooth' }); }, 100); } } }); }
 window.compareTradesFromText = window.processQRText;
-
-window.clearMatchInput = function() { 
-    const matchInput = document.getElementById('match-input'); if(matchInput) matchInput.value = ''; 
-    const container = document.getElementById('match-results-container'); if(container) container.style.display = 'none'; 
-}
-
-// --- FUNCIONES VISUALES DE MATCH EN LÍNEA ---
+window.clearMatchInput = function() { const matchInput = document.getElementById('match-input'); if(matchInput) matchInput.value = ''; const container = document.getElementById('match-results-container'); if(container) container.style.display = 'none'; }
 
 window.renderMatchResultsUI = function() {
     if(!lastMatchResult) return;
-    
     let totalRec = 0; for(let team in lastMatchResult.iReceive) totalRec += lastMatchResult.iReceive[team].length;
     let totalGive = 0; for(let team in lastMatchResult.iGive) totalGive += lastMatchResult.iGive[team].length;
-    
-    let myNameStr = getFamilyNameString();
-    let optimal = Math.min(totalRec, totalGive); 
-    let bottleneck = totalRec < totalGive ? `(Menos repetidas: ${lastMatchResult.friendName})` : totalGive < totalRec ? `(Menos repetidas: ${myNameStr})` : `(Equilibrado)`;
-    
-    // Encabezado Global
-    let html = `<p style="text-align:center; color:var(--text-secondary); margin-bottom:1rem;">
-                    Comparación Global con: <strong style="color:var(--text-primary); font-size:1.1rem;">${lastMatchResult.friendName}</strong>
-                </p>`;
-    
-    // Tarjeta de Resumen
-    html += `<div style="background: rgba(59,130,246,0.05); border: 1px dashed var(--blue-accent, #3b82f6); padding: 1.2rem; border-radius: 12px; margin-bottom: 1.5rem; text-align: center;">
-                <p style="margin-bottom: 0.8rem; font-size: 1.1rem; color: var(--text-primary);"><strong>📊 Resumen de Match</strong></p>
-                <div style="display: flex; justify-content: space-around; margin-bottom: 1rem; font-size: 0.95rem;">
-                    <div>⬇️ Recibes:<br><strong style="color:var(--green-complete, #10b981); font-size:1.2rem;">${totalRec}</strong></div>
-                    <div>⬆️ Entregas:<br><strong style="color:var(--gold, #f59e0b); font-size:1.2rem;">${totalGive}</strong></div>
-                </div>
-                <div style="background: var(--blue-accent, #3b82f6); color: white; padding: 0.5rem 1rem; border-radius: 8px; display: inline-block; margin-bottom: 1rem; width: 100%; box-sizing: border-box;">
-                    <strong>Máx. cambios justos: ${optimal}</strong> <br><span style="font-size: 0.85rem; opacity: 0.9;">${bottleneck}</span>
-                </div>
-                <button class="btn" style="background:var(--green-complete, #10b981); width:100%; max-width:280px; margin:0 auto; display:block; font-size:0.9rem; font-weight:bold; padding: 0.8rem;" onclick="window.applyInterchangeAutomatic()">
-                    ⚡ Aplicar Intercambio en 1-Clic
-                </button>
-            </div>`;
-            
-    // Columnas Responsivas
-    html += `<div class="match-columns">`;
-
-    // --- COLUMNA: RECIBE ---
-    html += `<div class="match-col col-receive">
-                <h3 style="color: var(--green-complete, #10b981);">⬇️ ${myNameStr} Recibe</h3>`;
-    let recCount = 0; 
-    for(let team in lastMatchResult.iReceive) { 
-        let chips = lastMatchResult.iReceive[team].map(code => `<span class="match-sticker-chip">${code}</span>`).join('');
-        html += `<div class="match-team-row"><span class="match-team-name">${team}</span><div>${chips}</div></div>`; 
-        recCount++; 
-    }
-    if(recCount === 0) html += '<p style="color: var(--text-muted); text-align: center; margin-top: 2rem;">Ninguna :(</p>'; 
-    html += `</div>`;
-
-    // --- COLUMNA: ENTREGA ---
-    html += `<div class="match-col col-give">
-                <h3 style="color: var(--gold, #f59e0b);">⬆️ ${myNameStr} Entrega</h3>`;
-    let giveCount = 0; 
-    for(let team in lastMatchResult.iGive) { 
-        let chips = lastMatchResult.iGive[team].map(code => `<span class="match-sticker-chip">${code}</span>`).join('');
-        html += `<div class="match-team-row"><span class="match-team-name">${team}</span><div>${chips}</div></div>`; 
-        giveCount++; 
-    }
-    if(giveCount === 0) html += '<p style="color: var(--text-muted); text-align: center; margin-top: 2rem;">Ninguna :(</p>'; 
-    html += `</div></div>`; 
-    
-    const resultsDiv = document.getElementById('match-results'); 
-    if(resultsDiv) resultsDiv.innerHTML = html; 
-    
-    const container = document.getElementById('match-results-container'); 
-    if(container) container.style.display = 'block';
+    let myNameStr = getFamilyNameString(); let optimal = Math.min(totalRec, totalGive); let bottleneck = totalRec < totalGive ? `(Menos repetidas: ${lastMatchResult.friendName})` : totalGive < totalRec ? `(Menos repetidas: ${myNameStr})` : `(Equilibrado)`;
+    let html = `<p style="text-align:center; color:var(--text-secondary); margin-bottom:1rem;">Comparación con: <strong style="color:var(--text-primary); font-size:1.1rem;">${lastMatchResult.friendName}</strong></p>`;
+    html += `<div style="background: rgba(59,130,246,0.05); border: 1px dashed var(--blue-accent, #3b82f6); padding: 1.2rem; border-radius: 12px; margin-bottom: 1.5rem; text-align: center;"><p style="margin-bottom: 0.8rem; font-size: 1.1rem; color: var(--text-primary);"><strong>📊 Resumen</strong></p><div style="display: flex; justify-content: space-around; margin-bottom: 1rem; font-size: 0.95rem;"><div>⬇️ Recibes:<br><strong style="color:var(--green-complete, #10b981); font-size:1.2rem;">${totalRec}</strong></div><div>⬆️ Entregas:<br><strong style="color:var(--gold, #f59e0b); font-size:1.2rem;">${totalGive}</strong></div></div><div style="background: var(--blue-accent, #3b82f6); color: white; padding: 0.5rem 1rem; border-radius: 8px; display: inline-block; margin-bottom: 1rem; width: 100%; box-sizing: border-box;"><strong>Máx. justos: ${optimal}</strong> <br><span style="font-size: 0.85rem; opacity: 0.9;">${bottleneck}</span></div><button class="btn" style="background:var(--green-complete, #10b981); width:100%; max-width:280px; margin:0 auto; display:block; font-size:0.9rem; font-weight:bold; padding: 0.8rem;" onclick="window.applyInterchangeAutomatic()">⚡ Aplicar Intercambio en 1-Clic</button></div>`;
+    html += `<div class="match-columns"><div class="match-col col-receive"><h3 style="color: var(--green-complete, #10b981);">⬇️ ${myNameStr} Recibe</h3>`;
+    let recCount = 0; for(let team in lastMatchResult.iReceive) { let chips = lastMatchResult.iReceive[team].map(code => `<span class="match-sticker-chip">${code}</span>`).join(''); html += `<div class="match-team-row"><span class="match-team-name">${team}</span><div>${chips}</div></div>`; recCount++; }
+    if(recCount === 0) html += '<p style="color: var(--text-muted); text-align: center; margin-top: 2rem;">Ninguna :(</p>'; html += `</div><div class="match-col col-give"><h3 style="color: var(--gold, #f59e0b);">⬆️ ${myNameStr} Entrega</h3>`;
+    let giveCount = 0; for(let team in lastMatchResult.iGive) { let chips = lastMatchResult.iGive[team].map(code => `<span class="match-sticker-chip">${code}</span>`).join(''); html += `<div class="match-team-row"><span class="match-team-name">${team}</span><div>${chips}</div></div>`; giveCount++; }
+    if(giveCount === 0) html += '<p style="color: var(--text-muted); text-align: center; margin-top: 2rem;">Ninguna :(</p>'; html += `</div></div>`; 
+    const resultsDiv = document.getElementById('match-results'); if(resultsDiv) resultsDiv.innerHTML = html; 
+    const container = document.getElementById('match-results-container'); if(container) container.style.display = 'block';
 }
 
-window.applyInterchangeAutomatic = function() { 
-    if(typeof executeGlobalTrade === 'function' && executeGlobalTrade()) { 
-        alert("¡Intercambio aplicado globalmente en tus álbumes!"); 
-        const container = document.getElementById('match-results-container'); 
-        if(container) container.style.display = 'none'; 
-        updateUIForActiveAlbum(); 
-    } 
-};
+window.applyInterchangeAutomatic = function() { if(typeof executeGlobalTrade === 'function' && executeGlobalTrade()) { alert("¡Intercambio aplicado!"); const container = document.getElementById('match-results-container'); if(container) container.style.display = 'none'; updateUIForActiveAlbum(); } };
 
-// --- RELLENADOR DE FILTROS ---
-function populateFilters() {
-    if (!window.DATA || !window.DATA.TEAMS) return;
-
-    const teamSelect = document.getElementById('filter-team');
-    const groupSelect = document.getElementById('filter-group');
-
-    if (!teamSelect || !groupSelect) return;
-
-    // Limpiamos y dejamos solo la opción por defecto
-    teamSelect.innerHTML = '<option value="all">Todos los Equipos</option>';
-    groupSelect.innerHTML = '<option value="all">Todos los Grupos</option>';
-
-    const groups = new Set();
-    
-    // Recorremos la base de datos de la FIFA
-    window.DATA.TEAMS.forEach(team => {
-        // 1. Agregar el país al filtro de equipos
-        if (team.code && team.name) {
-            const opt = document.createElement('option');
-            opt.value = team.code;
-            opt.innerText = team.name;
-            teamSelect.appendChild(opt);
-        }
-        
-        // 2. Recolectar el grupo para no repetirlos
-        if (team.group) {
-            groups.add(team.group);
-        }
-    });
-
-    // 3. Agregar los grupos ordenados al filtro de grupos
-    Array.from(groups).sort().forEach(group => {
-        const opt = document.createElement('option');
-        opt.value = group;
-        opt.innerText = group;
-        groupSelect.appendChild(opt);
-    });
-}
-
-// MOTOR DE ARRANQUE INFALIBLE
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-} else {
-    init(); // Si el HTML ya cargó, lo forzamos a arrancar de inmediato
-}
+if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', init); } else { init(); }
