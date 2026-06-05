@@ -1,5 +1,5 @@
 // match.js - Motor de Match Global
-import { globalState, saveStore, getFamilyNameString } from './store.js?v=70v70';
+import { globalState, saveStore, getFamilyNameString } from './store.js?v=71';
 
 export let lastMatchResult = null;
 

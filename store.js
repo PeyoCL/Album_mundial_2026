@@ -1,14 +1,17 @@
-// store.js - Sincronización en Tiempo Real y Actualización Quirúrgica (v70)
-import { db, doc, setDoc, getDoc, updateDoc, onSnapshot, auth } from './firebase-config.js?v=70';
+// store.js - Sincronización Real-Time con Escudo Anti-Interrupciones (v71)
+import { db, doc, setDoc, getDoc, updateDoc, onSnapshot, auth } from './firebase-config.js?v=71';
 
 export const globalState = { albums: {}, activeAlbumId: null, friendCode: null };
+export let lastLocalWriteTime = 0; // Temporizador del Escudo
 
 function sanitizeData() {
+    let repairNeeded = false;
     if (Array.isArray(globalState.albums)) {
         const fixedAlbums = {};
         globalState.albums.forEach(a => { if (a && a.id) fixedAlbums[a.id] = a; });
         for (let k in globalState.albums) { if (isNaN(k) && globalState.albums[k]?.id) fixedAlbums[k] = globalState.albums[k]; }
         globalState.albums = fixedAlbums;
+        repairNeeded = true;
     }
     for (let id in globalState.albums) {
         let a = globalState.albums[id];
@@ -16,13 +19,22 @@ function sanitizeData() {
         if (Array.isArray(a.stickers)) {
             let fixedS = {};
             a.stickers.forEach(s => { if (s && s.code) fixedS[s.code] = s; });
+            
+            // 🔥 RESCATE VITAL: Recuperar las láminas invisibles que se guardaron mal en la nube
+            for (let key in a.stickers) {
+                if (isNaN(key) && a.stickers[key] && typeof a.stickers[key] === 'object') {
+                    fixedS[key] = a.stickers[key];
+                }
+            }
             a.stickers = fixedS;
+            repairNeeded = true;
         } else if (!a.stickers) { a.stickers = {}; }
     }
     if (!globalState.activeAlbumId || !globalState.albums[globalState.activeAlbumId]) {
         const keys = Object.keys(globalState.albums);
         globalState.activeAlbumId = keys.length > 0 ? keys[0] : null;
     }
+    return repairNeeded; // Avisa si encontró errores para curar la nube
 }
 
 export async function loadStore() {
@@ -41,9 +53,6 @@ export async function saveStore() {
     localStorage.setItem('albumStore', JSON.stringify(globalState));
 }
 
-// --- NUEVO: SINCRONIZACIÓN PROFESIONAL v70 ---
-
-// Backup completo (solo se usa al crear álbumes nuevos o borrar)
 export async function fullCloudBackup(user) {
     if (!user) return;
     sanitizeData();
@@ -52,41 +61,48 @@ export async function fullCloudBackup(user) {
     uploadToPublicBox(user);
 }
 
-// Actualización quirúrgica: Modifica solo la lámina que tocaste sin alterar el resto
 export async function saveStickerToCloud(user, albumId, stickerCode, stickerData) {
     if (!user) return;
+    lastLocalWriteTime = Date.now(); // 🛡️ Activa el Escudo Anti-Interrupciones
     const docRef = doc(db, 'usuarios', user.uid);
     try {
         await updateDoc(docRef, { [`albums.${albumId}.stickers.${stickerCode}`]: stickerData });
         uploadToPublicBox(user); 
     } catch (e) {
-        if(e.code === 'not-found') await fullCloudBackup(user); // Si no existe, lo crea
+        if(e.code === 'not-found') await fullCloudBackup(user);
     }
 }
 
-// Escucha Activa: Recibe cambios de tus otros celulares en menos de 1 segundo
 let cloudUnsubscribe = null;
 export function startRealTimeSync(user, onDataUpdated) {
     if (!user) { if (cloudUnsubscribe) { cloudUnsubscribe(); cloudUnsubscribe = null; } return; }
 
     const docRef = doc(db, 'usuarios', user.uid);
     cloudUnsubscribe = onSnapshot(docRef, (docSnap) => {
+        // Ignora el eco instantáneo local para que la pantalla no parpadee
+        if (docSnap.metadata.hasPendingWrites) return;
+
         if (docSnap.exists()) {
             const data = docSnap.data();
             globalState.albums = data.albums || {};
             globalState.activeAlbumId = data.activeAlbumId || globalState.activeAlbumId;
             globalState.friendCode = data.friendCode || globalState.friendCode;
             
-            sanitizeData();
+            let wasCorrupted = sanitizeData();
             localStorage.setItem('albumStore', JSON.stringify(globalState));
-            if (onDataUpdated) onDataUpdated(); // Redibuja la pantalla mágicamente
+            
+            // Si la base de datos estaba rota (Array), manda el antídoto y la cura para siempre
+            if (wasCorrupted) fullCloudBackup(user); 
+
+            // 🛡️ ESCUDO: Solo redibuja la pantalla si no has tocado nada en los últimos 2 segundos
+            if (Date.now() - lastLocalWriteTime > 2000) {
+                if (onDataUpdated) onDataUpdated();
+            }
         } else {
             fullCloudBackup(user);
         }
     }, (error) => { console.error("Error en sincronización en vivo:", error); });
 }
-
-// --- FIN NUEVO ---
 
 export function getActiveAlbum() {
     sanitizeData(); if (!globalState.activeAlbumId) return null; let album = globalState.albums[globalState.activeAlbumId];
@@ -146,4 +162,3 @@ export async function getFriendBox(friendCode) {
     if (!boxSnap.exists()) throw new Error("No se encontró a nadie con este código.");
     return boxSnap.data().data;
 }
-
