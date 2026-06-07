@@ -198,8 +198,31 @@ function getMissingExportRows() { let rows = []; let map = {}; getMissingList().
 function removeAccents(str) { if (!str) return ''; return str.normalize("NFD").replace(/[\u0300-\u036f]/g, ""); }
 window.exportTradesExcel = function() { let csv = 'Seccion,Laminas Repetidas\n'; getTradeExportRows().forEach(r => { csv += `"${removeAccents(r.section)}","${r.text}"\n`; }); downloadBlob(new Blob([csv], { type: 'text/csv;charset=utf-8' }), 'cambios_album.csv'); }
 window.exportMissingExcel = function() { let csv = 'Seccion,Laminas Faltantes\n'; getMissingExportRows().forEach(r => { csv += `"${removeAccents(r.section)}","${r.text}"\n`; }); downloadBlob(new Blob([csv], { type: 'text/csv;charset=utf-8' }), 'faltantes_album.csv'); }
-window.generateShareText = function() { const p = getTotalProgress(); let txt = `*${getActiveAlbum().profile.name}*\nProgreso: ${p.have}/${p.total} (${p.percentage}%)\nRepetidas: ${getRepeatedTotal()}\n\n`; getTradeExportRows().forEach(r => { txt += `${r.section}: ${r.text}\n`; }); const shareEl = document.getElementById('share-textarea'); if(shareEl) shareEl.value = txt; window.showModal('modal-share'); }
-function downloadBlob(b, f) { const u = URL.createObjectURL(b); const a = document.createElement('a'); a.href = u; a.download = f; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(u); }
+window.generateShareText = function() { 
+    const p = getTotalProgress(); 
+    let txt = `🏆 *${getActiveAlbum().profile.name}*\n📊 Progreso: ${p.have}/${p.total} (${p.percentage}%)\n🔄 Repetidas listas para cambio: ${getRepeatedTotal()}\n\n`; 
+    
+    // Formato con negritas para los países y viñetas para las láminas
+    getRepeatedList().forEach(g => { 
+        let itemsStr = g.items.map(i => `• ${formatCode(i.name)}${i.count > 1 ? ` (x${i.count})` : ''}`).join('\n'); 
+        txt += `*${g.team}*\n${itemsStr}\n\n`; 
+    }); 
+    
+    const shareEl = document.getElementById('share-textarea'); 
+    if(shareEl) shareEl.value = txt.trim(); 
+    window.showModal('modal-share'); 
+};
+
+// NUEVO: La función que realmente abre WhatsApp con el texto del resumen
+window.shareListViaWhatsApp = function() {
+    const shareEl = document.getElementById('share-textarea');
+    if(shareEl && shareEl.value) {
+        const text = encodeURIComponent(shareEl.value);
+        window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
+    } else {
+        alert("No hay texto para compartir.");
+    }
+};function downloadBlob(b, f) { const u = URL.createObjectURL(b); const a = document.createElement('a'); a.href = u; a.download = f; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(u); }
 
 window.exportTradesPdf = function() {
     const p = getTotalProgress(); 
@@ -224,22 +247,83 @@ window.exportData = function() { downloadBlob(new Blob([JSON.stringify(globalSta
 window.confirmReset = function() { if (confirm('¿Borrar el progreso actual?')) { getActiveAlbum().stickers = {}; getActiveAlbum().milestones = {}; saveStore(); if (auth && auth.currentUser) fullCloudBackup(auth.currentUser); window.closeModal('modal-settings'); updateUIForActiveAlbum(); } }
 
 window.importData = function(e) { 
-    const f = e.target.files[0]; if (!f) return; const r = new FileReader(); 
+    const f = e.target.files[0]; if (!f) return; 
+    const r = new FileReader(); 
+    
     r.onload = (ev) => { 
         try { 
             const d = JSON.parse(ev.target.result); 
-            if (d.albums) { 
-                let action = prompt("Este archivo contiene un gestor Multi-Álbum.\n\nEscribe 'REEMPLAZAR' o 'FUSIONAR'.");
-                if (action && action.toUpperCase() === 'REEMPLAZAR') { localStorage.setItem('albumStore', ev.target.result); alert('Base de datos reemplazada.'); window.location.reload(); } 
-                else if (action && action.toUpperCase() === 'FUSIONAR') { for (let id in d.albums) { globalState.albums['album_imported_' + Date.now() + Math.random()] = d.albums[id]; } saveStore(); if (auth && auth.currentUser) fullCloudBackup(auth.currentUser); alert(`Álbumes fusionados.`); window.location.reload(); }
-            } else if (d.stickers) { 
-                let importedName = d.profile?.name || 'Álbum Importado'; let action = prompt(`Se detectó el álbum: "${importedName}".\n\nEscribe 'REEMPLAZAR' o 'AGREGAR'.`);
-                if (action && action.toUpperCase() === 'REEMPLAZAR') { globalState.albums[globalState.activeAlbumId] = { profile: d.profile || { name: importedName }, stickers: d.stickers || {}, milestones: d.milestones || {} }; saveStore(); if (auth && auth.currentUser) fullCloudBackup(auth.currentUser); alert(`Álbum reemplazado.`); window.location.reload(); } 
-                else if (action && action.toUpperCase() === 'AGREGAR') { const newId = 'album_' + Date.now(); globalState.albums[newId] = { profile: d.profile || { name: importedName }, stickers: d.stickers || {}, milestones: d.milestones || {} }; globalState.activeAlbumId = newId; saveStore(); if (auth && auth.currentUser) fullCloudBackup(auth.currentUser); alert(`Álbum importado.`); window.location.reload(); }
-            } else { alert('Archivo JSON no reconocido.'); }
-        } catch (err) { alert('Archivo JSON inválido.'); } 
-    }; r.readAsText(f); e.target.value = ''; 
-}
+            
+            // Creamos el modal dinámicamente si no existe
+            let modal = document.getElementById('modal-import-action');
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.id = 'modal-import-action';
+                modal.className = 'modal';
+                document.body.appendChild(modal);
+            }
+            
+            // Textos dinámicos dependiendo de si el archivo tiene 1 o varios álbumes
+            let title = d.albums ? "Gestor Multi-Álbum" : "Álbum Detectado";
+            let btn1Text = "⚠️ REEMPLAZAR TODO";
+            let btn1Desc = "Borrará tu progreso actual y lo reemplazará por los datos de este archivo.";
+            let btn2Text = d.albums ? "➕ FUSIONAR" : "➕ AGREGAR COMO NUEVO";
+            let btn2Desc = d.albums ? "Añadirá los álbumes del archivo a tu cuenta sin borrar lo que ya tienes." : "Añadirá este álbum a tu lista sin borrar tus álbumes actuales.";
+            
+            modal.innerHTML = `
+                <div class="modal-content" style="max-width: 400px; padding: 2rem; text-align: center;">
+                    <span class="close-modal" onclick="document.getElementById('modal-import-action').style.display='none'">&times;</span>
+                    <h2 style="margin-bottom: 1rem; color: var(--text-primary);">${title}</h2>
+                    <p style="margin-bottom: 1.5rem; color: var(--text-secondary); font-size: 0.95rem;">¿Qué deseas hacer con los datos de este archivo de recuperación?</p>
+                    
+                    <div style="display: flex; flex-direction: column; gap: 15px;">
+                        <button id="btn-import-add" class="btn" style="background: var(--green-complete, #10b981); color: white; padding: 12px; display: flex; flex-direction: column; align-items: center; border: none;">
+                            <strong style="font-size: 1.1rem;">${btn2Text}</strong>
+                            <span style="font-size: 0.8rem; font-weight: normal; margin-top: 4px; opacity: 0.9;">${btn2Desc}</span>
+                        </button>
+                        
+                        <button id="btn-import-replace" class="btn" style="background: transparent; border: 2px solid #ef4444; color: #ef4444; padding: 12px; display: flex; flex-direction: column; align-items: center;">
+                            <strong style="font-size: 1.1rem;">${btn1Text}</strong>
+                            <span style="font-size: 0.8rem; font-weight: normal; margin-top: 4px;">${btn1Desc}</span>
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            // Lógica del botón REEMPLAZAR
+            document.getElementById('btn-import-replace').onclick = () => {
+                if(d.albums) {
+                    localStorage.setItem('albumStore', ev.target.result);
+                } else {
+                    globalState.albums[globalState.activeAlbumId] = { profile: d.profile || { name: 'Álbum Importado' }, stickers: d.stickers || {}, milestones: d.milestones || {} };
+                    saveStore();
+                }
+                if (auth && auth.currentUser) fullCloudBackup(auth.currentUser);
+                alert("¡Datos reemplazados con éxito!");
+                window.location.reload();
+            };
+            
+            // Lógica del botón AGREGAR/FUSIONAR
+            document.getElementById('btn-import-add').onclick = () => {
+                if(d.albums) {
+                    for (let id in d.albums) { globalState.albums['album_imported_' + Date.now() + Math.random()] = d.albums[id]; }
+                } else {
+                    const newId = 'album_' + Date.now();
+                    globalState.albums[newId] = { profile: d.profile || { name: 'Álbum Importado' }, stickers: d.stickers || {}, milestones: d.milestones || {} };
+                    globalState.activeAlbumId = newId;
+                }
+                saveStore();
+                if (auth && auth.currentUser) fullCloudBackup(auth.currentUser);
+                alert("¡Datos agregados con éxito!");
+                window.location.reload();
+            };
+            
+            modal.style.display = 'flex';
+        } catch (err) { alert('El archivo seleccionado no es válido o está corrupto.'); } 
+    }; 
+    r.readAsText(f); 
+    e.target.value = ''; // Resetea el input file
+};
 
 function triggerConfetti(x, y) { const canvas = document.getElementById('confetti-canvas'); if(!canvas) return; const ctx = canvas.getContext('2d'); canvas.width = window.innerWidth; canvas.height = window.innerHeight; let particles = []; for(let i=0; i<30; i++) particles.push({ x, y, r: Math.random()*4+2, dx: Math.random()*6-3, dy: Math.random()*-6-2, color: `hsl(${Math.random()*360}, 100%, 50%)` }); function animate() { ctx.clearRect(0,0,canvas.width,canvas.height); let active = false; particles.forEach(p => { p.x += p.dx; p.y += p.dy; p.dy += 0.2; ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fillStyle = p.color; ctx.fill(); if(p.y < canvas.height) active = true; }); if(active) requestAnimationFrame(animate); else ctx.clearRect(0,0,canvas.width,canvas.height); } animate(); }
 function shootBigConfetti() { triggerConfetti(window.innerWidth/2, window.innerHeight/2); setTimeout(() => triggerConfetti(window.innerWidth/3, window.innerHeight/2), 200); setTimeout(() => triggerConfetti((window.innerWidth/3)*2, window.innerHeight/2), 400); }
