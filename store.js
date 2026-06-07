@@ -1,5 +1,5 @@
 // store.js - Sincronización Real-Time con Escudo Anti-Interrupciones (v71)
-import { db, doc, setDoc, getDoc, updateDoc, onSnapshot, auth } from './firebase-config.js?v=71';
+import { db, doc, setDoc, getDoc, updateDoc, onSnapshot, auth, deleteField } from './firebase-config.js?v=71';
 
 export const globalState = { albums: {}, activeAlbumId: null, friendCode: null };
 export let lastLocalWriteTime = 0; // Temporizador del Escudo
@@ -57,7 +57,12 @@ export async function fullCloudBackup(user) {
     if (!user) return;
     sanitizeData();
     const docRef = doc(db, 'usuarios', user.uid);
-    await setDoc(docRef, { albums: globalState.albums, activeAlbumId: globalState.activeAlbumId, friendCode: globalState.friendCode || null }, { merge: true });
+    // Al quitar { merge: true }, obligamos a Firebase a tener EXACTAMENTE los mismos álbumes que tu teléfono
+    await setDoc(docRef, { 
+        albums: globalState.albums, 
+        activeAlbumId: globalState.activeAlbumId, 
+        friendCode: globalState.friendCode || null 
+    });
     uploadToPublicBox(user);
 }
 
@@ -122,8 +127,28 @@ export function createNewAlbum(name) {
 
 export function deleteActiveAlbum() {
     if (globalState.activeAlbumId) {
-        delete globalState.albums[globalState.activeAlbumId]; sanitizeData(); saveStore();
-        if (auth && auth.currentUser) fullCloudBackup(auth.currentUser);
+        const idToDelete = globalState.activeAlbumId;
+        
+        // 1. Lo borramos de la memoria del teléfono
+        delete globalState.albums[idToDelete]; 
+        sanitizeData(); 
+        saveStore();
+        
+        // 2. Si hay sesión iniciada, lo fulminamos en la nube para que no resucite
+        if (auth && auth.currentUser) {
+            const docRef = doc(db, 'usuarios', auth.currentUser.uid);
+            
+            // Usamos deleteField() para arrancar el álbum de raíz de Firestore
+            updateDoc(docRef, { [`albums.${idToDelete}`]: deleteField() })
+                .then(() => {
+                    // Una vez borrado del servidor, actualizamos el estado del ID activo de forma segura
+                    fullCloudBackup(auth.currentUser);
+                })
+                .catch((err) => {
+                    console.error("Error en borrado quirúrgico, aplicando espejo:", err);
+                    fullCloudBackup(auth.currentUser);
+                });
+        }
     }
 }
 
