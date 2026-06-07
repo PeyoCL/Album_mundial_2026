@@ -208,7 +208,7 @@ function getMissingExportRows() { let rows = []; let map = {}; getMissingList().
 function removeAccents(str) { if (!str) return ''; return str.normalize("NFD").replace(/[\u0300-\u036f]/g, ""); }
 window.exportTradesExcel = function() { let csv = 'Seccion,Laminas Repetidas\n'; getTradeExportRows().forEach(r => { csv += `"${removeAccents(r.section)}","${r.text}"\n`; }); downloadBlob(new Blob([csv], { type: 'text/csv;charset=utf-8' }), 'cambios_album.csv'); }
 window.exportMissingExcel = function() { let csv = 'Seccion,Laminas Faltantes\n'; getMissingExportRows().forEach(r => { csv += `"${removeAccents(r.section)}","${r.text}"\n`; }); downloadBlob(new Blob([csv], { type: 'text/csv;charset=utf-8' }), 'faltantes_album.csv'); }
-window.generateShareText = function() { 
+function getShareTextString() {
     const p = getTotalProgress(); 
     let txt = `🏆 *${getActiveAlbum().profile.name}*\n📊 Progreso: ${p.have}/${p.total} (${p.percentage}%)\n`; 
     
@@ -237,22 +237,33 @@ window.generateShareText = function() {
             txt += `*${team}:* ${missingMap[team].join(', ')}\n`;
         }
     }
-    
+    return txt.trim();
+}
+window.generateShareText = function() { 
+    const txt = getShareTextString();
     const shareEl = document.getElementById('share-textarea'); 
-    if(shareEl) shareEl.value = txt.trim(); 
+    
+    if(shareEl) {
+        // Por si tu HTML usa un div en vez de un textarea
+        if (shareEl.tagName.toLowerCase() === 'textarea' || shareEl.tagName.toLowerCase() === 'input') {
+            shareEl.value = txt; 
+        } else {
+            shareEl.innerText = txt; 
+        }
+    }
     window.showModal('modal-share'); 
 };
 
-// NUEVO: La función que realmente abre WhatsApp con el texto del resumen
 window.shareListViaWhatsApp = function() {
-    const shareEl = document.getElementById('share-textarea');
-    if(shareEl && shareEl.value) {
-        const text = encodeURIComponent(shareEl.value);
-        window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
+    const text = getShareTextString();
+    if(text) {
+        const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
+        window.open(url, '_blank');
     } else {
-        alert("No hay texto para compartir.");
+        alert("El álbum está vacío, no hay nada para compartir aún.");
     }
-};function downloadBlob(b, f) { const u = URL.createObjectURL(b); const a = document.createElement('a'); a.href = u; a.download = f; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(u); }
+};
+function downloadBlob(b, f) { const u = URL.createObjectURL(b); const a = document.createElement('a'); a.href = u; a.download = f; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(u); }
 
 window.exportTradesPdf = function() {
     const p = getTotalProgress(); 
