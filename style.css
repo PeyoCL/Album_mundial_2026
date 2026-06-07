@@ -241,3 +241,42 @@ textarea { width: 100%; background: var(--bg-base); color: var(--text-primary); 
     margin: 15px 0;
     letter-spacing: 2px;
 }
+
+/* =========================================
+   DISEÑO DE PESTAÑA "CAMBIOS" (REPETIDAS)
+   ========================================= */
+
+.trade-group {
+    background: var(--bg-surface, #ffffff);
+    border: 1px solid rgba(0,0,0,0.05);
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+}
+
+.trade-group h3 {
+    margin-top: 0;
+    margin-bottom: 0.8rem;
+    font-size: 1.1rem;
+    color: var(--text-primary, #333);
+    border-bottom: 2px solid rgba(59, 130, 246, 0.1);
+    padding-bottom: 0.4rem;
+}
+
+.trade-items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.trade-item {
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    color: var(--text-primary);
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-family: monospace;
+    font-weight: bold;
+}
