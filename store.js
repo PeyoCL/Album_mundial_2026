@@ -127,7 +127,10 @@ export function deleteActiveAlbum() {
     }
 }
 
-export function getFamilyNameString(familyCode) { return familyCode || "Mi Álbum"; }
+export function getFamilyNameString() { 
+    const a = getActiveAlbum(); 
+    return (a && a.profile && a.profile.name) ? a.profile.name : "Mi Álbum"; 
+}
 
 export async function claimFriendCode(user, desiredCode) {
     if (!user) throw new Error("Inicia sesión para crear tu código.");
