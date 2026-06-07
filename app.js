@@ -287,15 +287,14 @@ window.closeModal = function (id) { const m = document.getElementById(id); if (m
 window.exportData = function () { downloadBlob(new Blob([JSON.stringify(globalState, null, 2)], { type: 'application/json' }), 'album_mundial_2026_backup.json'); }
 window.confirmReset = function () { if (confirm('¿Borrar el progreso actual?')) { getActiveAlbum().stickers = {}; getActiveAlbum().milestones = {}; saveStore(); if (auth && auth.currentUser) fullCloudBackup(auth.currentUser); window.closeModal('modal-settings'); updateUIForActiveAlbum(); } }
 
-window.importData = function (e) {
-    const f = e.target.files[0]; if (!f) return;
-    const r = new FileReader();
-
-    r.onload = (ev) => {
-        try {
-            const d = JSON.parse(ev.target.result);
-
-            // Creamos el modal dinámicamente si no existe
+window.importData = function(e) { 
+    const f = e.target.files[0]; if (!f) return; 
+    const r = new FileReader(); 
+    
+    r.onload = (ev) => { 
+        try { 
+            const d = JSON.parse(ev.target.result); 
+            
             let modal = document.getElementById('modal-import-action');
             if (!modal) {
                 modal = document.createElement('div');
@@ -303,14 +302,13 @@ window.importData = function (e) {
                 modal.className = 'modal';
                 document.body.appendChild(modal);
             }
-
-            // Textos dinámicos dependiendo de si el archivo tiene 1 o varios álbumes
+            
             let title = d.albums ? "Gestor Multi-Álbum" : "Álbum Detectado";
             let btn1Text = "⚠️ REEMPLAZAR TODO";
             let btn1Desc = "Borrará tu progreso actual y lo reemplazará por los datos de este archivo.";
             let btn2Text = d.albums ? "➕ FUSIONAR" : "➕ AGREGAR COMO NUEVO";
             let btn2Desc = d.albums ? "Añadirá los álbumes del archivo a tu cuenta sin borrar lo que ya tienes." : "Añadirá este álbum a tu lista sin borrar tus álbumes actuales.";
-
+            
             modal.innerHTML = `
                 <div class="modal-content" style="max-width: 400px; padding: 2rem; text-align: center;">
                     <span class="close-modal" onclick="document.getElementById('modal-import-action').style.display='none'">&times;</span>
@@ -330,40 +328,66 @@ window.importData = function (e) {
                     </div>
                 </div>
             `;
-
-            // Lógica del botón REEMPLAZAR
+            
+            // --- LÓGICA CORREGIDA DEL BOTÓN REEMPLAZAR ---
             document.getElementById('btn-import-replace').onclick = () => {
-                if (d.albums) {
-                    localStorage.setItem('albumStore', ev.target.result);
+                // 1. Inyectar en la MEMORIA ACTIVA de la app
+                if(d.albums) {
+                    globalState.albums = d.albums;
+                    const keys = Object.keys(d.albums);
+                    globalState.activeAlbumId = keys.length > 0 ? keys[0] : null;
                 } else {
-                    globalState.albums[globalState.activeAlbumId] = { profile: d.profile || { name: 'Álbum Importado' }, stickers: d.stickers || {}, milestones: d.milestones || {} };
-                    saveStore();
+                    if (!globalState.albums) globalState.albums = {};
+                    let targetId = globalState.activeAlbumId || ('album_' + Date.now());
+                    globalState.albums[targetId] = { profile: d.profile || { name: 'Álbum Importado' }, stickers: d.stickers || {}, milestones: d.milestones || {} };
+                    globalState.activeAlbumId = targetId;
                 }
-                if (auth && auth.currentUser) fullCloudBackup(auth.currentUser);
-                alert("¡Datos reemplazados con éxito!");
-                window.location.reload();
+                
+                // 2. Guardar en el disco duro del teléfono
+                saveStore(); 
+                
+                // 3. Subir a la nube y ESPERAR a que termine antes de recargar
+                if (auth && auth.currentUser) {
+                    fullCloudBackup(auth.currentUser).then(() => {
+                        alert("¡Datos reemplazados con éxito!");
+                        window.location.reload();
+                    });
+                } else {
+                    alert("¡Datos reemplazados con éxito!");
+                    window.location.reload();
+                }
             };
-
-            // Lógica del botón AGREGAR/FUSIONAR
+            
+            // --- LÓGICA CORREGIDA DEL BOTÓN AGREGAR ---
             document.getElementById('btn-import-add').onclick = () => {
-                if (d.albums) {
+                if (!globalState.albums) globalState.albums = {};
+                
+                if(d.albums) {
                     for (let id in d.albums) { globalState.albums['album_imported_' + Date.now() + Math.random()] = d.albums[id]; }
                 } else {
                     const newId = 'album_' + Date.now();
                     globalState.albums[newId] = { profile: d.profile || { name: 'Álbum Importado' }, stickers: d.stickers || {}, milestones: d.milestones || {} };
                     globalState.activeAlbumId = newId;
                 }
+                
                 saveStore();
-                if (auth && auth.currentUser) fullCloudBackup(auth.currentUser);
-                alert("¡Datos agregados con éxito!");
-                window.location.reload();
+                
+                if (auth && auth.currentUser) {
+                    fullCloudBackup(auth.currentUser).then(() => {
+                        alert("¡Datos agregados con éxito!");
+                        window.location.reload();
+                    });
+                } else {
+                    alert("¡Datos agregados con éxito!");
+                    window.location.reload();
+                }
             };
-
+            
             modal.style.display = 'flex';
-        } catch (err) { alert('El archivo seleccionado no es válido o está corrupto.'); }
-    };
-    r.readAsText(f);
-    e.target.value = ''; // Resetea el input file
+        } catch (err) { alert('El archivo seleccionado no es válido o está corrupto.'); } 
+    }; 
+    r.readAsText(f); 
+    e.target.value = ''; 
 };
 
 function triggerConfetti(x, y) { const canvas = document.getElementById('confetti-canvas'); if (!canvas) return; const ctx = canvas.getContext('2d'); canvas.width = window.innerWidth; canvas.height = window.innerHeight; let particles = []; for (let i = 0; i < 30; i++) particles.push({ x, y, r: Math.random() * 4 + 2, dx: Math.random() * 6 - 3, dy: Math.random() * -6 - 2, color: `hsl(${Math.random() * 360}, 100%, 50%)` }); function animate() { ctx.clearRect(0, 0, canvas.width, canvas.height); let active = false; particles.forEach(p => { p.x += p.dx; p.y += p.dy; p.dy += 0.2; ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fillStyle = p.color; ctx.fill(); if (p.y < canvas.height) active = true; }); if (active) requestAnimationFrame(animate); else ctx.clearRect(0, 0, canvas.width, canvas.height); } animate(); }
