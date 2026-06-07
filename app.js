@@ -2,7 +2,7 @@ import { globalState, loadStore, saveStore, getActiveAlbum, createNewAlbum, dele
 import { auth, provider, signInWithPopup, signOut, onAuthStateChanged } from './firebase-config.js?v=71';
 import { getGlobalMinifiedData, compareGlobalTrades, executeGlobalTrade, lastMatchResult } from './match.js?v=71';
 
-window.onerror = function(msg, url, line) { console.error("🚨 ERROR EN LA APP:\n" + msg + "\nLínea: " + line); return false; };
+window.onerror = function (msg, url, line) { console.error("🚨 ERROR EN LA APP:\n" + msg + "\nLínea: " + line); return false; };
 
 let activeSearch = { text: '', team: 'all', group: 'all', sort: 'all' };
 let currentOpenTeam = null;
@@ -14,7 +14,7 @@ function loadQRLibraries(cb) {
     if (typeof jsQR === 'undefined') p.push(ls('https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js'));
     if (typeof Html5Qrcode === 'undefined') p.push(ls('https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js'));
     if (typeof LZString === 'undefined') p.push(ls('https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.5.0/lz-string.min.js'));
-    if (p.length > 0) Promise.all(p).then(cb).catch(()=>alert("Error cargando librerías QR")); else if(cb) cb();
+    if (p.length > 0) Promise.all(p).then(cb).catch(() => alert("Error cargando librerías QR")); else if (cb) cb();
 }
 
 function formatCode(n) { if (!n) return '??'; return String(n) === '00' ? '00' : String(n).replace(/^([A-Z]+)(\d+)$/, '$1 $2'); }
@@ -26,31 +26,31 @@ async function init() {
         if (!window.DATA || !window.DATA.TEAMS || window.DATA.TEAMS.length === 0) return alert("🚨 Error CRÍTICO: La base de datos de la FIFA está vacía.");
 
         await loadStore();
-        
+
         const savedMode = localStorage.getItem('album_display_mode');
         if (savedMode) { globalState.displayMode = savedMode; const displaySelect = document.getElementById('setting-display-mode'); if (displaySelect) displaySelect.value = savedMode; }
-        
+
         if (!getActiveAlbum()) { if (typeof createNewAlbum === 'function') createNewAlbum('Mi Álbum'); }
         const active = getActiveAlbum();
         if (active) { if (!active.profile) active.profile = { name: active.name || 'Mi Álbum' }; if (!active.stickers) active.stickers = {}; saveStore(); }
 
         loadTheme(); checkIOSInstall(); observeHeaderOffset(); populateFilters();
 
-        renderAlbumSelector(); updateUIForActiveAlbum(); bindEvents(); 
-        
+        renderAlbumSelector(); updateUIForActiveAlbum(); bindEvents();
+
         onAuthStateChanged(auth, async (user) => {
             updateAuthUI(user);
             if (user) {
                 // ESCUCHA ACTIVA: Cualquier cambio en otro celular se redibujará solo
                 startRealTimeSync(user, () => { renderAlbumSelector(); updateUIForActiveAlbum(); });
-            } else { 
-                startRealTimeSync(null); 
+            } else {
+                startRealTimeSync(null);
             }
         });
 
         const urlParams = new URLSearchParams(window.location.search);
         const matchCode = urlParams.get('match');
-        if (matchCode) { setTimeout(() => { const inputElement = document.getElementById('input-friend-code'); if(inputElement) { inputElement.value = matchCode; window.openOnlineMatchModal(); window.handleSearchFriend(); } }, 1500); }
+        if (matchCode) { setTimeout(() => { const inputElement = document.getElementById('input-friend-code'); if (inputElement) { inputElement.value = matchCode; window.openOnlineMatchModal(); window.handleSearchFriend(); } }, 1500); }
     } catch (error) { alert("Error en arranque: " + error.message); }
 }
 
@@ -67,7 +67,7 @@ function populateFilters() {
 }
 
 function renderAlbumSelector() {
-    const sel = document.getElementById('select-album-global'); if(!sel) return; sel.innerHTML = '';
+    const sel = document.getElementById('select-album-global'); if (!sel) return; sel.innerHTML = '';
     for (let id in globalState.albums) { let opt = document.createElement('option'); opt.value = id; opt.innerText = globalState.albums[id].profile.name; if (id === globalState.activeAlbumId) opt.selected = true; sel.appendChild(opt); }
     sel.onchange = (e) => { globalState.activeAlbumId = e.target.value; saveStore(); if (auth && auth.currentUser) fullCloudBackup(auth.currentUser); updateUIForActiveAlbum(); };
     const btnManage = document.getElementById('btn-manage-albums'); if (btnManage) btnManage.onclick = () => window.showModal('modal-manage-albums');
@@ -83,37 +83,37 @@ function updateProfileName(newName, updateInput = true) {
 function updateUIForActiveAlbum() {
     const album = getActiveAlbum(); if (!album) return;
     const titleEl = document.getElementById('album-title'); if (titleEl) titleEl.innerText = album.profile.name;
-    const inputProfile = document.getElementById('input-profile-name'); if(inputProfile) inputProfile.value = album.profile.name;
-    applyCollectionSearch(); renderDashboardCards(); renderTrades(); if(currentOpenTeam) openTeamDetail(currentOpenTeam);
+    const inputProfile = document.getElementById('input-profile-name'); if (inputProfile) inputProfile.value = album.profile.name;
+    applyCollectionSearch(); renderDashboardCards(); renderTrades(); if (currentOpenTeam) openTeamDetail(currentOpenTeam);
 }
 
 function getStickerState(code) { return getActiveAlbum().stickers[code] || { have: false, count: 0 }; }
 
 // ACTULIZACIONES QUIRÚRGICAS (DOT NOTATION)
-window.toggleSticker = function(code, ev) {
-    if(ev) ev.stopPropagation(); let s = getStickerState(code);
-    if (!s.have) { s.have = true; s.count = 1; triggerConfetti(ev?.clientX || window.innerWidth/2, ev?.clientY || window.innerHeight/2); } else { s.count++; }
-    getActiveAlbum().stickers[code] = s; saveStore(); 
+window.toggleSticker = function (code, ev) {
+    if (ev) ev.stopPropagation(); let s = getStickerState(code);
+    if (!s.have) { s.have = true; s.count = 1; triggerConfetti(ev?.clientX || window.innerWidth / 2, ev?.clientY || window.innerHeight / 2); } else { s.count++; }
+    getActiveAlbum().stickers[code] = s; saveStore();
     if (auth && auth.currentUser) saveStickerToCloud(auth.currentUser, getActiveAlbum().id, code, s);
     checkMilestones(); updateUIForActiveAlbum();
 }
-window.decrementSticker = function(code, ev) {
-    if(ev) ev.stopPropagation(); let s = getStickerState(code);
-    if (s.have && s.count > 0) { 
-        s.count--; if(s.count === 0) s.have = false; 
-        getActiveAlbum().stickers[code] = s; saveStore(); 
+window.decrementSticker = function (code, ev) {
+    if (ev) ev.stopPropagation(); let s = getStickerState(code);
+    if (s.have && s.count > 0) {
+        s.count--; if (s.count === 0) s.have = false;
+        getActiveAlbum().stickers[code] = s; saveStore();
         if (auth && auth.currentUser) saveStickerToCloud(auth.currentUser, getActiveAlbum().id, code, s);
-        updateUIForActiveAlbum(); 
+        updateUIForActiveAlbum();
     }
 }
 
 function getHaveCount() { return Object.values(getActiveAlbum().stickers).filter(s => s.have).length; }
-function getTeamProgress(teamCode) { if (!window.DATA || !window.DATA.TEAMS) return { have: 0, total: 0 }; const team = window.DATA.TEAMS.find(t => t.code === teamCode); if(!team) return { have: 0, total: 0 }; let have = team.stickers.filter(s => getStickerState(s.code).have).length; return { have, total: team.stickers.length }; }
+function getTeamProgress(teamCode) { if (!window.DATA || !window.DATA.TEAMS) return { have: 0, total: 0 }; const team = window.DATA.TEAMS.find(t => t.code === teamCode); if (!team) return { have: 0, total: 0 }; let have = team.stickers.filter(s => getStickerState(s.code).have).length; return { have, total: team.stickers.length }; }
 function getTotalProgress() { let have = getHaveCount(); let total = window.DATA ? window.DATA.TOTAL_STICKERS : 994; let percentage = Math.round((have / total) * 100) || 0; if (percentage === 100 && have < total) percentage = 99; return { have, total, percentage }; }
 function getRepeatedTotal() { return Object.values(getActiveAlbum().stickers).reduce((sum, s) => s.have && s.count > 1 ? sum + (s.count - 1) : sum, 0); }
 function getRepeatedList() { let repeated = []; if (!window.DATA || !window.DATA.TEAMS) return repeated; window.DATA.TEAMS.forEach(team => { let teamReps = []; team.stickers.forEach(s => { let st = getStickerState(s.code); if (st.have && st.count > 1) { teamReps.push({ name: s.name, count: st.count - 1, code: s.code }); } }); if (teamReps.length > 0) repeated.push({ team: team.name, items: teamReps }); }); return repeated; }
 function getMissingList() { let missing = []; if (!window.DATA || !window.DATA.TEAMS) return missing; window.DATA.TEAMS.forEach(team => { team.stickers.forEach(s => { if (!getStickerState(s.code).have) missing.push({ team: team.name, name: s.name, code: s.code }); }); }); return missing; }
-function checkMilestones() { const p = getTotalProgress().percentage; const targets = [25, 50, 75, 100]; let m = getActiveAlbum().milestones; if(!m) { m = {}; getActiveAlbum().milestones = m; } for (let t of targets) { if (p >= t && !m[`m${t}`]) { m[`m${t}`] = true; saveStore(); shootBigConfetti(); setTimeout(() => alert(`¡Felicidades! Has completado el ${t}% de este álbum.`), 500); } } }
+function checkMilestones() { const p = getTotalProgress().percentage; const targets = [25, 50, 75, 100]; let m = getActiveAlbum().milestones; if (!m) { m = {}; getActiveAlbum().milestones = m; } for (let t of targets) { if (p >= t && !m[`m${t}`]) { m[`m${t}`] = true; saveStore(); shootBigConfetti(); setTimeout(() => alert(`¡Felicidades! Has completado el ${t}% de este álbum.`), 500); } } }
 
 function renderDashboardCards() {
     try {
@@ -133,7 +133,7 @@ function makeTeamCard(team) {
         const prog = getTeamProgress(team.code); let pct = Math.round((prog.have / prog.total) * 100) || 0; if (pct === 100 && prog.have < prog.total) pct = 99;
         const div = document.createElement('div'); div.className = `team-card ${prog.have === prog.total && prog.total > 0 ? 'completed' : ''}`; div.id = `team-card-${team.code}`; div.onclick = () => openTeamDetail(team);
         let iconHtml = ''; let iconStr = team.icon ? String(team.icon) : '';
-        if (iconStr.endsWith('.svg')) { iconHtml = `<img src="${iconStr}" class="team-icon section-logo" alt="${team.name}" style="object-fit: contain; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5)); padding: 2px;">`; } 
+        if (iconStr.endsWith('.svg')) { iconHtml = `<img src="${iconStr}" class="team-icon section-logo" alt="${team.name}" style="object-fit: contain; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5)); padding: 2px;">`; }
         else if (iconStr) { iconHtml = `<div class="team-icon emoji-icon" style="font-size:24px; display:flex; align-items:center; justify-content:center;">${iconStr}</div>`; } else { iconHtml = `<div class="team-icon placeholder">?</div>`; }
         div.innerHTML = `<div class="team-card-header">${iconHtml}<div class="team-info"><h3>${team.name || 'Equipo'}</h3><span>${team.group || ''}</span></div></div><div class="team-stats"><span>Progreso</span><span id="card-count-${team.code}">${prog.have}/${prog.total} (${pct}%)</span></div><div class="linear-progress"><div class="linear-bar" id="card-bar-${team.code}" style="width: ${pct}%;"></div></div>`; return div;
     } catch (e) { return document.createElement('div'); }
@@ -144,14 +144,14 @@ function applyCollectionSearch() {
         if (!window.DATA || !window.DATA.TEAMS) return;
         let filtered = window.DATA.TEAMS.filter(t => {
             let matchText = true;
-            if (activeSearch.text) { let txt = activeSearch.text.toLowerCase(); let hasSticker = t.stickers.some(s => (s.name||'').toLowerCase().includes(txt) || ((s.playerName||'').toLowerCase().includes(txt))); matchText = (t.name||'').toLowerCase().includes(txt) || (t.group||'').toLowerCase().includes(txt) || hasSticker; }
+            if (activeSearch.text) { let txt = activeSearch.text.toLowerCase(); let hasSticker = t.stickers.some(s => (s.name || '').toLowerCase().includes(txt) || ((s.playerName || '').toLowerCase().includes(txt))); matchText = (t.name || '').toLowerCase().includes(txt) || (t.group || '').toLowerCase().includes(txt) || hasSticker; }
             return matchText && (activeSearch.team === 'all' || t.code === activeSearch.team) && (activeSearch.group === 'all' || t.group === activeSearch.group);
         });
-        if (activeSearch.sort === 'most') { filtered.sort((a,b) => (getTeamProgress(b.code).have / b.stickers.length) - (getTeamProgress(a.code).have / a.stickers.length)); }
-        else if (activeSearch.sort === 'least') { filtered.sort((a,b) => (getTeamProgress(a.code).have / a.stickers.length) - (getTeamProgress(b.code).have / b.stickers.length)); }
-        else if (activeSearch.sort === 'az') { filtered.sort((a,b) => (a.name||'').localeCompare(b.name||'')); }
-        const grid = document.getElementById('teams-grid'); if(!grid) return; grid.innerHTML = '';
-        const counterEl = document.getElementById('results-counter'); if(counterEl) counterEl.innerText = `${filtered.length} resultados`;
+        if (activeSearch.sort === 'most') { filtered.sort((a, b) => (getTeamProgress(b.code).have / b.stickers.length) - (getTeamProgress(a.code).have / a.stickers.length)); }
+        else if (activeSearch.sort === 'least') { filtered.sort((a, b) => (getTeamProgress(a.code).have / a.stickers.length) - (getTeamProgress(b.code).have / b.stickers.length)); }
+        else if (activeSearch.sort === 'az') { filtered.sort((a, b) => (a.name || '').localeCompare(b.name || '')); }
+        const grid = document.getElementById('teams-grid'); if (!grid) return; grid.innerHTML = '';
+        const counterEl = document.getElementById('results-counter'); if (counterEl) counterEl.innerText = `${filtered.length} resultados`;
         filtered.forEach(team => { grid.appendChild(makeTeamCard(team)); });
     } catch (e) { console.error("Error dibujando países", e); }
 }
@@ -159,8 +159,8 @@ function applyCollectionSearch() {
 function renderTrades() {
     try {
         const reps = getRepeatedList(); const total = getRepeatedTotal();
-        const totalText = document.getElementById('trades-total-text'); if (totalText) totalText.innerText = `Total repetidas: ${total}`; 
-        const list = document.getElementById('trades-list'); if(!list) return; list.innerHTML = '';
+        const totalText = document.getElementById('trades-total-text'); if (totalText) totalText.innerText = `Total repetidas: ${total}`;
+        const list = document.getElementById('trades-list'); if (!list) return; list.innerHTML = '';
         if (reps.length === 0) { list.innerHTML = '<p style="color: var(--text-muted); text-align:center; padding: 2rem;">No tienes láminas repetidas aún.</p>'; }
         else { reps.forEach(group => { const grpDiv = document.createElement('div'); grpDiv.className = 'trade-group'; let itemsHtml = group.items.map(i => `<span class="trade-item">${formatCode(i.name)} (x${i.count})</span>`).join(''); grpDiv.innerHTML = `<h3>${group.team}</h3><div class="trade-items">${itemsHtml}</div>`; list.appendChild(grpDiv); }); }
         updateTradeExportButtons(total > 0);
@@ -169,7 +169,7 @@ function renderTrades() {
 
 function makeStickerCard(sticker) {
     const st = getStickerState(sticker.code); const div = document.createElement('div'); const isSpecial = sticker.type === 'special' || sticker.type === 'shield' || sticker.type === 'group'; div.className = `sticker ${st.have ? 'have animate-pop' : ''} ${isSpecial ? 'special' : ''}`; div.onclick = (e) => window.toggleSticker(sticker.code, e);
-    let badge = st.count > 1 ? `<span class="sticker-badge">+${st.count - 1}</span>` : ''; let codeText = formatCode(sticker.name); let playerText = sticker.playerName || ''; let displayText = codeText; 
+    let badge = st.count > 1 ? `<span class="sticker-badge">+${st.count - 1}</span>` : ''; let codeText = formatCode(sticker.name); let playerText = sticker.playerName || ''; let displayText = codeText;
     if (globalState.displayMode === 'name' && playerText !== '') { displayText = `<span style="font-size: 0.85em; line-height: 1.1; text-align: center;">${playerText}</span>`; } else if (globalState.displayMode === 'both' && playerText !== '') { displayText = `<span style="font-size: 0.7em; opacity: 0.8; display: block; margin-bottom: 2px;">${codeText}</span><span style="font-size: 0.8em; line-height: 1.1; display: block; text-align: center;">${playerText}</span>`; }
     div.innerHTML = `<span class="sticker-name" style="${isSpecial ? 'color: var(--gold)' : ''}; display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100%; padding: 0 4px;">${displayText}</span>${badge}<button class="btn-minus" onclick="window.decrementSticker('${sticker.code}', event)">-</button>`; return div;
 }
@@ -185,78 +185,78 @@ function openTeamDetail(team) {
 function renderStickersGrid(team) { const grid = document.getElementById('modal-stickers-grid'); grid.innerHTML = ''; team.stickers.forEach(s => { grid.appendChild(makeStickerCard(s)); }); updateTeamCount(team.code); }
 
 function updateTeamCount(teamCode) {
-    const p = getTeamProgress(teamCode); const countEl = document.getElementById('modal-team-count'); if(countEl) countEl.innerText = `${p.have}/${p.total}`;
+    const p = getTeamProgress(teamCode); const countEl = document.getElementById('modal-team-count'); if (countEl) countEl.innerText = `${p.have}/${p.total}`;
     let pct = Math.round((p.have / p.total) * 100) || 0; if (pct === 100 && p.have < p.total) pct = 99;
     const cardCount = document.getElementById(`card-count-${teamCode}`); const cardBar = document.getElementById(`card-bar-${teamCode}`); const card = document.getElementById(`team-card-${teamCode}`);
     if (cardCount) { cardCount.innerText = `${p.have}/${p.total} (${pct}%)`; cardBar.style.width = `${pct}%`; if (p.have === p.total && p.total > 0) { card.classList.add('completed'); } else { card.classList.remove('completed'); } }
 }
 
-function clearFilters() { const searchEl = document.getElementById('search-input'); if(searchEl) searchEl.value = ''; const filterTeam = document.getElementById('filter-team'); if(filterTeam) filterTeam.value = 'all'; const filterGroup = document.getElementById('filter-group'); if(filterGroup) filterGroup.value = 'all'; activeSearch = { ...activeSearch, text: '', team: 'all', group: 'all' }; applyCollectionSearch(); }
-function updateTradeExportButtons(hasRepeated) { 
+function clearFilters() { const searchEl = document.getElementById('search-input'); if (searchEl) searchEl.value = ''; const filterTeam = document.getElementById('filter-team'); if (filterTeam) filterTeam.value = 'all'; const filterGroup = document.getElementById('filter-group'); if (filterGroup) filterGroup.value = 'all'; activeSearch = { ...activeSearch, text: '', team: 'all', group: 'all' }; applyCollectionSearch(); }
+function updateTradeExportButtons(hasRepeated) {
     const hasMissing = getMissingList().length > 0;
-    
+
     // NUEVO: El botón de compartir se activa SIEMPRE que tengas repetidas O te falten láminas
-    const btnShare = document.getElementById('btn-share-list'); 
-    if(btnShare) btnShare.disabled = (!hasRepeated && !hasMissing); 
-    
-    const btnPdf = document.getElementById('btn-export-pdf'); if(btnPdf) btnPdf.disabled = !hasRepeated; 
-    const btnExcel = document.getElementById('btn-export-excel'); if(btnExcel) btnExcel.disabled = !hasRepeated; 
-    const btnMissing = document.getElementById('btn-download-missing'); if(btnMissing) btnMissing.disabled = !hasMissing; 
+    const btnShare = document.getElementById('btn-share-list');
+    if (btnShare) btnShare.disabled = (!hasRepeated && !hasMissing);
+
+    const btnPdf = document.getElementById('btn-export-pdf'); if (btnPdf) btnPdf.disabled = !hasRepeated;
+    const btnExcel = document.getElementById('btn-export-excel'); if (btnExcel) btnExcel.disabled = !hasRepeated;
+    const btnMissing = document.getElementById('btn-download-missing'); if (btnMissing) btnMissing.disabled = !hasMissing;
 }
 function getTradeExportRows() { let rows = []; getRepeatedList().forEach(g => { let itemsStr = g.items.map(i => { let num = formatCode(i.name); return i.count > 1 ? `${num}(x${i.count})` : num; }).join(', '); rows.push({ section: g.team, text: itemsStr }); }); return rows; }
-function getMissingExportRows() { let rows = []; let map = {}; getMissingList().forEach(m => { if(!map[m.team]) map[m.team] = []; map[m.team].push(formatCode(m.name)); }); for(let team in map){ rows.push({ section: team, text: map[team].join(', ') }); } return rows; }
+function getMissingExportRows() { let rows = []; let map = {}; getMissingList().forEach(m => { if (!map[m.team]) map[m.team] = []; map[m.team].push(formatCode(m.name)); }); for (let team in map) { rows.push({ section: team, text: map[team].join(', ') }); } return rows; }
 function removeAccents(str) { if (!str) return ''; return str.normalize("NFD").replace(/[\u0300-\u036f]/g, ""); }
-window.exportTradesExcel = function() { let csv = 'Seccion,Laminas Repetidas\n'; getTradeExportRows().forEach(r => { csv += `"${removeAccents(r.section)}","${r.text}"\n`; }); downloadBlob(new Blob([csv], { type: 'text/csv;charset=utf-8' }), 'cambios_album.csv'); }
-window.exportMissingExcel = function() { let csv = 'Seccion,Laminas Faltantes\n'; getMissingExportRows().forEach(r => { csv += `"${removeAccents(r.section)}","${r.text}"\n`; }); downloadBlob(new Blob([csv], { type: 'text/csv;charset=utf-8' }), 'faltantes_album.csv'); }
+window.exportTradesExcel = function () { let csv = 'Seccion,Laminas Repetidas\n'; getTradeExportRows().forEach(r => { csv += `"${removeAccents(r.section)}","${r.text}"\n`; }); downloadBlob(new Blob([csv], { type: 'text/csv;charset=utf-8' }), 'cambios_album.csv'); }
+window.exportMissingExcel = function () { let csv = 'Seccion,Laminas Faltantes\n'; getMissingExportRows().forEach(r => { csv += `"${removeAccents(r.section)}","${r.text}"\n`; }); downloadBlob(new Blob([csv], { type: 'text/csv;charset=utf-8' }), 'faltantes_album.csv'); }
 function getShareTextString() {
-    const p = getTotalProgress(); 
-    let txt = `🏆 *${getActiveAlbum().profile.name}*\n📊 Progreso: ${p.have}/${p.total} (${p.percentage}%)\n`; 
-    
+    const p = getTotalProgress();
+    let txt = `🏆 *${getActiveAlbum().profile.name}*\n📊 Progreso: ${p.have}/${p.total} (${p.percentage}%)\n`;
+
     // Agregar lista de Repetidas
     const reps = getRepeatedList();
     if (reps.length > 0) {
         txt += `\n🔄 *TENGO REPETIDAS:*\n`;
-        reps.forEach(g => { 
-            let itemsStr = g.items.map(i => `${formatCode(i.name)}${i.count > 1 ? ` (x${i.count})` : ''}`).join(', '); 
-            txt += `*${g.team}:* ${itemsStr}\n`; 
+        reps.forEach(g => {
+            let itemsStr = g.items.map(i => `${formatCode(i.name)}${i.count > 1 ? ` (x${i.count})` : ''}`).join(', ');
+            txt += `*${g.team}:* ${itemsStr}\n`;
         });
     } else {
         txt += `\n🔄 *NO TENGO REPETIDAS AÚN*\n`;
     }
-    
+
     // Agregar lista de Faltantes
     const missing = getMissingList();
     if (missing.length > 0) {
         txt += `\n❌ *ME FALTAN:*\n`;
         let missingMap = {};
         missing.forEach(m => {
-            if(!missingMap[m.team]) missingMap[m.team] = [];
+            if (!missingMap[m.team]) missingMap[m.team] = [];
             missingMap[m.team].push(formatCode(m.name));
         });
-        for(let team in missingMap) {
+        for (let team in missingMap) {
             txt += `*${team}:* ${missingMap[team].join(', ')}\n`;
         }
     }
     return txt.trim();
 }
-window.generateShareText = function() { 
+window.generateShareText = function () {
     const txt = getShareTextString();
-    const shareEl = document.getElementById('share-textarea'); 
-    
-    if(shareEl) {
+    const shareEl = document.getElementById('share-textarea');
+
+    if (shareEl) {
         // Por si tu HTML usa un div en vez de un textarea
         if (shareEl.tagName.toLowerCase() === 'textarea' || shareEl.tagName.toLowerCase() === 'input') {
-            shareEl.value = txt; 
+            shareEl.value = txt;
         } else {
-            shareEl.innerText = txt; 
+            shareEl.innerText = txt;
         }
     }
-    window.showModal('modal-share'); 
+    window.showModal('modal-share');
 };
 
-window.shareListViaWhatsApp = function() {
+window.shareListViaWhatsApp = function () {
     const text = getShareTextString();
-    if(text) {
+    if (text) {
         const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
         window.open(url, '_blank');
     } else {
@@ -265,36 +265,36 @@ window.shareListViaWhatsApp = function() {
 };
 function downloadBlob(b, f) { const u = URL.createObjectURL(b); const a = document.createElement('a'); a.href = u; a.download = f; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(u); }
 
-window.exportTradesPdf = function() {
-    const p = getTotalProgress(); 
+window.exportTradesPdf = function () {
+    const p = getTotalProgress();
     let html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Láminas Repetidas</title><style>body{font-family:sans-serif;padding:20px;}table{width:100%;border-collapse:collapse;margin-top:15px;}th,td{border:1px solid #111;padding:10px;text-align:left;font-size:14px;}th{background-color:#f5f5f5;}h1{font-size:22px;margin-bottom:4px;}p{color:#444;font-size:13px;margin-top:0;}</style></head><body><h1>Láminas Repetidas - ${getActiveAlbum().profile.name}</h1><p>Progreso del Álbum: ${p.have}/${p.total} (${p.percentage}%) | Total de cambios listos: ${getRepeatedTotal()}</p><table><thead><tr><th style="width:180px;">Sección / Equipo</th><th>Láminas Disponibles</th></tr></thead><tbody>`;
-    getTradeExportRows().forEach(r => { html += `<tr><td><strong>${r.section}</strong></td><td>${r.text}</td></tr>`; }); 
+    getTradeExportRows().forEach(r => { html += `<tr><td><strong>${r.section}</strong></td><td>${r.text}</td></tr>`; });
     html += `</tbody></table></body></html>`;
     const iframe = document.createElement('iframe'); iframe.style.position = 'fixed'; iframe.style.right = '0'; iframe.style.bottom = '0'; iframe.style.width = '0'; iframe.style.height = '0'; iframe.style.border = 'none'; document.body.appendChild(iframe);
     const doc = iframe.contentWindow.document; doc.open(); doc.write(html); doc.close();
     setTimeout(() => { iframe.contentWindow.focus(); iframe.contentWindow.print(); setTimeout(() => { if (document.body.contains(iframe)) { document.body.removeChild(iframe); } }, 15000); }, 500);
 };
 
-window.forceUpdateCache = function() { if ('caches' in window) { caches.keys().then(names => { for (let n of names) caches.delete(n); }).then(() => { alert("Caché borrada."); window.location.href = window.location.pathname + '?v=' + new Date().getTime(); }); } else { window.location.reload(true); } }
+window.forceUpdateCache = function () { if ('caches' in window) { caches.keys().then(names => { for (let n of names) caches.delete(n); }).then(() => { alert("Caché borrada."); window.location.href = window.location.pathname + '?v=' + new Date().getTime(); }); } else { window.location.reload(true); } }
 function checkIOSInstall() { const isIos = () => /iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase()); const isStandalone = () => ('standalone' in window.navigator) && window.navigator.standalone; if (isIos() && !isStandalone()) { const prompt = document.getElementById('ios-install-prompt'); if (prompt && !localStorage.getItem('ios_prompt_dismissed')) { prompt.style.display = 'block'; prompt.querySelector('.close-ios-prompt').onclick = () => { prompt.style.display = 'none'; localStorage.setItem('ios_prompt_dismissed', 'true'); }; } } }
 function loadTheme() { if (localStorage.getItem('album_theme_2026') === 'light') document.documentElement.setAttribute('data-theme', 'light'); }
-function updateHeaderOffset() { const h = document.querySelector('.app-header'); if(h) document.documentElement.style.setProperty('--header-offset', `${h.offsetHeight + 18}px`); }
-function observeHeaderOffset() { updateHeaderOffset(); window.addEventListener('resize', updateHeaderOffset); window.addEventListener('orientationchange', () => setTimeout(updateHeaderOffset, 150)); if(document.fonts) document.fonts.ready.then(updateHeaderOffset); }
+function updateHeaderOffset() { const h = document.querySelector('.app-header'); if (h) document.documentElement.style.setProperty('--header-offset', `${h.offsetHeight + 18}px`); }
+function observeHeaderOffset() { updateHeaderOffset(); window.addEventListener('resize', updateHeaderOffset); window.addEventListener('orientationchange', () => setTimeout(updateHeaderOffset, 150)); if (document.fonts) document.fonts.ready.then(updateHeaderOffset); }
 
-window.toggleTheme = function() { const root = document.documentElement; if (root.getAttribute('data-theme') === 'light') { root.removeAttribute('data-theme'); localStorage.setItem('album_theme_2026', 'dark'); } else { root.setAttribute('data-theme', 'light'); localStorage.setItem('album_theme_2026', 'light'); } }
-window.showModal = function(id) { const m = document.getElementById(id); if(m) m.style.display = 'flex'; }
-window.closeModal = function(id) { const m = document.getElementById(id); if(m) { m.style.display = 'none'; } currentOpenTeam = null; }
-window.exportData = function() { downloadBlob(new Blob([JSON.stringify(globalState, null, 2)], { type: 'application/json' }), 'album_mundial_2026_backup.json'); }
-window.confirmReset = function() { if (confirm('¿Borrar el progreso actual?')) { getActiveAlbum().stickers = {}; getActiveAlbum().milestones = {}; saveStore(); if (auth && auth.currentUser) fullCloudBackup(auth.currentUser); window.closeModal('modal-settings'); updateUIForActiveAlbum(); } }
+window.toggleTheme = function () { const root = document.documentElement; if (root.getAttribute('data-theme') === 'light') { root.removeAttribute('data-theme'); localStorage.setItem('album_theme_2026', 'dark'); } else { root.setAttribute('data-theme', 'light'); localStorage.setItem('album_theme_2026', 'light'); } }
+window.showModal = function (id) { const m = document.getElementById(id); if (m) m.style.display = 'flex'; }
+window.closeModal = function (id) { const m = document.getElementById(id); if (m) { m.style.display = 'none'; } currentOpenTeam = null; }
+window.exportData = function () { downloadBlob(new Blob([JSON.stringify(globalState, null, 2)], { type: 'application/json' }), 'album_mundial_2026_backup.json'); }
+window.confirmReset = function () { if (confirm('¿Borrar el progreso actual?')) { getActiveAlbum().stickers = {}; getActiveAlbum().milestones = {}; saveStore(); if (auth && auth.currentUser) fullCloudBackup(auth.currentUser); window.closeModal('modal-settings'); updateUIForActiveAlbum(); } }
 
-window.importData = function(e) { 
-    const f = e.target.files[0]; if (!f) return; 
-    const r = new FileReader(); 
-    
-    r.onload = (ev) => { 
-        try { 
-            const d = JSON.parse(ev.target.result); 
-            
+window.importData = function (e) {
+    const f = e.target.files[0]; if (!f) return;
+    const r = new FileReader();
+
+    r.onload = (ev) => {
+        try {
+            const d = JSON.parse(ev.target.result);
+
             // Creamos el modal dinámicamente si no existe
             let modal = document.getElementById('modal-import-action');
             if (!modal) {
@@ -303,14 +303,14 @@ window.importData = function(e) {
                 modal.className = 'modal';
                 document.body.appendChild(modal);
             }
-            
+
             // Textos dinámicos dependiendo de si el archivo tiene 1 o varios álbumes
             let title = d.albums ? "Gestor Multi-Álbum" : "Álbum Detectado";
             let btn1Text = "⚠️ REEMPLAZAR TODO";
             let btn1Desc = "Borrará tu progreso actual y lo reemplazará por los datos de este archivo.";
             let btn2Text = d.albums ? "➕ FUSIONAR" : "➕ AGREGAR COMO NUEVO";
             let btn2Desc = d.albums ? "Añadirá los álbumes del archivo a tu cuenta sin borrar lo que ya tienes." : "Añadirá este álbum a tu lista sin borrar tus álbumes actuales.";
-            
+
             modal.innerHTML = `
                 <div class="modal-content" style="max-width: 400px; padding: 2rem; text-align: center;">
                     <span class="close-modal" onclick="document.getElementById('modal-import-action').style.display='none'">&times;</span>
@@ -330,10 +330,10 @@ window.importData = function(e) {
                     </div>
                 </div>
             `;
-            
+
             // Lógica del botón REEMPLAZAR
             document.getElementById('btn-import-replace').onclick = () => {
-                if(d.albums) {
+                if (d.albums) {
                     localStorage.setItem('albumStore', ev.target.result);
                 } else {
                     globalState.albums[globalState.activeAlbumId] = { profile: d.profile || { name: 'Álbum Importado' }, stickers: d.stickers || {}, milestones: d.milestones || {} };
@@ -343,10 +343,10 @@ window.importData = function(e) {
                 alert("¡Datos reemplazados con éxito!");
                 window.location.reload();
             };
-            
+
             // Lógica del botón AGREGAR/FUSIONAR
             document.getElementById('btn-import-add').onclick = () => {
-                if(d.albums) {
+                if (d.albums) {
                     for (let id in d.albums) { globalState.albums['album_imported_' + Date.now() + Math.random()] = d.albums[id]; }
                 } else {
                     const newId = 'album_' + Date.now();
@@ -358,75 +358,75 @@ window.importData = function(e) {
                 alert("¡Datos agregados con éxito!");
                 window.location.reload();
             };
-            
+
             modal.style.display = 'flex';
-        } catch (err) { alert('El archivo seleccionado no es válido o está corrupto.'); } 
-    }; 
-    r.readAsText(f); 
+        } catch (err) { alert('El archivo seleccionado no es válido o está corrupto.'); }
+    };
+    r.readAsText(f);
     e.target.value = ''; // Resetea el input file
 };
 
-function triggerConfetti(x, y) { const canvas = document.getElementById('confetti-canvas'); if(!canvas) return; const ctx = canvas.getContext('2d'); canvas.width = window.innerWidth; canvas.height = window.innerHeight; let particles = []; for(let i=0; i<30; i++) particles.push({ x, y, r: Math.random()*4+2, dx: Math.random()*6-3, dy: Math.random()*-6-2, color: `hsl(${Math.random()*360}, 100%, 50%)` }); function animate() { ctx.clearRect(0,0,canvas.width,canvas.height); let active = false; particles.forEach(p => { p.x += p.dx; p.y += p.dy; p.dy += 0.2; ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fillStyle = p.color; ctx.fill(); if(p.y < canvas.height) active = true; }); if(active) requestAnimationFrame(animate); else ctx.clearRect(0,0,canvas.width,canvas.height); } animate(); }
-function shootBigConfetti() { triggerConfetti(window.innerWidth/2, window.innerHeight/2); setTimeout(() => triggerConfetti(window.innerWidth/3, window.innerHeight/2), 200); setTimeout(() => triggerConfetti((window.innerWidth/3)*2, window.innerHeight/2), 400); }
+function triggerConfetti(x, y) { const canvas = document.getElementById('confetti-canvas'); if (!canvas) return; const ctx = canvas.getContext('2d'); canvas.width = window.innerWidth; canvas.height = window.innerHeight; let particles = []; for (let i = 0; i < 30; i++) particles.push({ x, y, r: Math.random() * 4 + 2, dx: Math.random() * 6 - 3, dy: Math.random() * -6 - 2, color: `hsl(${Math.random() * 360}, 100%, 50%)` }); function animate() { ctx.clearRect(0, 0, canvas.width, canvas.height); let active = false; particles.forEach(p => { p.x += p.dx; p.y += p.dy; p.dy += 0.2; ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fillStyle = p.color; ctx.fill(); if (p.y < canvas.height) active = true; }); if (active) requestAnimationFrame(animate); else ctx.clearRect(0, 0, canvas.width, canvas.height); } animate(); }
+function shootBigConfetti() { triggerConfetti(window.innerWidth / 2, window.innerHeight / 2); setTimeout(() => triggerConfetti(window.innerWidth / 3, window.innerHeight / 2), 200); setTimeout(() => triggerConfetti((window.innerWidth / 3) * 2, window.innerHeight / 2), 400); }
 
 function bindEvents() {
-    const click = (id, fn) => { const el = document.getElementById(id); if(el) el.onclick = fn; };
-    const input = (id, fn) => { const el = document.getElementById(id); if(el) el.oninput = fn; };
-    const change = (id, fn) => { const el = document.getElementById(id); if(el) el.onchange = fn; };
+    const click = (id, fn) => { const el = document.getElementById(id); if (el) el.onclick = fn; };
+    const input = (id, fn) => { const el = document.getElementById(id); if (el) el.oninput = fn; };
+    const change = (id, fn) => { const el = document.getElementById(id); if (el) el.onchange = fn; };
 
     click('btn-theme', window.toggleTheme); click('btn-settings', () => window.showModal('modal-settings')); click('btn-clear-filters', clearFilters); click('btn-share-list', window.generateShareText); click('btn-export-excel', window.exportTradesExcel); click('btn-export-pdf', window.exportTradesPdf); click('btn-download-missing', window.exportMissingExcel);
     input('search-input', (e) => { activeSearch.text = e.target.value; applyCollectionSearch(); }); change('filter-team', (e) => { activeSearch.team = e.target.value; applyCollectionSearch(); }); change('filter-group', (e) => { activeSearch.group = e.target.value; applyCollectionSearch(); }); change('sort-select', (e) => { activeSearch.sort = e.target.value; applyCollectionSearch(); });
     change('setting-display-mode', (e) => { globalState.displayMode = e.target.value; localStorage.setItem('album_display_mode', e.target.value); updateUIForActiveAlbum(); });
-    
-    document.querySelectorAll('.close-modal').forEach(btn => { btn.onclick = () => { const modal = btn.closest('.modal'); if(modal) modal.style.display = 'none'; currentOpenTeam = null; }; });
-    document.querySelectorAll('.nav-btn').forEach(btn => { btn.onclick = () => { document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active')); document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active')); btn.classList.add('active'); const t = btn.getAttribute('data-target'); const targetPane = document.getElementById(t); if(targetPane) targetPane.classList.add('active'); if (t === 'tab-trades') renderTrades(); window.scrollTo(0, 0); }; });
-    
+
+    document.querySelectorAll('.close-modal').forEach(btn => { btn.onclick = () => { const modal = btn.closest('.modal'); if (modal) modal.style.display = 'none'; currentOpenTeam = null; }; });
+    document.querySelectorAll('.nav-btn').forEach(btn => { btn.onclick = () => { document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active')); document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active')); btn.classList.add('active'); const t = btn.getAttribute('data-target'); const targetPane = document.getElementById(t); if (targetPane) targetPane.classList.add('active'); if (t === 'tab-trades') renderTrades(); window.scrollTo(0, 0); }; });
+
     click('btn-modal-create-album', () => { const input = document.getElementById('new-album-input'); if (input && input.value.trim() !== '') { createNewAlbum(input.value.trim()); input.value = ''; renderAlbumSelector(); updateUIForActiveAlbum(); window.closeModal('modal-manage-albums'); } });
     click('btn-modal-delete-album', () => { if (confirm("⚠️ ¿Estás seguro de que deseas eliminar este álbum permanentemente?")) { deleteActiveAlbum(); if (!getActiveAlbum() && typeof createNewAlbum === 'function') { createNewAlbum('Mi Álbum'); } renderAlbumSelector(); updateUIForActiveAlbum(); window.closeModal('modal-manage-albums'); } });
 }
 
-window.loginGoogle = function() { signInWithPopup(auth, provider).then(() => { alert("¡Sesión iniciada!"); }).catch(err => alert("Error: " + err.message)); };
-window.logoutGoogle = function() { signOut(auth).then(() => { alert("Sesión cerrada."); }).catch(err => alert("Error: " + err)); };
-function updateAuthUI(user) { const btnLogin = document.getElementById('btn-login-google'); const authInfo = document.getElementById('auth-user-info'); const authText = document.getElementById('auth-status-text'); const emailText = document.getElementById('auth-user-email'); if (user) { if(btnLogin) btnLogin.style.display = 'none'; if(authInfo) authInfo.style.display = 'flex'; if(authText) authText.innerText = "Sincronizando en tiempo real."; if(emailText) emailText.innerText = `👋 Hola, ${user.displayName || user.email}`; } else { if(btnLogin) btnLogin.style.display = 'flex'; if(authInfo) authInfo.style.display = 'none'; if(authText) authText.innerText = "Inicia sesión para sincronizar."; if(emailText) emailText.innerText = ""; } }
+window.loginGoogle = function () { signInWithPopup(auth, provider).then(() => { alert("¡Sesión iniciada!"); }).catch(err => alert("Error: " + err.message)); };
+window.logoutGoogle = function () { signOut(auth).then(() => { alert("Sesión cerrada."); }).catch(err => alert("Error: " + err)); };
+function updateAuthUI(user) { const btnLogin = document.getElementById('btn-login-google'); const authInfo = document.getElementById('auth-user-info'); const authText = document.getElementById('auth-status-text'); const emailText = document.getElementById('auth-user-email'); if (user) { if (btnLogin) btnLogin.style.display = 'none'; if (authInfo) authInfo.style.display = 'flex'; if (authText) authText.innerText = "Sincronizando en tiempo real."; if (emailText) emailText.innerText = `👋 Hola, ${user.displayName || user.email}`; } else { if (btnLogin) btnLogin.style.display = 'flex'; if (authInfo) authInfo.style.display = 'none'; if (authText) authText.innerText = "Inicia sesión para sincronizar."; if (emailText) emailText.innerText = ""; } }
 
-window.openOnlineMatchModal = function() { const modal = document.getElementById('modal-online-match'); if (!modal) return; if (!auth || !auth.currentUser) { alert("Debes iniciar sesión para usar esto."); return; } if (globalState.friendCode) { document.getElementById('online-match-setup').style.display = 'none'; document.getElementById('online-match-ready').style.display = 'block'; document.getElementById('display-my-code').innerText = globalState.friendCode; } else { document.getElementById('online-match-setup').style.display = 'block'; document.getElementById('online-match-ready').style.display = 'none'; } modal.style.display = 'flex'; }
-window.closeOnlineMatchModal = function() { document.getElementById('modal-online-match').style.display = 'none'; }
-window.handleClaimCode = async function() { const input = document.getElementById('input-claim-code'); const btn = document.getElementById('btn-claim-code'); const desiredCode = input.value; if (!desiredCode) return alert("Escribe un código."); btn.innerText = "Pensando..."; btn.disabled = true; try { await claimFriendCode(auth.currentUser, desiredCode); alert("¡Tu código es " + globalState.friendCode); window.openOnlineMatchModal(); } catch (error) { alert(error.message); } finally { btn.innerText = "Reclamar"; btn.disabled = false; } }
+window.openOnlineMatchModal = function () { const modal = document.getElementById('modal-online-match'); if (!modal) return; if (!auth || !auth.currentUser) { alert("Debes iniciar sesión para usar esto."); return; } if (globalState.friendCode) { document.getElementById('online-match-setup').style.display = 'none'; document.getElementById('online-match-ready').style.display = 'block'; document.getElementById('display-my-code').innerText = globalState.friendCode; } else { document.getElementById('online-match-setup').style.display = 'block'; document.getElementById('online-match-ready').style.display = 'none'; } modal.style.display = 'flex'; }
+window.closeOnlineMatchModal = function () { document.getElementById('modal-online-match').style.display = 'none'; }
+window.handleClaimCode = async function () { const input = document.getElementById('input-claim-code'); const btn = document.getElementById('btn-claim-code'); const desiredCode = input.value; if (!desiredCode) return alert("Escribe un código."); btn.innerText = "Pensando..."; btn.disabled = true; try { await claimFriendCode(auth.currentUser, desiredCode); alert("¡Tu código es " + globalState.friendCode); window.openOnlineMatchModal(); } catch (error) { alert(error.message); } finally { btn.innerText = "Reclamar"; btn.disabled = false; } }
 function getMagicLink() { return `${window.location.href.split('?')[0]}?match=${globalState.friendCode}`; }
-window.shareViaWhatsApp = function() { window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(`¡Hola! Mi código es ${globalState.friendCode}. Revisa qué láminas cambiamos:\n\n${getMagicLink()}`)}`, '_blank'); }
-window.copyMagicLink = function() { navigator.clipboard.writeText(getMagicLink()).then(() => alert("Copiado al portapapeles.")); }
+window.shareViaWhatsApp = function () { window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(`¡Hola! Mi código es ${globalState.friendCode}. Revisa qué láminas cambiamos:\n\n${getMagicLink()}`)}`, '_blank'); }
+window.copyMagicLink = function () { navigator.clipboard.writeText(getMagicLink()).then(() => alert("Copiado al portapapeles.")); }
 
-window.handleSearchFriend = async function() {
+window.handleSearchFriend = async function () {
     const input = document.getElementById('input-friend-code'); const btn = document.getElementById('btn-search-friend'); const friendCode = input.value; if (!friendCode) return alert("Escribe un código."); btn.innerText = "Buscando..."; btn.disabled = true;
     try {
-        const compressedData = await getFriendBox(friendCode); window.closeOnlineMatchModal(); 
+        const compressedData = await getFriendBox(friendCode); window.closeOnlineMatchModal();
         const parts = compressedData.split('|'); const repArray = parts[1] ? parts[1].split(',') : []; const missingArray = parts[2] ? parts[2].split(',') : [];
         let fakeS = {}; if (window.DATA && window.DATA.TEAMS) { window.DATA.TEAMS.forEach(team => { team.stickers.forEach(s => { if (!missingArray.includes(s.code)) { fakeS[s.code] = repArray.includes(s.code) ? 2 : 1; } }); }); }
         const jsonForMatch = JSON.stringify({ n: friendCode, profile: { name: friendCode }, s: fakeS, m: [] });
-        if (typeof compareGlobalTrades === 'function') { const matchResult = compareGlobalTrades(jsonForMatch); if (matchResult) { if (typeof window.renderMatchResultsUI === 'function') window.renderMatchResultsUI(); setTimeout(() => { const matchContainer = document.getElementById('match-results-container'); if(matchContainer) matchContainer.scrollIntoView({ behavior: 'smooth' }); }, 100); } else { alert("Match calculó pero devolvió vacío."); } }
+        if (typeof compareGlobalTrades === 'function') { const matchResult = compareGlobalTrades(jsonForMatch); if (matchResult) { if (typeof window.renderMatchResultsUI === 'function') window.renderMatchResultsUI(); setTimeout(() => { const matchContainer = document.getElementById('match-results-container'); if (matchContainer) matchContainer.scrollIntoView({ behavior: 'smooth' }); }, 100); } else { alert("Match calculó pero devolvió vacío."); } }
     } catch (error) { alert("Error: " + error.message); } finally { btn.innerText = "Buscar"; btn.disabled = false; }
 }
 
 // MATCH OFFLINE Y QR
-window.copyMyJsonForTrade = function() { const jsonStr = getGlobalMinifiedData(); if (!jsonStr) { alert("No hay datos."); return; } if (navigator.clipboard && window.isSecureContext) { navigator.clipboard.writeText(jsonStr).then(() => { alert("¡Copiado!"); }); } else { let t = document.createElement("textarea"); t.value = jsonStr; t.style.position = "fixed"; document.body.appendChild(t); t.focus(); t.select(); try { document.execCommand('copy'); alert("¡Copiado!"); } catch (err) {} t.remove(); } };
-window.showMyQR = function() { loadQRLibraries(() => { const jsonStr = getGlobalMinifiedData(); const compressedData = LZString.compressToEncodedURIComponent(jsonStr); if (compressedData.length > 2500) { alert("Demasiadas repetidas. Usa Texto."); return; } const imgEl = document.getElementById('qr-image'); try { QRCode.toDataURL(compressedData, { width: 800, margin: 2, errorCorrectionLevel: 'L', color: { dark: '#000', light: '#fff' } }, function (error, url) { if (!error) { imgEl.src = url; window.showModal('modal-my-qr'); } }); } catch (e) { alert("Error QR."); } }); };
-window.openCameraScanner = function() { loadQRLibraries(() => { window.showModal('modal-scanner'); html5QrcodeScanner = new Html5Qrcode("qr-reader"); html5QrcodeScanner.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 250 } }, (decodedText) => { window.closeScannerModal(); const matchInput = document.getElementById('match-input'); if(matchInput) { matchInput.value = decodedText; window.processQRText(); } }, (e) => {} ).catch(err => { alert("No se pudo iniciar cámara."); window.closeScannerModal(); }); }); }
-window.closeScannerModal = function() { if (html5QrcodeScanner) { html5QrcodeScanner.stop().then(() => { html5QrcodeScanner.clear(); window.closeModal('modal-scanner'); }).catch(e => window.closeModal('modal-scanner')); } else { window.closeModal('modal-scanner'); } }
-window.uploadQRImage = function(event) { const file = event.target.files[0]; if (!file) return; loadQRLibraries(() => { const reader = new FileReader(); reader.onload = (e) => { const img = new Image(); img.onload = () => { const canvas = document.getElementById('hidden-qr-canvas'); const context = canvas.getContext('2d', { willReadFrequently: true }); const maxSize = 2000; let w = img.width; let h = img.height; if (w > maxSize || h > maxSize) { const r = Math.min(maxSize / w, maxSize / h); w *= r; h *= r; } canvas.width = w; canvas.height = h; context.fillStyle = '#FFFFFF'; context.fillRect(0, 0, w, h); context.drawImage(img, 0, 0, w, h); const data = context.getImageData(0, 0, w, h); const code = jsQR(data.data, data.width, data.height, { inversionAttempts: "attemptBoth" }); if (code) { const matchInput = document.getElementById('match-input'); if(matchInput) { matchInput.value = code.data; window.processQRText(); } } else { alert('Error leyendo QR.'); } }; img.src = e.target.result; }; reader.readAsDataURL(file); event.target.value = ''; }); };
-window.processQRText = function() { const matchInput = document.getElementById('match-input'); if(!matchInput) return; const input = matchInput.value.trim(); if(!input) { window.clearMatchInput(); return; } loadQRLibraries(() => { let finalData = input; const decompressed = LZString.decompressFromEncodedURIComponent(input); if (decompressed) finalData = decompressed; if(typeof compareGlobalTrades === 'function') { const matchResult = compareGlobalTrades(finalData); if(matchResult) { if (typeof window.renderMatchResultsUI === 'function') window.renderMatchResultsUI(); setTimeout(() => { const matchContainer = document.getElementById('match-results-container'); if(matchContainer) matchContainer.scrollIntoView({ behavior: 'smooth' }); }, 100); } } }); }
+window.copyMyJsonForTrade = function () { const jsonStr = getGlobalMinifiedData(); if (!jsonStr) { alert("No hay datos."); return; } if (navigator.clipboard && window.isSecureContext) { navigator.clipboard.writeText(jsonStr).then(() => { alert("¡Copiado!"); }); } else { let t = document.createElement("textarea"); t.value = jsonStr; t.style.position = "fixed"; document.body.appendChild(t); t.focus(); t.select(); try { document.execCommand('copy'); alert("¡Copiado!"); } catch (err) { } t.remove(); } };
+window.showMyQR = function () { loadQRLibraries(() => { const jsonStr = getGlobalMinifiedData(); const compressedData = LZString.compressToEncodedURIComponent(jsonStr); if (compressedData.length > 2500) { alert("Demasiadas repetidas. Usa Texto."); return; } const imgEl = document.getElementById('qr-image'); try { QRCode.toDataURL(compressedData, { width: 800, margin: 2, errorCorrectionLevel: 'L', color: { dark: '#000', light: '#fff' } }, function (error, url) { if (!error) { imgEl.src = url; window.showModal('modal-my-qr'); } }); } catch (e) { alert("Error QR."); } }); };
+window.openCameraScanner = function () { loadQRLibraries(() => { window.showModal('modal-scanner'); html5QrcodeScanner = new Html5Qrcode("qr-reader"); html5QrcodeScanner.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 250 } }, (decodedText) => { window.closeScannerModal(); const matchInput = document.getElementById('match-input'); if (matchInput) { matchInput.value = decodedText; window.processQRText(); } }, (e) => { }).catch(err => { alert("No se pudo iniciar cámara."); window.closeScannerModal(); }); }); }
+window.closeScannerModal = function () { if (html5QrcodeScanner) { html5QrcodeScanner.stop().then(() => { html5QrcodeScanner.clear(); window.closeModal('modal-scanner'); }).catch(e => window.closeModal('modal-scanner')); } else { window.closeModal('modal-scanner'); } }
+window.uploadQRImage = function (event) { const file = event.target.files[0]; if (!file) return; loadQRLibraries(() => { const reader = new FileReader(); reader.onload = (e) => { const img = new Image(); img.onload = () => { const canvas = document.getElementById('hidden-qr-canvas'); const context = canvas.getContext('2d', { willReadFrequently: true }); const maxSize = 2000; let w = img.width; let h = img.height; if (w > maxSize || h > maxSize) { const r = Math.min(maxSize / w, maxSize / h); w *= r; h *= r; } canvas.width = w; canvas.height = h; context.fillStyle = '#FFFFFF'; context.fillRect(0, 0, w, h); context.drawImage(img, 0, 0, w, h); const data = context.getImageData(0, 0, w, h); const code = jsQR(data.data, data.width, data.height, { inversionAttempts: "attemptBoth" }); if (code) { const matchInput = document.getElementById('match-input'); if (matchInput) { matchInput.value = code.data; window.processQRText(); } } else { alert('Error leyendo QR.'); } }; img.src = e.target.result; }; reader.readAsDataURL(file); event.target.value = ''; }); };
+window.processQRText = function () { const matchInput = document.getElementById('match-input'); if (!matchInput) return; const input = matchInput.value.trim(); if (!input) { window.clearMatchInput(); return; } loadQRLibraries(() => { let finalData = input; const decompressed = LZString.decompressFromEncodedURIComponent(input); if (decompressed) finalData = decompressed; if (typeof compareGlobalTrades === 'function') { const matchResult = compareGlobalTrades(finalData); if (matchResult) { if (typeof window.renderMatchResultsUI === 'function') window.renderMatchResultsUI(); setTimeout(() => { const matchContainer = document.getElementById('match-results-container'); if (matchContainer) matchContainer.scrollIntoView({ behavior: 'smooth' }); }, 100); } } }); }
 window.compareTradesFromText = window.processQRText;
-window.clearMatchInput = function() { const matchInput = document.getElementById('match-input'); if(matchInput) matchInput.value = ''; const container = document.getElementById('match-results-container'); if(container) container.style.display = 'none'; }
+window.clearMatchInput = function () { const matchInput = document.getElementById('match-input'); if (matchInput) matchInput.value = ''; const container = document.getElementById('match-results-container'); if (container) container.style.display = 'none'; }
 
-window.renderMatchResultsUI = function() {
-    if(!lastMatchResult) return;
-    let totalRec = 0; for(let team in lastMatchResult.iReceive) totalRec += lastMatchResult.iReceive[team].length;
-    let totalGive = 0; for(let team in lastMatchResult.iGive) totalGive += lastMatchResult.iGive[team].length;
-    let myNameStr = getFamilyNameString(); 
-    let optimal = Math.min(totalRec, totalGive); 
+window.renderMatchResultsUI = function () {
+    if (!lastMatchResult) return;
+    let totalRec = 0; for (let team in lastMatchResult.iReceive) totalRec += lastMatchResult.iReceive[team].length;
+    let totalGive = 0; for (let team in lastMatchResult.iGive) totalGive += lastMatchResult.iGive[team].length;
+    let myNameStr = getFamilyNameString();
+    let optimal = Math.min(totalRec, totalGive);
     let bottleneck = totalRec < totalGive ? `(Menos repetidas: ${lastMatchResult.friendName})` : totalGive < totalRec ? `(Menos repetidas: ${myNameStr})` : `(Equilibrado)`;
-    
+
     let html = `<p style="text-align:center; color:var(--text-secondary); margin-bottom:1rem;">Comparación con: <strong style="color:var(--text-primary); font-size:1.1rem;">${lastMatchResult.friendName}</strong></p>`;
-    
+
     html += `<div style="background: rgba(59,130,246,0.05); border: 1px dashed var(--blue-accent, #3b82f6); padding: 1.2rem; border-radius: 12px; margin-bottom: 1.5rem; text-align: center;">
                 <p style="margin-bottom: 0.8rem; font-size: 1.1rem; color: var(--text-primary);"><strong>📊 Resumen</strong></p>
                 <div style="display: flex; justify-content: space-around; margin-bottom: 1rem; font-size: 0.95rem;">
@@ -436,42 +436,80 @@ window.renderMatchResultsUI = function() {
                 <div style="background: var(--blue-accent, #3b82f6); color: white; padding: 0.5rem 1rem; border-radius: 8px; display: inline-block; margin-bottom: 1rem; width: 100%; box-sizing: border-box;">
                     <strong>Máx. justos: ${optimal}</strong> <br><span style="font-size: 0.85rem; opacity: 0.9;">${bottleneck}</span>
                 </div>
-                <button class="btn" style="background:var(--green-complete, #10b981); width:100%; max-width:280px; margin:0 auto; display:block; font-size:0.9rem; font-weight:bold; padding: 0.8rem; color:white; border:none; border-radius:8px; cursor:pointer;" onclick="window.applyInterchangeAutomatic()">⚡ Aplicar Intercambio en 1-Clic</button>
+                <div style="display: flex; flex-direction: column; gap: 10px; max-width: 280px; margin: 0 auto;">
+                    <button class="btn" style="background:var(--green-complete, #10b981); width:100%; font-size:0.9rem; font-weight:bold; padding: 0.8rem; color:white; border:none; border-radius:8px; cursor:pointer;" onclick="window.applyInterchangeAutomatic()">⚡ Aplicar Intercambio en 1-Clic</button>
+                    <button class="btn" style="background:#25D366; width:100%; font-size:0.9rem; font-weight:bold; padding: 0.8rem; color:white; border:none; border-radius:8px; cursor:pointer;" onclick="window.shareMatchViaWhatsApp()">💬 Enviar Trato por WhatsApp</button>
+                </div>
             </div>`;
-            
+
     html += `<div style="display: flex; flex-direction: column; gap: 1rem;">`;
 
     // --- COLUMNA: RECIBE ---
     html += `<div style="flex:1; background: var(--bg-surface, #ffffff); padding: 1.2rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid rgba(0,0,0,0.05);">
                 <h3 style="color: var(--green-complete, #10b981); margin-top:0; border-bottom: 2px solid rgba(0,0,0,0.05); padding-bottom:0.5rem; font-size:1.1rem;">⬇️ ${myNameStr} Recibe</h3>`;
-    let recCount = 0; 
-    for(let team in lastMatchResult.iReceive) { 
-        let chips = lastMatchResult.iReceive[team].map(code => `<span style="display:inline-block; background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); color:var(--text-primary, #333); padding:4px 8px; border-radius:6px; margin:2px; font-size:0.85rem; font-family:monospace; font-weight:bold;">${code}</span>`).join(''); 
-        html += `<div style="margin-bottom:0.8rem;"><span style="display:block; font-weight:bold; font-size:0.9rem; margin-bottom:0.3rem; color:var(--text-primary, #333);">${team}</span><div>${chips}</div></div>`; 
-        recCount++; 
+    let recCount = 0;
+    for (let team in lastMatchResult.iReceive) {
+        let chips = lastMatchResult.iReceive[team].map(code => `<span style="display:inline-block; background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); color:var(--text-primary, #333); padding:4px 8px; border-radius:6px; margin:2px; font-size:0.85rem; font-family:monospace; font-weight:bold;">${code}</span>`).join('');
+        html += `<div style="margin-bottom:0.8rem;"><span style="display:block; font-weight:bold; font-size:0.9rem; margin-bottom:0.3rem; color:var(--text-primary, #333);">${team}</span><div>${chips}</div></div>`;
+        recCount++;
     }
-    if(recCount === 0) html += '<p style="color: #999; text-align: center; margin-top: 2rem;">Ninguna :(</p>'; 
+    if (recCount === 0) html += '<p style="color: #999; text-align: center; margin-top: 2rem;">Ninguna :(</p>';
     html += `</div>`;
 
     // --- COLUMNA: ENTREGA ---
     html += `<div style="flex:1; background: var(--bg-surface, #ffffff); padding: 1.2rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid rgba(0,0,0,0.05);">
                 <h3 style="color: var(--gold, #f59e0b); margin-top:0; border-bottom: 2px solid rgba(0,0,0,0.05); padding-bottom:0.5rem; font-size:1.1rem;">⬆️ ${myNameStr} Entrega</h3>`;
-    let giveCount = 0; 
-    for(let team in lastMatchResult.iGive) { 
-        let chips = lastMatchResult.iGive[team].map(code => `<span style="display:inline-block; background:rgba(245,158,11,0.1); border:1px solid rgba(245,158,11,0.3); color:var(--text-primary, #333); padding:4px 8px; border-radius:6px; margin:2px; font-size:0.85rem; font-family:monospace; font-weight:bold;">${code}</span>`).join(''); 
-        html += `<div style="margin-bottom:0.8rem;"><span style="display:block; font-weight:bold; font-size:0.9rem; margin-bottom:0.3rem; color:var(--text-primary, #333);">${team}</span><div>${chips}</div></div>`; 
-        giveCount++; 
+    let giveCount = 0;
+    for (let team in lastMatchResult.iGive) {
+        let chips = lastMatchResult.iGive[team].map(code => `<span style="display:inline-block; background:rgba(245,158,11,0.1); border:1px solid rgba(245,158,11,0.3); color:var(--text-primary, #333); padding:4px 8px; border-radius:6px; margin:2px; font-size:0.85rem; font-family:monospace; font-weight:bold;">${code}</span>`).join('');
+        html += `<div style="margin-bottom:0.8rem;"><span style="display:block; font-weight:bold; font-size:0.9rem; margin-bottom:0.3rem; color:var(--text-primary, #333);">${team}</span><div>${chips}</div></div>`;
+        giveCount++;
     }
-    if(giveCount === 0) html += '<p style="color: #999; text-align: center; margin-top: 2rem;">Ninguna :(</p>'; 
-    html += `</div></div>`; 
-    
-    const resultsDiv = document.getElementById('match-results'); 
-    if(resultsDiv) resultsDiv.innerHTML = html; 
-    
-    const container = document.getElementById('match-results-container'); 
-    if(container) container.style.display = 'block';
-}
+    if (giveCount === 0) html += '<p style="color: #999; text-align: center; margin-top: 2rem;">Ninguna :(</p>';
+    html += `</div></div>`;
 
-window.applyInterchangeAutomatic = function() { if(typeof executeGlobalTrade === 'function' && executeGlobalTrade()) { alert("¡Intercambio aplicado!"); const container = document.getElementById('match-results-container'); if(container) container.style.display = 'none'; updateUIForActiveAlbum(); } };
+    const resultsDiv = document.getElementById('match-results');
+    if (resultsDiv) resultsDiv.innerHTML = html;
+
+    const container = document.getElementById('match-results-container');
+    if (container) container.style.display = 'block';
+}
+window.shareMatchViaWhatsApp = function () {
+    if (!lastMatchResult) {
+        alert("No hay ningún match calculado para compartir.");
+        return;
+    }
+
+    let myNameStr = getFamilyNameString();
+    let friendName = lastMatchResult.friendName || 'Amigo';
+
+    let txt = `🤝 *Propuesta de Intercambio*\nHola ${friendName}, revisé nuestro match de láminas y esto es lo que tenemos:\n\n`;
+
+    // Lo que recibo (amigo me da)
+    txt += `⬇️ *Yo (${myNameStr}) RECIBO:*\n`;
+    let recCount = 0;
+    for (let team in lastMatchResult.iReceive) {
+        let chips = lastMatchResult.iReceive[team].join(', ');
+        txt += `*${team}:* ${chips}\n`;
+        recCount++;
+    }
+    if (recCount === 0) txt += `Nada por ahora 😢\n`;
+
+    // Lo que entrego (doy al amigo)
+    txt += `\n⬆️ *Yo (${myNameStr}) TE ENTREGO:*\n`;
+    let giveCount = 0;
+    for (let team in lastMatchResult.iGive) {
+        let chips = lastMatchResult.iGive[team].join(', ');
+        txt += `*${team}:* ${chips}\n`;
+        giveCount++;
+    }
+    if (giveCount === 0) txt += `Nada por ahora 😢\n`;
+
+    txt += `\n¿Hacemos el cambio? ⚽`;
+
+    const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(txt)}`;
+    window.open(url, '_blank');
+};
+window.applyInterchangeAutomatic = function () { if (typeof executeGlobalTrade === 'function' && executeGlobalTrade()) { alert("¡Intercambio aplicado!"); const container = document.getElementById('match-results-container'); if (container) container.style.display = 'none'; updateUIForActiveAlbum(); } };
 
 if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', init); } else { init(); }
