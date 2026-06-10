@@ -25,31 +25,23 @@ async function init() {
         if (!window.DATA || !window.DATA.TEAMS || window.DATA.TEAMS.length === 0) return alert("🚨 Error CRÍTICO: La base de datos de la FIFA está vacía.");
 
         await loadStore();
-
+        
         const savedMode = localStorage.getItem('album_display_mode');
         if (savedMode) { globalState.displayMode = savedMode; const displaySelect = document.getElementById('setting-display-mode'); if (displaySelect) displaySelect.value = savedMode; }
-
+        
         if (!getActiveAlbum()) { if (typeof createNewAlbum === 'function') createNewAlbum('Mi Álbum'); }
         const active = getActiveAlbum();
         if (active) { if (!active.profile) active.profile = { name: active.name || 'Mi Álbum' }; if (!active.stickers) active.stickers = {}; saveStore(); }
 
         loadTheme(); checkIOSInstall(); observeHeaderOffset(); populateFilters();
 
-        renderAlbumSelector(); updateUIForActiveAlbum(); bindEvents();
+        // Arrancamos la interfaz local directamente
+        renderAlbumSelector(); updateUIForActiveAlbum(); bindEvents(); 
 
-        onAuthStateChanged(auth, async (user) => {
-            updateAuthUI(user);
-            if (user) {
-                // ESCUCHA ACTIVA: Cualquier cambio en otro celular se redibujará solo
-                startRealTimeSync(user, () => { renderAlbumSelector(); updateUIForActiveAlbum(); });
-            } else {
-                startRealTimeSync(null);
-            }
-        });
-
+        // Revisamos si alguien te envió un link con código de intercambio
         const urlParams = new URLSearchParams(window.location.search);
         const matchCode = urlParams.get('match');
-        if (matchCode) { setTimeout(() => { const inputElement = document.getElementById('input-friend-code'); if (inputElement) { inputElement.value = matchCode; window.openOnlineMatchModal(); window.handleSearchFriend(); } }, 1500); }
+        if (matchCode) { setTimeout(() => { const inputElement = document.getElementById('input-friend-code'); if(inputElement) { inputElement.value = matchCode; window.openOnlineMatchModal(); window.handleSearchFriend(); } }, 1500); }
     } catch (error) { alert("Error en arranque: " + error.message); }
 }
 
