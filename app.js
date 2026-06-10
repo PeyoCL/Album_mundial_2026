@@ -1,6 +1,5 @@
-import { globalState, loadStore, saveStore, getActiveAlbum, createNewAlbum, deleteActiveAlbum, getFamilyNameString, fullCloudBackup, saveStickerToCloud, startRealTimeSync, claimFriendCode, getFriendBox } from './store.js?v=71';
-import { auth, provider, signInWithPopup, signOut, onAuthStateChanged } from './firebase-config.js?v=71';
-import { getGlobalMinifiedData, compareGlobalTrades, executeGlobalTrade, lastMatchResult } from './match.js?v=71';
+import { globalState, loadStore, saveStore, getActiveAlbum, createNewAlbum, deleteActiveAlbum, getFamilyNameString, fullCloudBackup, saveStickerToCloud, startRealTimeSync, claimFriendCode, getFriendBox } from './store.js?v=72';
+import { getGlobalMinifiedData, compareGlobalTrades, executeGlobalTrade, lastMatchResult } from './match.js?v=72';
 
 window.onerror = function (msg, url, line) { console.error("🚨 ERROR EN LA APP:\n" + msg + "\nLínea: " + line); return false; };
 
@@ -89,21 +88,35 @@ function updateUIForActiveAlbum() {
 
 function getStickerState(code) { return getActiveAlbum().stickers[code] || { have: false, count: 0 }; }
 
-// ACTULIZACIONES QUIRÚRGICAS (DOT NOTATION)
-window.toggleSticker = function (code, ev) {
-    if (ev) ev.stopPropagation(); let s = getStickerState(code);
-    if (!s.have) { s.have = true; s.count = 1; triggerConfetti(ev?.clientX || window.innerWidth / 2, ev?.clientY || window.innerHeight / 2); } else { s.count++; }
-    getActiveAlbum().stickers[code] = s; saveStore();
-    if (auth && auth.currentUser) saveStickerToCloud(auth.currentUser, getActiveAlbum().id, code, s);
-    checkMilestones(); updateUIForActiveAlbum();
+window.toggleSticker = function(code, ev) {
+    if(ev) ev.stopPropagation(); 
+    let s = getStickerState(code);
+    if (!s.have) { 
+        s.have = true; s.count = 1; 
+        triggerConfetti(ev?.clientX || window.innerWidth/2, ev?.clientY || window.innerHeight/2); 
+    } else { 
+        s.count++; 
+    }
+    getActiveAlbum().stickers[code] = s; 
+    
+    // GUARDADO PURAMENTE LOCAL (Instantáneo)
+    saveStore(); 
+    
+    checkMilestones(); 
+    updateUIForActiveAlbum();
 }
-window.decrementSticker = function (code, ev) {
-    if (ev) ev.stopPropagation(); let s = getStickerState(code);
-    if (s.have && s.count > 0) {
-        s.count--; if (s.count === 0) s.have = false;
-        getActiveAlbum().stickers[code] = s; saveStore();
-        if (auth && auth.currentUser) saveStickerToCloud(auth.currentUser, getActiveAlbum().id, code, s);
-        updateUIForActiveAlbum();
+window.decrementSticker = function(code, ev) {
+    if(ev) ev.stopPropagation(); 
+    let s = getStickerState(code);
+    if (s.have && s.count > 0) { 
+        s.count--; 
+        if(s.count === 0) s.have = false; 
+        getActiveAlbum().stickers[code] = s; 
+        
+        // GUARDADO PURAMENTE LOCAL (Instantáneo)
+        saveStore(); 
+        
+        updateUIForActiveAlbum(); 
     }
 }
 
