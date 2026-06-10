@@ -1,4 +1,4 @@
-// store.js - VERSIÓN 100% OFFLINE (Sin Firebase)
+// store.js - VERSIÓN 100% OFFLINE DEFINITIVA
 export const globalState = { albums: {}, activeAlbumId: null };
 
 function sanitizeData() {
@@ -68,11 +68,3 @@ export function getFamilyNameString() {
     const a = getActiveAlbum(); 
     return (a && a.profile && a.profile.name) ? a.profile.name : "Mi Álbum"; 
 }
-
-// --- FUNCIONES EN BLANCO (Para evitar errores en app.js) ---
-export async function fullCloudBackup() { return true; }
-export async function saveStickerToCloud() { return true; }
-export function startRealTimeSync() { return true; }
-export async function claimFriendCode() { throw new Error("Match Online deshabilitado. Usa la opción de QR o Copiar Texto."); }
-export async function uploadToPublicBox() { return true; }
-export async function getFriendBox() { throw new Error("Match Online deshabilitado. Usa la opción de QR o Copiar Texto."); }

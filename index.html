@@ -14,7 +14,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap"
         rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=72">
+    <link rel="stylesheet" href="style.css?v=74">
 </head>
 
 <body>
@@ -27,7 +27,7 @@
                 <div class="header-left">
                     <h1 id="album-title" contenteditable="true" spellcheck="false">Mi Álbum</h1>
                     <span class="subtitle">Mundial 2026 · 48 selecciones · 994 láminas <span
-                            class="app-version">v72</span></span>
+                            class="app-version">v74</span></span>
                 </div>
 
                 <div class="header-actions" style="display: flex; align-items: center; gap: 12px;">
@@ -360,9 +360,9 @@
         </div>
     </div>
 
-    <link rel="stylesheet" href="style.css?v=72">
-    <script src="data.js?v=72"></script>
-    <script type="module" src="app.js?v=72"></script>
+    <link rel="stylesheet" href="style.css?v=74">
+    <script src="data.js?v=74"></script>
+    <script type="module" src="app.js?v=74"></script>
 
     <script>
         if ('serviceWorker' in navigator) {
@@ -374,74 +374,7 @@
         }
     </script>
 
-    <!-- MODAL INTERCAMBIO EN LÍNEA -->
-    <div id="modal-online-match" class="modal"
-        style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); justify-content: center; align-items: center;">
-        <div class="modal-content"
-            style="max-width: 400px; width: 90%; padding: 0; border-radius: 8px; overflow: hidden; background-color: var(--bg-surface, #1e2233);">
-
-            <!-- ENCABEZADO -->
-            <div
-                style="display: flex; justify-content: space-between; align-items: center; padding: 20px 20px 15px 20px; border-bottom: 1px solid rgba(255,255,255,0.05);">
-                <h2
-                    style="margin: 0; font-size: 1.4rem; font-family: 'Bebas Neue', Impact, sans-serif; letter-spacing: 0.5px; color: white;">
-                    🤝 MATCH EN LÍNEA</h2>
-                <span onclick="window.closeOnlineMatchModal()"
-                    style="font-size: 1.5rem; cursor: pointer; color: #ccc;">&times;</span>
-            </div>
-
-            <!-- CUERPO DEL MODAL -->
-            <div style="padding: 20px; display: flex; flex-direction: column; gap: 20px;">
-
-                <!-- SECCIÓN MI CÓDIGO -->
-                <div
-                    style="background-color: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); padding: 15px; border-radius: 8px;">
-                    <h3 style="margin-top:0; color: #5a81ed; margin-bottom: 10px; font-size: 1.1rem;">Tu Código Único
-                    </h3>
-
-                    <!-- Estado 1: Sin código -->
-                    <div id="online-match-setup" style="display: none;">
-                        <p style="font-size: 0.85rem; color: #a0aabf; margin-bottom: 10px;">Crea un código para que tus
-                            amigos te encuentren.</p>
-                        <div style="display: flex; gap: 10px;">
-                            <input type="text" id="input-claim-code" placeholder="Ej: PEYO26"
-                                style="flex: 1; padding: 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background-color: rgba(0,0,0,0.4); color: white; text-transform: uppercase;">
-                            <button
-                                style="background-color: #5a81ed; color: white; padding: 10px; border-radius: 6px; border: none; font-weight: bold;"
-                                id="btn-claim-code" onclick="window.handleClaimCode()">Reclamar</button>
-                        </div>
-                    </div>
-
-                    <!-- Estado 2: Con código -->
-                    <div id="online-match-ready" style="display: none; text-align: center;">
-                        <div style="font-size: 1.6rem; font-weight: bold; letter-spacing: 2px; color: white; margin-bottom: 15px; background: rgba(90, 129, 237, 0.2); padding: 10px; border-radius: 6px; border: 1px dashed #5a81ed;"
-                            id="display-my-code">...</div>
-                        <button
-                            style="background-color: #25D366; color: white; width: 100%; padding: 12px; border-radius: 6px; border: none; font-weight: bold; margin-bottom: 10px;"
-                            onclick="window.shareViaWhatsApp()">💬 Compartir por WhatsApp</button>
-                        <button
-                            style="background-color: transparent; border: 1px solid rgba(255,255,255,0.2); color: #a0aabf; width: 100%; padding: 10px; border-radius: 6px;"
-                            onclick="window.copyMagicLink()">🔗 Copiar Link</button>
-                    </div>
-                </div>
-
-                <!-- SECCIÓN BUSCAR AMIGO -->
-                <div>
-                    <h3 style="margin-top:0; color: white; margin-bottom: 5px; font-size: 1rem;">Buscar a un amigo</h3>
-                    <p style="font-size: 0.85rem; color: #a0aabf; margin-bottom: 10px;">Ingresa su código para ver si
-                        tienen láminas para cambiar.</p>
-                    <div style="display: flex; gap: 10px;">
-                        <input type="text" id="input-friend-code" placeholder="Código"
-                            style="flex: 1; padding: 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background-color: rgba(0,0,0,0.2); color: white; text-transform: uppercase;">
-                        <button
-                            style="background-color: #eab308; color: black; padding: 10px; border-radius: 6px; border: none; font-weight: bold;"
-                            id="btn-search-friend" onclick="window.handleSearchFriend()">Buscar</button>
-                    </div>
-                </div>
-
-            </div>
-        </div>
-    </div>
+    
 </body>
 
 </html>

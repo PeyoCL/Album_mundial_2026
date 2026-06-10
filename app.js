@@ -1,5 +1,5 @@
-import { globalState, loadStore, saveStore, getActiveAlbum, createNewAlbum, deleteActiveAlbum, getFamilyNameString, fullCloudBackup, saveStickerToCloud, startRealTimeSync, claimFriendCode, getFriendBox } from './store.js?v=72';
-import { getGlobalMinifiedData, compareGlobalTrades, executeGlobalTrade, lastMatchResult } from './match.js?v=72';
+import { globalState, loadStore, saveStore, getActiveAlbum, createNewAlbum, deleteActiveAlbum, getFamilyNameString } from './store.js?v=74';
+import { getGlobalMinifiedData, compareGlobalTrades, executeGlobalTrade, lastMatchResult } from './match.js?v=74';
 
 window.onerror = function (msg, url, line) { console.error("🚨 ERROR EN LA APP:\n" + msg + "\nLínea: " + line); return false; };
 
@@ -38,10 +38,8 @@ async function init() {
         // Arrancamos la interfaz local directamente
         renderAlbumSelector(); updateUIForActiveAlbum(); bindEvents(); 
 
-        // Revisamos si alguien te envió un link con código de intercambio
-        const urlParams = new URLSearchParams(window.location.search);
-        const matchCode = urlParams.get('match');
-        if (matchCode) { setTimeout(() => { const inputElement = document.getElementById('input-friend-code'); if(inputElement) { inputElement.value = matchCode; window.openOnlineMatchModal(); window.handleSearchFriend(); } }, 1500); }
+   
+   
     } catch (error) { alert("Error en arranque: " + error.message); }
 }
 
@@ -399,23 +397,8 @@ window.loginGoogle = function () { signInWithPopup(auth, provider).then(() => { 
 window.logoutGoogle = function () { signOut(auth).then(() => { alert("Sesión cerrada."); }).catch(err => alert("Error: " + err)); };
 function updateAuthUI(user) { const btnLogin = document.getElementById('btn-login-google'); const authInfo = document.getElementById('auth-user-info'); const authText = document.getElementById('auth-status-text'); const emailText = document.getElementById('auth-user-email'); if (user) { if (btnLogin) btnLogin.style.display = 'none'; if (authInfo) authInfo.style.display = 'flex'; if (authText) authText.innerText = "Sincronizando en tiempo real."; if (emailText) emailText.innerText = `👋 Hola, ${user.displayName || user.email}`; } else { if (btnLogin) btnLogin.style.display = 'flex'; if (authInfo) authInfo.style.display = 'none'; if (authText) authText.innerText = "Inicia sesión para sincronizar."; if (emailText) emailText.innerText = ""; } }
 
-window.openOnlineMatchModal = function () { const modal = document.getElementById('modal-online-match'); if (!modal) return; if (!auth || !auth.currentUser) { alert("Debes iniciar sesión para usar esto."); return; } if (globalState.friendCode) { document.getElementById('online-match-setup').style.display = 'none'; document.getElementById('online-match-ready').style.display = 'block'; document.getElementById('display-my-code').innerText = globalState.friendCode; } else { document.getElementById('online-match-setup').style.display = 'block'; document.getElementById('online-match-ready').style.display = 'none'; } modal.style.display = 'flex'; }
-window.closeOnlineMatchModal = function () { document.getElementById('modal-online-match').style.display = 'none'; }
-window.handleClaimCode = async function () { const input = document.getElementById('input-claim-code'); const btn = document.getElementById('btn-claim-code'); const desiredCode = input.value; if (!desiredCode) return alert("Escribe un código."); btn.innerText = "Pensando..."; btn.disabled = true; try { await claimFriendCode(auth.currentUser, desiredCode); alert("¡Tu código es " + globalState.friendCode); window.openOnlineMatchModal(); } catch (error) { alert(error.message); } finally { btn.innerText = "Reclamar"; btn.disabled = false; } }
-function getMagicLink() { return `${window.location.href.split('?')[0]}?match=${globalState.friendCode}`; }
-window.shareViaWhatsApp = function () { window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(`¡Hola! Mi código es ${globalState.friendCode}. Revisa qué láminas cambiamos:\n\n${getMagicLink()}`)}`, '_blank'); }
-window.copyMagicLink = function () { navigator.clipboard.writeText(getMagicLink()).then(() => alert("Copiado al portapapeles.")); }
 
-window.handleSearchFriend = async function () {
-    const input = document.getElementById('input-friend-code'); const btn = document.getElementById('btn-search-friend'); const friendCode = input.value; if (!friendCode) return alert("Escribe un código."); btn.innerText = "Buscando..."; btn.disabled = true;
-    try {
-        const compressedData = await getFriendBox(friendCode); window.closeOnlineMatchModal();
-        const parts = compressedData.split('|'); const repArray = parts[1] ? parts[1].split(',') : []; const missingArray = parts[2] ? parts[2].split(',') : [];
-        let fakeS = {}; if (window.DATA && window.DATA.TEAMS) { window.DATA.TEAMS.forEach(team => { team.stickers.forEach(s => { if (!missingArray.includes(s.code)) { fakeS[s.code] = repArray.includes(s.code) ? 2 : 1; } }); }); }
-        const jsonForMatch = JSON.stringify({ n: friendCode, profile: { name: friendCode }, s: fakeS, m: [] });
-        if (typeof compareGlobalTrades === 'function') { const matchResult = compareGlobalTrades(jsonForMatch); if (matchResult) { if (typeof window.renderMatchResultsUI === 'function') window.renderMatchResultsUI(); setTimeout(() => { const matchContainer = document.getElementById('match-results-container'); if (matchContainer) matchContainer.scrollIntoView({ behavior: 'smooth' }); }, 100); } else { alert("Match calculó pero devolvió vacío."); } }
-    } catch (error) { alert("Error: " + error.message); } finally { btn.innerText = "Buscar"; btn.disabled = false; }
-}
+
 
 // MATCH OFFLINE Y QR
 window.copyMyJsonForTrade = function () { const jsonStr = getGlobalMinifiedData(); if (!jsonStr) { alert("No hay datos."); return; } if (navigator.clipboard && window.isSecureContext) { navigator.clipboard.writeText(jsonStr).then(() => { alert("¡Copiado!"); }); } else { let t = document.createElement("textarea"); t.value = jsonStr; t.style.position = "fixed"; document.body.appendChild(t); t.focus(); t.select(); try { document.execCommand('copy'); alert("¡Copiado!"); } catch (err) { } t.remove(); } };
